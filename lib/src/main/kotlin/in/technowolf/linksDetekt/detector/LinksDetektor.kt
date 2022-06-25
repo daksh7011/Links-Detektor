@@ -7,7 +7,8 @@ import `in`.technowolf.linksDetekt.detector.CharExtensions.isAlpha
 import `in`.technowolf.linksDetekt.detector.CharExtensions.isDot
 import `in`.technowolf.linksDetekt.detector.CharExtensions.isHex
 import `in`.technowolf.linksDetekt.detector.CharExtensions.isNumeric
-import java.util.*
+import java.util.Collections
+import java.util.Locale
 
 /**
  * Creates a new UrlDetector object used to find urls inside of text.
@@ -126,15 +127,15 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      * The default input reader which looks for specific flags to start detecting the url.
      */
     private fun readDefault() {
-        //Keeps track of the number of characters read to be able to later cut out the domain name.
+        // Keeps track of the number of characters read to be able to later cut out the domain name.
         var length = 0
 
-        //until end of string read the contents
+        // until end of string read the contents
         while (inputTextReader.eof().not()) {
-            //read the next char to process.
+            // read the next char to process.
             when (val curr: Char = inputTextReader.read()) {
                 ' ' -> {
-                    //space was found, check if it's a valid single level domain.
+                    // space was found, check if it's a valid single level domain.
                     if (
                         linksDetektorOptions.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
                         bufferStringBuilder.isNotEmpty() &&
@@ -177,8 +178,8 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                 }
                 '[' -> {
                     if (dontMatchIpv6) {
-                        //Check if we need to match characters. If we match characters and this is a start or stop of range,
-                        //either way reset the world and start processing again.
+                        // Check if we need to match characters. If we match characters and this is a start or stop of range,
+                        // either way reset the world and start processing again.
                         if (checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
                             readEnd(ReadEndState.InvalidUrl)
                             length = 0
@@ -186,36 +187,36 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                     }
                     val beginning: Int = inputTextReader.position
 
-                    //if it doesn't have a scheme, clear the buffer.
+                    // if it doesn't have a scheme, clear the buffer.
                     if (!hasScheme) {
                         bufferStringBuilder.delete(0, bufferStringBuilder.length)
                     }
                     bufferStringBuilder.append(curr)
                     if (!readDomainName(bufferStringBuilder.substring(length))) {
-                        //if we didn't find an ipv6 address, then check inside the brackets for urls
+                        // if we didn't find an ipv6 address, then check inside the brackets for urls
                         inputTextReader.seek(beginning)
                         dontMatchIpv6 = true
                     }
                     length = 0
                 }
-                '/' ->           // "/" was found, then we either read a scheme, or if we already read a scheme, then
+                '/' -> // "/" was found, then we either read a scheme, or if we already read a scheme, then
                     // we are reading an url in the format http://123123123/asdf
                     if (hasScheme ||
                         linksDetektorOptions.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
                         bufferStringBuilder.length > 1
                     ) {
-                        //we already have the scheme, so then we already read:
-                        //http://something/ <- if something is all numeric then its a valid url.
-                        //OR we are searching for single level domains. We have buffer length > 1 condition
-                        //to weed out infinite backtrack in cases of html5 roots
+                        // we already have the scheme, so then we already read:
+                        // http://something/ <- if something is all numeric then its a valid url.
+                        // OR we are searching for single level domains. We have buffer length > 1 condition
+                        // to weed out infinite backtrack in cases of html5 roots
 
-                        //unread this "/" and continue to check the domain name starting from the beginning of the domain
+                        // unread this "/" and continue to check the domain name starting from the beginning of the domain
                         inputTextReader.goBack()
                         readDomainName(bufferStringBuilder.substring(length))
                         length = 0
                     } else {
 
-                        //we don't have a scheme already, then clear state, then check for html5 root such as: "//google.com/"
+                        // we don't have a scheme already, then clear state, then check for html5 root such as: "//google.com/"
                         // remember the state of the quote when clearing state just in case its "//google.com" so its not cleared.
                         readEnd(ReadEndState.InvalidUrl)
                         bufferStringBuilder.append(curr)
@@ -223,12 +224,12 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                         length = bufferStringBuilder.length
                     }
                 ':' -> {
-                    //add the ":" to the url and check for scheme/username
+                    // add the ":" to the url and check for scheme/username
                     bufferStringBuilder.append(curr)
                     length = processColon(length)
                 }
-                else ->           //Check if we need to match characters. If we match characters and this is a start or stop of range,
-                    //either way reset the world and start processing again.
+                else -> // Check if we need to match characters. If we match characters and this is a start or stop of range,
+                    // either way reset the world and start processing again.
                     if (checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
                         readEnd(ReadEndState.InvalidUrl)
                         length = 0
@@ -257,14 +258,14 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
     private fun processColon(length: Int): Int {
         var length = length
         if (hasScheme) {
-            //read it as username/password if it has scheme
+            // read it as username/password if it has scheme
             if (!readUserPass(length) && bufferStringBuilder.isNotEmpty()) {
-                //unread the ":" so that the domain reader can process it
+                // unread the ":" so that the domain reader can process it
                 inputTextReader.goBack()
                 bufferStringBuilder.delete(bufferStringBuilder.length - 1, bufferStringBuilder.length)
                 val backtrackOnFail: Int = inputTextReader.position - bufferStringBuilder.length + length
                 if (!readDomainName(bufferStringBuilder.substring(length))) {
-                    //go back to length location and restart search
+                    // go back to length location and restart search
                     inputTextReader.seek(backtrackOnFail)
                     readEnd(ReadEndState.InvalidUrl)
                 }
@@ -272,12 +273,12 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             }
         } else if (readScheme() && bufferStringBuilder.isNotEmpty()) {
             hasScheme = true
-            length = bufferStringBuilder.length //set length to be right after the scheme
+            length = bufferStringBuilder.length // set length to be right after the scheme
         } else if (bufferStringBuilder.isNotEmpty() &&
             linksDetektorOptions.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
             inputTextReader.canReadChars(1)
-        ) { //takes care of case like hi:
-            inputTextReader.goBack() //unread the ":" so readDomainName can take care of the port
+        ) { // takes care of case like hi:
+            inputTextReader.goBack() // unread the ":" so readDomainName can take care of the port
             bufferStringBuilder.delete(bufferStringBuilder.length - 1, bufferStringBuilder.length)
             readDomainName(bufferStringBuilder.toString())
         } else {
@@ -305,7 +306,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      */
     private fun checkMatchingCharacter(curr: Char): CharacterMatch {
 
-        //This is a quote and we are matching quotes.
+        // This is a quote and we are matching quotes.
         if (curr == '\"' && linksDetektorOptions.hasFlag(LinksDetektorOptions.QUOTE_MATCH) || curr == '\'' && linksDetektorOptions.hasFlag(
                 LinksDetektorOptions.SINGLE_QUOTE_MATCH
             )
@@ -314,27 +315,27 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             if (curr == '\"') {
                 quoteStart = this.quoteStart
 
-                //remember that a double quote was found.
+                // remember that a double quote was found.
                 this.quoteStart = true
             } else {
                 quoteStart = singleQuoteStart
 
-                //remember that a single quote was found.
+                // remember that a single quote was found.
                 singleQuoteStart = true
             }
 
-            //increment the number of quotes found.
+            // increment the number of quotes found.
             val currVal = getCharacterCount(curr) + 1
             characterMatchHashMap[curr] = currVal
 
-            //if there was already a quote found, or the number of quotes is even, return that we have to stop, else its a start.
+            // if there was already a quote found, or the number of quotes is even, return that we have to stop, else its a start.
             return if (quoteStart || currVal % 2 == 0) CharacterMatch.CharacterMatchStop else CharacterMatch.CharacterMatchStart
         } else if (linksDetektorOptions.hasFlag(LinksDetektorOptions.BRACKET_MATCH) && (curr == '[' || curr == '{' || curr == '(')) {
-            //Look for start of bracket
+            // Look for start of bracket
             characterMatchHashMap[curr] = getCharacterCount(curr) + 1
             return CharacterMatch.CharacterMatchStart
         } else if (linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && curr == '<') {
-            //If its html, look for "<"
+            // If its html, look for "<"
             characterMatchHashMap[curr] = getCharacterCount(curr) + 1
             return CharacterMatch.CharacterMatchStart
         } else if (
@@ -343,11 +344,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && (curr == '>')
         ) {
 
-            //If we catch a end bracket increment its count and get rid of not ipv6 flag
+            // If we catch a end bracket increment its count and get rid of not ipv6 flag
             val currVal = getCharacterCount(curr) + 1
             characterMatchHashMap[curr] = currVal
 
-            //now figure out what the start bracket was associated with the closed bracket.
+            // now figure out what the start bracket was associated with the closed bracket.
             var match = '\u0000'
             when (curr) {
                 ']' -> match = '['
@@ -357,11 +358,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                 else -> {}
             }
 
-            //If the number of open is greater then the number of closed, return a stop.
+            // If the number of open is greater then the number of closed, return a stop.
             return if (getCharacterCount(match) > currVal) CharacterMatch.CharacterMatchStop else CharacterMatch.CharacterMatchStart
         }
 
-        //Nothing else was found.
+        // Nothing else was found.
         return CharacterMatch.CharacterNotMatched
     }
 
@@ -371,18 +372,18 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      * @return True if the url is in this format and was matched correctly.
      */
     private fun readHtml5Root(): Boolean {
-        //end of input then go away.
+        // end of input then go away.
         if (inputTextReader.eof()) {
             return false
         }
 
-        //read the next character. If its // then return true.
+        // read the next character. If its // then return true.
         val curr: Char = inputTextReader.read()
         if (curr == '/') {
             bufferStringBuilder.append(curr)
             return true
         } else {
-            //if its not //, then go back and reset by 1 character.
+            // if its not //, then go back and reset by 1 character.
             inputTextReader.goBack()
             readEnd(ReadEndState.InvalidUrl)
         }
@@ -394,9 +395,9 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      * @return True if the scheme was found, else false.
      */
     private fun readScheme(): Boolean {
-        //Check if we are checking html and the length is longer than mailto:
+        // Check if we are checking html and the length is longer than mailto:
         if (linksDetektorOptions.hasFlag(LinksDetektorOptions.HTML) && bufferStringBuilder.length >= HTML_MAILTO.length) {
-            //Check if the string is actually mailto: then just return nothing.
+            // Check if the string is actually mailto: then just return nothing.
             if (HTML_MAILTO.equals(
                     bufferStringBuilder.substring(bufferStringBuilder.length - HTML_MAILTO.length),
                     ignoreCase = true
@@ -410,11 +411,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         while (!inputTextReader.eof()) {
             val curr: Char = inputTextReader.read()
 
-            //if we match a slash, look for a second one.
+            // if we match a slash, look for a second one.
             if (curr == '/') {
                 bufferStringBuilder.append(curr)
                 if (numSlashes == 1) {
-                    //return only if its an approved protocol. This can be expanded to allow others
+                    // return only if its an approved protocol. This can be expanded to allow others
                     if (VALID_SCHEMES.contains(bufferStringBuilder.toString().lowercase(Locale.getDefault()))) {
                         currentUrlMarker.setIndex(UrlPart.SCHEME, 0)
                         return true
@@ -423,11 +424,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                 }
                 numSlashes++
             } else if (curr == ' ' || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
-                //if we find a space or end of input, then nothing found.
+                // if we find a space or end of input, then nothing found.
                 bufferStringBuilder.append(curr)
                 return false
-            } else if (curr == '[') { //if we're starting to see an ipv6 address
-                inputTextReader.goBack() //unread the '[', so that we can start looking for ipv6
+            } else if (curr == '[') { // if we're starting to see an ipv6 address
+                inputTextReader.goBack() // unread the '[', so that we can start looking for ipv6
                 return false
             } else if (originalLength > 0 || numSlashes > 0 || curr.isAlpha().not()) {
                 // if it's not a character a-z or A-Z then assume we aren't matching scheme, but instead
@@ -448,13 +449,13 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      */
     private fun readUserPass(beginningOfUsername: Int): Boolean {
 
-        //The start of where we are.
+        // The start of where we are.
         val start = bufferStringBuilder.length
 
-        //keep looping until "done"
+        // keep looping until "done"
         var done = false
 
-        //if we had a dot in the input, then it might be a domain name and not a username and password.
+        // if we had a dot in the input, then it might be a domain name and not a username and password.
         var rollback = false
         while (!done && !inputTextReader.eof()) {
             val curr: Char = inputTextReader.read()
@@ -465,20 +466,20 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                 currentUrlMarker.setIndex(UrlPart.USERNAME_PASSWORD, beginningOfUsername)
                 return readDomainName("")
             } else if (curr.isDot() || curr == '[') {
-                //everything is still ok, just remember that we found a dot or '[' in case we might need to backtrack
+                // everything is still ok, just remember that we found a dot or '[' in case we might need to backtrack
                 bufferStringBuilder.append(curr)
                 rollback = true
             } else if (curr == '#' || curr == ' ' || curr == '/' || curr == ':' || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
-                //one of these characters indicates we are invalid state and should just return.
+                // one of these characters indicates we are invalid state and should just return.
                 rollback = true
                 done = true
             } else {
-                //all else, just append character assuming its ok so far.
+                // all else, just append character assuming its ok so far.
                 bufferStringBuilder.append(curr)
             }
         }
         return if (rollback) {
-            //got to here, so there is no username and password. (We didn't find a @)
+            // got to here, so there is no username and password. (We didn't find a @)
             val distance = bufferStringBuilder.length - start
             bufferStringBuilder.delete(start, bufferStringBuilder.length)
             val currIndex = (inputTextReader.position - distance - if (done) 1 else 0).coerceAtLeast(0)
@@ -497,8 +498,8 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
     private fun readDomainName(current: String?): Boolean {
         val hostIndex = if (current == null) bufferStringBuilder.length else bufferStringBuilder.length - current.length
         currentUrlMarker.setIndex(UrlPart.HOST, hostIndex)
-        //create the domain name reader and specify the handler that will be called when a quote character
-        //or something is found.
+        // create the domain name reader and specify the handler that will be called when a quote character
+        // or something is found.
         val reader = DomainNameReader(
             inputTextReader,
             bufferStringBuilder,
@@ -510,7 +511,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                 }
             })
 
-        //Try to read the dns and act on the response.
+        // Try to read the dns and act on the response.
         return when (reader.readDomainName()) {
             DomainNameReader.ReaderNextState.ValidDomainName -> readEnd(ReadEndState.ValidUrl)
             DomainNameReader.ReaderNextState.ReadFragment -> readFragment()
@@ -530,16 +531,16 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         while (!inputTextReader.eof()) {
             val curr: Char = inputTextReader.read()
 
-            //if it's the end or space, then a valid url was read.
+            // if it's the end or space, then a valid url was read.
             if (curr == ' ' || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
                 return readEnd(ReadEndState.ValidUrl)
             } else {
-                //otherwise keep appending.
+                // otherwise keep appending.
                 bufferStringBuilder.append(curr)
             }
         }
 
-        //if we are here, anything read is valid.
+        // if we are here, anything read is valid.
         return readEnd(ReadEndState.ValidUrl)
     }
 
@@ -551,17 +552,17 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         currentUrlMarker.setIndex(UrlPart.QUERY, bufferStringBuilder.length - 1)
         while (!inputTextReader.eof()) {
             val curr: Char = inputTextReader.read()
-            if (curr == '#') { //fragment
+            if (curr == '#') { // fragment
                 bufferStringBuilder.append(curr)
                 return readFragment()
             } else if (curr == ' ' || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
-                //end of query string
+                // end of query string
                 return readEnd(ReadEndState.ValidUrl)
-            } else { //all else add to buffer.
+            } else { // all else add to buffer.
                 bufferStringBuilder.append(curr)
             }
         }
-        //a valid url was read.
+        // a valid url was read.
         return readEnd(ReadEndState.ValidUrl)
     }
 
@@ -571,43 +572,43 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      */
     private fun readPort(): Boolean {
         currentUrlMarker.setIndex(UrlPart.PORT, bufferStringBuilder.length)
-        //The length of the port read.
+        // The length of the port read.
         var portLen = 0
         while (!inputTextReader.eof()) {
-            //read the next one and remember the length
+            // read the next one and remember the length
             val curr: Char = inputTextReader.read()
             portLen++
             if (curr == '/') {
-                //continue to read path
+                // continue to read path
                 bufferStringBuilder.append(curr)
                 return readPath()
             } else if (curr == '?') {
-                //continue to read query string
+                // continue to read query string
                 bufferStringBuilder.append(curr)
                 return readQueryString()
             } else if (curr == '#') {
-                //continue to read fragment.
+                // continue to read fragment.
                 bufferStringBuilder.append(curr)
                 return readFragment()
             } else if (checkMatchingCharacter(curr) == CharacterMatch.CharacterMatchStop || curr.isNumeric().not()
             ) {
-                //if we got here, then what we got so far is a valid url. don't append the current character.
+                // if we got here, then what we got so far is a valid url. don't append the current character.
                 inputTextReader.goBack()
 
-                //no port found; it was something like google.com:hello.world
+                // no port found; it was something like google.com:hello.world
                 if (portLen == 1) {
-                    //remove the ":" from the end.
+                    // remove the ":" from the end.
                     bufferStringBuilder.delete(bufferStringBuilder.length - 1, bufferStringBuilder.length)
                 }
                 currentUrlMarker.unsetIndex(UrlPart.PORT)
                 return readEnd(ReadEndState.ValidUrl)
             } else {
-                //this is a valid character in the port string.
+                // this is a valid character in the port string.
                 bufferStringBuilder.append(curr)
             }
         }
 
-        //found a correct url
+        // found a correct url
         return readEnd(ReadEndState.ValidUrl)
     }
 
@@ -618,27 +619,27 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
     private fun readPath(): Boolean {
         currentUrlMarker.setIndex(UrlPart.PATH, bufferStringBuilder.length - 1)
         while (!inputTextReader.eof()) {
-            //read the next char
+            // read the next char
             val curr: Char = inputTextReader.read()
             if (curr == ' ' || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
-                //if end of state and we got here, then the url is valid.
+                // if end of state and we got here, then the url is valid.
                 return readEnd(ReadEndState.ValidUrl)
             }
 
-            //append the char
+            // append the char
             bufferStringBuilder.append(curr)
 
-            //now see if we move to another state.
+            // now see if we move to another state.
             if (curr == '?') {
-                //if ? read query string
+                // if ? read query string
                 return readQueryString()
             } else if (curr == '#') {
-                //if # read the fragment
+                // if # read the fragment
                 return readFragment()
             }
         }
 
-        //end of input then this url is good.
+        // end of input then this url is good.
         return readEnd(ReadEndState.ValidUrl)
     }
 
@@ -648,31 +649,31 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      * @return True if the url was valid.
      */
     private fun readEnd(state: ReadEndState): Boolean {
-        //if the url is valid and greater then 0
+        // if the url is valid and greater then 0
         if (state == ReadEndState.ValidUrl && bufferStringBuilder.isNotEmpty()) {
-            //get the last character. if its a quote, cut it off.
+            // get the last character. if its a quote, cut it off.
             val len = bufferStringBuilder.length
             if (quoteStart && bufferStringBuilder[len - 1] == '\"') {
                 bufferStringBuilder.delete(len - 1, len)
             }
 
-            //Add the url to the list of good urls.
+            // Add the url to the list of good urls.
             if (bufferStringBuilder.isNotEmpty()) {
                 currentUrlMarker.originalUrl = bufferStringBuilder.toString()
                 urlList.add(currentUrlMarker.createUrl())
             }
         }
 
-        //clear out the buffer.
+        // clear out the buffer.
         bufferStringBuilder.delete(0, bufferStringBuilder.length)
 
-        //reset the state of internal objects.
+        // reset the state of internal objects.
         quoteStart = false
         hasScheme = false
         dontMatchIpv6 = false
         currentUrlMarker = UrlMarker()
 
-        //return true if valid.
+        // return true if valid.
         return state == ReadEndState.ValidUrl
     }
 

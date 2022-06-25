@@ -4,17 +4,9 @@ import `in`.technowolf.linksDetekt.detector.CharExtensions.isWhiteSpace
 
 /**
  * Class used to read a text input character by character. This also gives the ability to backtrack.
- */
-class InputTextReader
-/**
- * Creates a new instance of the InputTextReader using the content to read.
  * @param _content The content to read.
- */(
-    /**
-     * The content to read.
-     */
-    private val _content: String
-) {
+*/
+class InputTextReader(private val _content: String) {
     /**
      * Gets the current position in the stream.
      * @return The index to the current position.
@@ -111,8 +103,8 @@ class InputTextReader
             }
             val badText: String = _content.substring(start, start + backtrackLength)
             throw NegativeArraySizeException(
-                "Backtracked max amount of characters. Endless loop detected. Bad Text: '"
-                        + badText + "'"
+                "Backtracked max amount of characters. Endless loop detected. Bad Text: '" +
+                        badText + "'"
             )
         }
     }

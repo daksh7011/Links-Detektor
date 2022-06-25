@@ -13,5 +13,4 @@ enum class UrlPart(
     HOST(PORT),
     USERNAME_PASSWORD(HOST),
     SCHEME(USERNAME_PASSWORD);
-
 }

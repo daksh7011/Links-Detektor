@@ -3,7 +3,7 @@ package `in`.technowolf.linksDetekt
 import `in`.technowolf.linksDetekt.detector.CharExtensions.isHex
 import `in`.technowolf.linksDetekt.detector.CharExtensions.isWhiteSpace
 import `in`.technowolf.linksDetekt.detector.InputTextReader
-import java.util.*
+import java.util.Stack
 
 internal object UrlUtil {
     /**
@@ -22,22 +22,22 @@ internal object UrlUtil {
                         "%s", stringBuilder.substring(i + 1, i + 3).toShort(16)
                             .toInt().toChar()
                     )[0]
-                    stringBuilder.delete(i, i + 3) //delete the % and two hex digits
-                    stringBuilder.insert(i, decodedChar) //add decoded character
+                    stringBuilder.delete(i, i + 3) // delete the % and two hex digits
+                    stringBuilder.insert(i, decodedChar) // add decoded character
                     if (decodedChar == '%') {
-                        i-- //backtrack one character to check for another decoding with this %.
+                        i-- // backtrack one character to check for another decoding with this %.
                     } else if (
                         (nonDecodedPercentIndices.isEmpty().not() &&
                                 decodedChar.isHex() &&
                                 stringBuilder[i - 1].isHex()) &&
                         i - nonDecodedPercentIndices.peek() == 2
                     ) {
-                        //Go back to the last non-decoded percent sign if it can be decoded.
-                        //We only need to go back if it's of form %[HEX][HEX]
-                        i = nonDecodedPercentIndices.pop() - 1 //backtrack to the % sign.
+                        // Go back to the last non-decoded percent sign if it can be decoded.
+                        // We only need to go back if it's of form %[HEX][HEX]
+                        i = nonDecodedPercentIndices.pop() - 1 // backtrack to the % sign.
                     } else if (!nonDecodedPercentIndices.isEmpty() && i == stringBuilder.length - 2) {
-                        //special case to handle %[HEX][Unknown][end of string]
-                        i = nonDecodedPercentIndices.pop() - 1 //backtrack to the % sign.
+                        // special case to handle %[HEX][Unknown][end of string]
+                        i = nonDecodedPercentIndices.pop() - 1 // backtrack to the % sign.
                     }
                 } else {
                     nonDecodedPercentIndices.add(i)

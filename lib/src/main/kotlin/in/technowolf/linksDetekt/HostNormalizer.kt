@@ -7,7 +7,7 @@ import java.net.IDN
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.UnknownHostException
-import java.util.*
+import java.util.Locale
 
 /**
  * Normalizes the host by converting hex characters to the actual textual representation, changes ip addresses
@@ -29,10 +29,10 @@ class HostNormalizer(private val _host: String?) {
         }
         var host: String
         host = try {
-            //replace high unicode characters
+            // replace high unicode characters
             IDN.toASCII(_host)
         } catch (ex: IllegalArgumentException) {
-            //occurs when the url is invalid. Just return
+            // occurs when the url is invalid. Just return
             return
         }
         host = host.lowercase(Locale.getDefault())
@@ -88,19 +88,19 @@ class HostNormalizer(private val _host: String?) {
         }
         val bytes = ByteArray(16)
 
-        //An ipv4 mapped ipv6 bytes will have the 11th and 12th byte as 0xff
+        // An ipv4 mapped ipv6 bytes will have the 11th and 12th byte as 0xff
         bytes[10] = 0xff.toByte()
         bytes[11] = 0xff.toByte()
         for (i in parts.indices) {
             var parsedNum: String
             var base: Int
-            if (parts[i].startsWith("0x")) { //hex
+            if (parts[i].startsWith("0x")) { // hex
                 parsedNum = parts[i].substring(2)
                 base = 16
-            } else if (parts[i].startsWith("0")) { //octal
+            } else if (parts[i].startsWith("0")) { // octal
                 parsedNum = parts[i].substring(1)
                 base = 8
-            } else { //decimal
+            } else { // decimal
                 parsedNum = parts[i]
                 base = 10
             }
@@ -110,16 +110,16 @@ class HostNormalizer(private val _host: String?) {
             } catch (e: NumberFormatException) {
                 return null
             }
-            if (numParts == 4 && section > MAX_IPV4_PART || //This would look like 288.1.2.4
-                numParts == 1 && section > MAX_NUMERIC_DOMAIN_VALUE || //This would look like 4294967299
+            if (numParts == 4 && section > MAX_IPV4_PART || // This would look like 288.1.2.4
+                numParts == 1 && section > MAX_NUMERIC_DOMAIN_VALUE || // This would look like 4294967299
                 section < MIN_IP_PART
             ) {
                 return null
             }
-            //bytes 13->16 is where the ipv4 address of an ipv4-mapped-ipv6-address is stored.
+            // bytes 13->16 is where the ipv4 address of an ipv4-mapped-ipv6-address is stored.
             if (numParts == 4) {
                 bytes[IPV4_MAPPED_IPV6_START_OFFSET + i] = section.toByte()
-            } else { //numParts == 1
+            } else { // numParts == 1
                 var index = IPV4_MAPPED_IPV6_START_OFFSET
                 bytes[index++] = (section shr 24 and 0xFFL).toByte()
                 bytes[index++] = (section shr 16 and 0xFFL).toByte()
@@ -139,12 +139,12 @@ class HostNormalizer(private val _host: String?) {
      */
     private fun tryDecodeHostToIPv6(host: String): ByteArray? {
         val ip = host.substring(1, host.length - 1)
-        val parts: List<String> = ArrayList(Arrays.asList(*ip.split(":".toRegex()).toTypedArray()))
+        val parts: List<String> = ArrayList(listOf(*ip.split(":".toRegex()).toTypedArray()))
         if (parts.size < 3) {
             return null
         }
 
-        //Check for embedded ipv4 address
+        // Check for embedded ipv4 address
         val lastPart = parts[parts.size - 1]
         val zoneIndexStart = lastPart.lastIndexOf("%")
         val lastPartWithoutZoneIndex = if (zoneIndexStart == -1) lastPart else lastPart.substring(0, zoneIndexStart)
@@ -153,11 +153,11 @@ class HostNormalizer(private val _host: String?) {
             ipv4Address = tryDecodeHostToIPv4(lastPartWithoutZoneIndex)
         }
         val bytes = ByteArray(16)
-        //How many parts do we need to fill by the end of this for loop?
+        // How many parts do we need to fill by the end of this for loop?
         val totalSize = if (ipv4Address == null) 8 else 6
-        //How many zeroes did we fill in the case of double colons? Ex: [::1] will have numberOfFilledZeroes = 7
+        // How many zeroes did we fill in the case of double colons? Ex: [::1] will have numberOfFilledZeroes = 7
         var numberOfFilledZeroes = 0
-        //How many sections do we have to parse through? Ex: [fe80:ff::192.168.1.1] size = 3, another ex: [a:a::] size = 4
+        // How many sections do we have to parse through? Ex: [fe80:ff::192.168.1.1] size = 3, another ex: [a:a::] size = 4
         val size = if (ipv4Address == null) parts.size else parts.size - 1
         for (i in 0 until size) {
             val lenPart = parts[i].length
@@ -196,7 +196,7 @@ class HostNormalizer(private val _host: String?) {
         private const val NUMBER_BYTES_IN_IPV4 = 4
         private fun isHexSection(section: String): Boolean {
             for (element in section) {
-                if(element.isHex().not()) {
+                if (element.isHex().not()) {
                     return false
                 }
             }

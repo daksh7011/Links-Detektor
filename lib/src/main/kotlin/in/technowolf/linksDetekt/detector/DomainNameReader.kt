@@ -7,7 +7,7 @@ import `in`.technowolf.linksDetekt.detector.CharExtensions.isHex
 import `in`.technowolf.linksDetekt.detector.CharExtensions.isNumeric
 import `in`.technowolf.linksDetekt.detector.CharExtensions.isUnreserved
 import `in`.technowolf.linksDetekt.detector.CharExtensions.splitByDot
-import java.util.*
+import java.util.Locale
 
 /**
  * The domain name reader reads input from a InputTextReader and validates if the content being read is a valid domain name.
@@ -146,39 +146,39 @@ class DomainNameReader(
      */
     private fun readCurrent(): ReaderNextState {
         if (_current != null) {
-            //Handles the case where the string is ".hello"
+            // Handles the case where the string is ".hello"
             if (_current.length == 1 && _current[0].isDot()) {
                 return ReaderNextState.InvalidDomainName
             } else if (_current.length == 3 && _current.equals("%$HEX_ENCODED_DOT", ignoreCase = true)) {
                 return ReaderNextState.InvalidDomainName
             }
 
-            //The location where the domain name started.
+            // The location where the domain name started.
             _startDomainName = bufferStringBuilder.length - _current.length
 
-            //flag that the domain is currently all numbers and/or dots.
+            // flag that the domain is currently all numbers and/or dots.
             _numeric = true
 
-            //If an invalid char is found, we can just restart the domain from there.
+            // If an invalid char is found, we can just restart the domain from there.
             var newStart = 0
             val currArray = _current.toCharArray()
             val length = currArray.size
 
-            //hex special case
+            // hex special case
             var isAllHexSoFar = length > 2 && currArray[0] == '0' && (currArray[1] == 'x' || currArray[1] == 'X')
             var index = if (isAllHexSoFar) 2 else 0
             var done = false
             while (index < length && !done) {
-                //get the current character and update length counts.
+                // get the current character and update length counts.
                 val curr = currArray[index]
                 _currentLabelLength++
                 _topLevelLength = _currentLabelLength
 
-                //Is the length of the last part > 64 (plus one since we just incremented)
+                // Is the length of the last part > 64 (plus one since we just incremented)
                 if (_currentLabelLength > MAX_LABEL_LENGTH) {
                     return ReaderNextState.InvalidDomainName
                 } else if (curr.isDot()) {
-                    //found a dot. Increment dot count, and reset last length
+                    // found a dot. Increment dot count, and reset last length
                     _dots++
                     _currentLabelLength = 0
                 } else if (curr == '[') {
@@ -190,7 +190,7 @@ class DomainNameReader(
                     currArray[index + 1].isHex() &&
                     currArray[index + 2].isHex()
                 ) {
-                    //handle url encoded dot
+                    // handle url encoded dot
                     if (currArray[index + 1] == '2' && currArray[index + 2] == 'e') {
                         _dots++
                         _currentLabelLength = 0
@@ -199,18 +199,18 @@ class DomainNameReader(
                     }
                     index += 2
                 } else if (isAllHexSoFar) {
-                    //if it's a valid character in the domain that is not numeric
+                    // if it's a valid character in the domain that is not numeric
                     if (curr.isHex().not()) {
                         _numeric = false
                         isAllHexSoFar = false
-                        index-- //backtrack to rerun last character knowing it isn't hex.
+                        index-- // backtrack to rerun last character knowing it isn't hex.
                     }
                 } else if (curr.isAlpha() || curr == '-' || curr.code >= INTERNATIONAL_CHAR_START) {
                     _numeric = false
                 } else if (curr.isNumeric().not() &&
                     _options.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).not()
                 ) {
-                    //if its not _numeric and not alphabetical, then restart searching for a domain from this point.
+                    // if its not _numeric and not alphabetical, then restart searching for a domain from this point.
                     newStart = index + 1
                     _currentLabelLength = 0
                     _topLevelLength = 0
@@ -221,20 +221,20 @@ class DomainNameReader(
                 index++
             }
 
-            //An invalid character for the domain was found somewhere in the current buffer.
-            //cut the first part of the domain out. For example:
+            // An invalid character for the domain was found somewhere in the current buffer.
+            // cut the first part of the domain out. For example:
             // http://asdf%asdf.google.com <- asdf.google.com is still valid, so restart from the %
             if (newStart > 0) {
 
-                //make sure the location is not at the end. Otherwise the thing is just invalid.
+                // make sure the location is not at the end. Otherwise the thing is just invalid.
                 if (newStart < _current.length) {
                     bufferStringBuilder.replace(0, bufferStringBuilder.length, _current.substring(newStart))
 
-                    //cut out the previous part, so now the domain name has to be from here.
+                    // cut out the previous part, so now the domain name has to be from here.
                     _startDomainName = 0
                 }
 
-                //now after cutting if the buffer is just "." newStart > current (last character in current is invalid)
+                // now after cutting if the buffer is just "." newStart > current (last character in current is invalid)
                 if (newStart >= _current.length || bufferStringBuilder.toString() == ".") {
                     return ReaderNextState.InvalidDomainName
                 }
@@ -243,7 +243,7 @@ class DomainNameReader(
             _startDomainName = bufferStringBuilder.length
         }
 
-        //all else is good, return OK
+        // all else is good, return OK
         return ReaderNextState.ValidDomainName
     }
 
@@ -254,54 +254,54 @@ class DomainNameReader(
      */
     fun readDomainName(): ReaderNextState {
 
-        //Read the current, and if its bad, just return.
+        // Read the current, and if its bad, just return.
         if (readCurrent() == ReaderNextState.InvalidDomainName) {
             return ReaderNextState.InvalidDomainName
         }
 
-        //while not done and not end of string keep reading.
+        // while not done and not end of string keep reading.
         var done = false
         while (!done && !_reader.eof()) {
             val curr: Char = _reader.read()
             if (curr == '/') {
-                //continue by reading the path
+                // continue by reading the path
                 return checkDomainNameValid(ReaderNextState.ReadPath, curr)
             } else if (curr == ':' && (!_seenBracket || _seenCompleteBracketSet)) {
-                //Don't check for a port if it's in the middle of an ipv6 address
-                //continue by reading the port.
+                // Don't check for a port if it's in the middle of an ipv6 address
+                // continue by reading the port.
                 return checkDomainNameValid(ReaderNextState.ReadPort, curr)
             } else if (curr == '?') {
-                //continue by reading the query string
+                // continue by reading the query string
                 return checkDomainNameValid(ReaderNextState.ReadQueryString, curr)
             } else if (curr == '#') {
-                //continue by reading the fragment
+                // continue by reading the fragment
                 return checkDomainNameValid(ReaderNextState.ReadFragment, curr)
             } else if (curr.isDot() || curr == '%' && _reader.canReadChars(2) && _reader.peek(2)
                     .equals(HEX_ENCODED_DOT, ignoreCase = true)
             ) {
-                //if the current character is a dot or a urlEncodedDot
+                // if the current character is a dot or a urlEncodedDot
 
-                //handles the case: hello..
+                // handles the case: hello..
                 if (_currentLabelLength < 1) {
                     done = true
                 } else {
-                    //append the "." to the domain name
+                    // append the "." to the domain name
                     bufferStringBuilder.append(curr)
 
-                    //if it was not a normal dot, then it is url encoded
-                    //read the next two chars, which are the hex representation
+                    // if it was not a normal dot, then it is url encoded
+                    // read the next two chars, which are the hex representation
                     if (curr.isDot().not()) {
                         bufferStringBuilder.append(_reader.read())
                         bufferStringBuilder.append(_reader.read())
                     }
 
-                    //increment the dots only if it's not part of the zone index and reset the last length.
+                    // increment the dots only if it's not part of the zone index and reset the last length.
                     if (!_zoneIndex) {
                         _dots++
                         _currentLabelLength = 0
                     }
 
-                    //if the length of the last section is longer than or equal to 64, it's too long to be a valid domain
+                    // if the length of the last section is longer than or equal to 64, it's too long to be a valid domain
                     if (_currentLabelLength >= MAX_LABEL_LENGTH) {
                         return ReaderNextState.InvalidDomainName
                     }
@@ -309,7 +309,7 @@ class DomainNameReader(
             } else if (_seenBracket &&
                 (curr.isHex() || curr == ':' || curr == '[' || curr == ']' || curr == '%') &&
                 _seenCompleteBracketSet.not()
-            ) { //if this is an ipv6 address.
+            ) { // if this is an ipv6 address.
                 when (curr) {
                     ':' -> _currentLabelLength = 0
                     '[' -> {
@@ -318,8 +318,8 @@ class DomainNameReader(
                         return ReaderNextState.InvalidDomainName
                     }
                     ']' -> {
-                        _seenCompleteBracketSet = true //means that we already have a complete ipv6 address.
-                        _zoneIndex = false //set this back off so that we can keep counting dots after ipv6 is over.
+                        _seenCompleteBracketSet = true // means that we already have a complete ipv6 address.
+                        _zoneIndex = false // set this back off so that we can keep counting dots after ipv6 is over.
                     }
                     '%' -> _zoneIndex = true
                     else -> _currentLabelLength++
@@ -327,18 +327,18 @@ class DomainNameReader(
                 _numeric = false
                 bufferStringBuilder.append(curr)
             } else if (curr.isAlphaNumeric() || curr == '-' || curr.code >= INTERNATIONAL_CHAR_START) {
-                //Valid domain name character. Either a-z, A-Z, 0-9, -, or international character
+                // Valid domain name character. Either a-z, A-Z, 0-9, -, or international character
                 if (_seenCompleteBracketSet) {
-                    //covers case of [fe80::]www.google.com
+                    // covers case of [fe80::]www.google.com
                     _reader.goBack()
                     done = true
                 } else {
-                    //if its not numeric, remember that; excluded x/X for hex ip addresses.
+                    // if its not numeric, remember that; excluded x/X for hex ip addresses.
                     if (curr != 'x' && curr != 'X' && curr.isNumeric().not()) {
                         _numeric = false
                     }
 
-                    //append to the states.
+                    // append to the states.
                     bufferStringBuilder.append(curr)
                     _currentLabelLength++
                     _topLevelLength = _currentLabelLength
@@ -347,7 +347,7 @@ class DomainNameReader(
                 _seenBracket = true
                 _numeric = false
                 bufferStringBuilder.append(curr)
-            } else if (curr == '[' && _seenCompleteBracketSet) { //Case where [::][ ...
+            } else if (curr == '[' && _seenCompleteBracketSet) { // Case where [::][ ...
                 _reader.goBack()
                 done = true
             } else if (
@@ -356,22 +356,22 @@ class DomainNameReader(
                 _reader.peekChar(0).isHex() &&
                 _reader.peekChar(1).isHex()
             ) {
-                //append to the states.
+                // append to the states.
                 bufferStringBuilder.append(curr)
                 bufferStringBuilder.append(_reader.read())
                 bufferStringBuilder.append(_reader.read())
                 _currentLabelLength += 3
                 _topLevelLength = _currentLabelLength
             } else {
-                //called to increment the count of matching characters
+                // called to increment the count of matching characters
                 _characterHandler.addCharacter(curr)
 
-                //invalid character, we are done.
+                // invalid character, we are done.
                 done = true
             }
         }
 
-        //Check the domain name to make sure its ok.
+        // Check the domain name to make sure its ok.
         return checkDomainNameValid(ReaderNextState.ValidDomainName, null)
     }
 
@@ -386,10 +386,10 @@ class DomainNameReader(
     private fun checkDomainNameValid(validState: ReaderNextState, lastChar: Char?): ReaderNextState {
         var valid = false
 
-        //Max domain length is 255 which includes the trailing "."
-        //most of the time this is not included in the url.
-        //If the _currentLabelLength is not 0 then the last "." is not included so add it.
-        //Same with number of labels (or dots including the last)
+        // Max domain length is 255 which includes the trailing "."
+        // most of the time this is not included in the url.
+        // If the _currentLabelLength is not 0 then the last "." is not included so add it.
+        // Same with number of labels (or dots including the last)
         val lastDotLength = if (bufferStringBuilder.length > 3 && bufferStringBuilder.substring(bufferStringBuilder.length - 3)
                 .equals("%$HEX_ENCODED_DOT", ignoreCase = true)
         ) 3 else 1
@@ -413,27 +413,27 @@ class DomainNameReader(
             }
             topStart = topStart.coerceAtLeast(0)
 
-            //get the first 4 characters of the top level domain
+            // get the first 4 characters of the top level domain
             val topLevelStart = bufferStringBuilder.substring(topStart, topStart + 4.coerceAtMost(bufferStringBuilder.length - topStart))
 
-            //There is no size restriction if the top level domain is international (starts with "xn--")
+            // There is no size restriction if the top level domain is international (starts with "xn--")
             valid =
                 topLevelStart.equals("xn--", ignoreCase = true) ||
                         (_topLevelLength in MIN_TOP_LEVEL_DOMAIN..MAX_TOP_LEVEL_DOMAIN)
         }
         if (valid) {
-            //if it's valid, add the last character (if specified) and return the valid state.
+            // if it's valid, add the last character (if specified) and return the valid state.
             if (lastChar != null) {
                 bufferStringBuilder.append(lastChar)
             }
             return validState
         }
 
-        //Roll back one char if its invalid to handle: "00:41.<br />"
-        //This gets detected as 41.br otherwise.
+        // Roll back one char if its invalid to handle: "00:41.<br />"
+        // This gets detected as 41.br otherwise.
         _reader.goBack()
 
-        //return invalid state.
+        // return invalid state.
         return ReaderNextState.InvalidDomainName
     }
 
@@ -445,14 +445,14 @@ class DomainNameReader(
     private fun isValidIpv4(testDomain: String): Boolean {
         var valid = false
         if (testDomain.isNotEmpty()) {
-            //handling format without dots. Ex: http://2123123123123/path/a, http://0x8242343/aksdjf
+            // handling format without dots. Ex: http://2123123123123/path/a, http://0x8242343/aksdjf
             if (_dots == 0) {
                 valid = try {
-                    val value: Long = if (testDomain.length > 2 && testDomain[0] == '0' && testDomain[1] == 'x') { //hex
+                    val value: Long = if (testDomain.length > 2 && testDomain[0] == '0' && testDomain[1] == 'x') { // hex
                         testDomain.substring(2).toLong(16)
-                    } else if (testDomain[0] == '0') { //octal
+                    } else if (testDomain[0] == '0') { // octal
                         testDomain.substring(1).toLong(8)
-                    } else { //decimal
+                    } else { // decimal
                         testDomain.toLong()
                     }
                     value in MIN_NUMERIC_DOMAIN_VALUE..MAX_NUMERIC_DOMAIN_VALUE
@@ -460,24 +460,24 @@ class DomainNameReader(
                     false
                 }
             } else if (_dots == 3) {
-                //Dotted decimal/hex/octal format
+                // Dotted decimal/hex/octal format
                 val parts: Array<String> = testDomain.splitByDot()
                 valid = true
 
-                //check each part of the ip and make sure its valid.
+                // check each part of the ip and make sure its valid.
                 var i = 0
                 while (i < parts.size && valid) {
                     val part = parts[i]
                     if (part.isNotEmpty()) {
                         var parsedNum: String
                         var base: Int
-                        if (part.length > 2 && part[0] == '0' && part[1] == 'x') { //dotted hex
+                        if (part.length > 2 && part[0] == '0' && part[1] == 'x') { // dotted hex
                             parsedNum = part.substring(2)
                             base = 16
-                        } else if (part[0] == '0') { //dotted octal
+                        } else if (part[0] == '0') { // dotted octal
                             parsedNum = part.substring(1)
                             base = 8
-                        } else { //dotted decimal
+                        } else { // dotted decimal
                             parsedNum = part
                             base = 10
                         }
@@ -521,14 +521,14 @@ class DomainNameReader(
         var hexDigits = 0
         var prevChar = 0.toChar()
 
-        //used to check ipv4 addresses at the end of ipv6 addresses.
+        // used to check ipv4 addresses at the end of ipv6 addresses.
         val lastSection = StringBuilder()
         var hexSection = true
 
         // If we see a '%'. Example: http://[::ffff:0xC0.0x00.0x02.0xEB%251]
         var zoneIndicesMode = false
 
-        //If doubleColonFlag is true, that means we've already seen one "::"; we're not allowed to have more than one.
+        // If doubleColonFlag is true, that means we've already seen one "::"; we're not allowed to have more than one.
         var doubleColonFlag = false
         var index = 0
         while (index < domainArray.size) {
@@ -536,7 +536,7 @@ class DomainNameReader(
                 '[' -> {}
                 '%', ']' -> {
                     if (domainArray[index] == '%') {
-                        //see if there's a urlencoded dot
+                        // see if there's a urlencoded dot
                         if (domainArray.size - index >= 2 && domainArray[index + 1] == '2' && domainArray[index + 2] == 'e') {
                             lastSection.append("%2e")
                             index += 2
@@ -547,7 +547,7 @@ class DomainNameReader(
                     }
                     if (!hexSection && (!zoneIndicesMode || domainArray[index] == '%')) {
                         if (isValidIpv4(lastSection.toString())) {
-                            numSections++ //ipv4 takes up 2 sections.
+                            numSections++ // ipv4 takes up 2 sections.
                         } else {
                             return false
                         }
@@ -555,31 +555,31 @@ class DomainNameReader(
                 }
                 ':' -> {
                     if (prevChar == ':') {
-                        if (doubleColonFlag) { //only allowed to have one "::" in an ipv6 address.
+                        if (doubleColonFlag) { // only allowed to have one "::" in an ipv6 address.
                             return false
                         }
                         doubleColonFlag = true
                     }
 
-                    //This means that we reached invalid characters in the previous section
+                    // This means that we reached invalid characters in the previous section
                     if (!hexSection) {
                         return false
                     }
-                    hexSection = true //reset hex to true
-                    hexDigits = 0 //reset count for hex digits
+                    hexSection = true // reset hex to true
+                    hexDigits = 0 // reset count for hex digits
                     numSections++
-                    lastSection.delete(0, lastSection.length) //clear last section
+                    lastSection.delete(0, lastSection.length) // clear last section
                 }
                 else -> if (zoneIndicesMode) {
                     if (domainArray[index].isUnreserved().not()) {
                         return false
                     }
                 } else {
-                    lastSection.append(domainArray[index]) //collect our possible ipv4 address
+                    lastSection.append(domainArray[index]) // collect our possible ipv4 address
                     if (hexSection && domainArray[index].isHex()) {
                         hexDigits++
                     } else {
-                        hexSection = false //non hex digit.
+                        hexSection = false // non hex digit.
                     }
                 }
             }
@@ -590,8 +590,8 @@ class DomainNameReader(
             index++
         }
 
-        //numSections != 1 checks for things like: [adf]
-        //If there are more than 8 sections for the address or there isn't a double colon, then it's invalid.
+        // numSections != 1 checks for things like: [adf]
+        // If there are more than 8 sections for the address or there isn't a double colon, then it's invalid.
         return numSections != 1 && (numSections >= 8 || doubleColonFlag)
     }
 

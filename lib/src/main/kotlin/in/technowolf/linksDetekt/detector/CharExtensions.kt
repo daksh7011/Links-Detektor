@@ -83,7 +83,7 @@ object CharExtensions {
                         inputTextReader.peek(2).equals("2e", ignoreCase = true) ->
                 {
                     inputTextReader.read()
-                    inputTextReader.read() //advance past the 2e
+                    inputTextReader.read() // advance past the 2e
                     splitList.add(section.toString())
                     section.setLength(0)
                 }

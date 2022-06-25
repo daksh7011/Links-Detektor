@@ -1,7 +1,7 @@
 package `in`.technowolf.linksDetekt
 
 import org.apache.commons.lang3.StringUtils
-import java.util.*
+import java.util.Stack
 
 internal class PathNormalizer {
     /**
@@ -36,9 +36,9 @@ internal class PathNormalizer {
                     slashIndexStack.add(index)
                     if (stringBuilder[index + 1] == '.') {
                         if (index < stringBuilder.length - 2 && stringBuilder[index + 2] == '.') {
-                            //If it looks like "/../" or ends with "/.."
-                            if (index < stringBuilder.length - 3 && stringBuilder[index + 3] == '/'
-                                || index == stringBuilder.length - 3
+                            // If it looks like "/../" or ends with "/.."
+                            if (index < stringBuilder.length - 3 && stringBuilder[index + 3] == '/' ||
+                                index == stringBuilder.length - 3
                             ) {
                                 val endOfPath = index == stringBuilder.length - 3
                                 slashIndexStack.pop()
@@ -48,8 +48,8 @@ internal class PathNormalizer {
                                 val startIndex = if (endOfPath) index + 1 else index
                                 stringBuilder.delete(startIndex + 1, endIndex)
                             }
-                        } else if (index < stringBuilder.length - 2 && stringBuilder[index + 2] == '/'
-                            || index == stringBuilder.length - 2
+                        } else if (index < stringBuilder.length - 2 && stringBuilder[index + 2] == '/' ||
+                            index == stringBuilder.length - 2
                         ) {
                             val endOfPath = index == stringBuilder.length - 2
                             slashIndexStack.pop()
@@ -66,7 +66,7 @@ internal class PathNormalizer {
                 index++
             }
             if (stringBuilder.isEmpty()) {
-                stringBuilder.append("/") //Every path has at least a slash
+                stringBuilder.append("/") // Every path has at least a slash
             }
             return stringBuilder.toString()
         }

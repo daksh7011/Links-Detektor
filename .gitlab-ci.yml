@@ -1,0 +1,64 @@
+image: openjdk:11-jdk
+
+stages:
+  - compile
+  - test
+  - package
+#  - deploy
+
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+  - chmod +x ./gradlew
+
+cache:
+  paths:
+    - .gradle/wrapper
+    - .gradle/caches
+
+compile:
+  stage: compile
+  script:
+    - ./gradlew assemble
+
+test:
+  stage: test
+  script:
+    - ./gradlew test --stacktrace
+
+code_style:
+  stage: test
+  script:
+    - ./gradlew lintKotlin
+  artifacts:
+    paths:
+      - build/ktlint.xml
+    expire_in: 1 day
+  allow_failure: true
+
+package:
+  stage: package
+  script:
+    - ./gradlew shadowJar
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 1 day
+  only:
+    - master
+
+#prod_deploy:
+#  stage: deploy
+#  image: alpine:latest
+#  before_script:
+#    - apk add openssh-client
+#    - eval $(ssh-agent -s)
+#    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+#    - mkdir -p ~/.ssh
+#    - chmod 700 ~/.ssh
+#  script:
+#    - ssh -o StrictHostKeyChecking=no $SSH_USER_HOST "cd ~/troy-bin && rm *.jar"
+#    - scp -o StrictHostKeyChecking=no build/libs/*.jar $SSH_USER_HOST:/root/troy-bin/
+#    - ssh -o StrictHostKeyChecking=no $SSH_USER_HOST "pm2 restart Troy"
+#    - echo "Finishing Deployment to production."
+#  only:
+#    - master

@@ -3,13 +3,16 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.5.31"
 
     // Apply kotlin-linter for enforcing code style.
-    id("org.jmailen.kotlinter") version "3.4.5"
+    id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
 
     // Apply shadowJar plugin to generate fatJar for easy execution.
     id("com.github.johnrengelman.shadow") version "7.0.0"
 
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
+
+    // Apply maven-publish to provide library as dependency.
+    `maven-publish`
 }
 
 group = "in.technowolf"
@@ -18,6 +21,8 @@ version = "1.0.0"
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
@@ -42,15 +47,48 @@ dependencies {
     implementation("org.apache.commons:commons-lang3:3.12.0")
 }
 
-// Adding task for kotlinter pre-push hook
-tasks.check {
-    dependsOn("installKotlinterPrePushHook")
+// Adding compiler jvm version for all kotlin compile and kotlin tests compile tasks.
+tasks {
+    compileKotlin {
+        kotlinOptions.jvmTarget = "11"
+    }
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = "11"
+    }
 }
 
-kotlinter {
-    ignoreFailures = false
-    indentSize = 4
-    reporters = arrayOf("checkstyle", "plain")
-    experimentalRules = false
-    disabledRules = arrayOf("import-ordering", "indent")
+// Kotlin linter configuration.
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    debug.set(true)
+    verbose.set(true)
+    android.set(false)
+    outputToConsole.set(true)
+    outputColorName.set("RED")
+    ignoreFailures.set(false)
+//    enableExperimentalRules.set(true)
+    disabledRules.set(setOf("indent"))
+    reporters {
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+    }
+    kotlinScriptAdditionalPaths {
+        include(fileTree("scripts/"))
+    }
+    filter {
+        exclude("**/generated/**")
+        include("**/kotlin/**")
+    }
+}
+
+// Publishing meta for Jitpack.
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "in.technowolf"
+            artifactId = "link-detektor"
+            version = "1.0.0"
+
+            from(components["java"])
+        }
+    }
 }

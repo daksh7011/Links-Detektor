@@ -86,7 +86,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "in.technowolf"
             artifactId = "link-detektor"
-            version = "1.0.0"
+            version = "1.0.1"
 
             from(components["java"])
         }

@@ -48,6 +48,10 @@ detekt {
     config.from(rootProject.files("detekt.yml"))
 }
 
+// Configure all JAR names
+tasks.withType<Jar> {
+    archiveBaseName.set("links-detektor")
+}
 
 tasks.withType<Test> {
     useJUnitPlatform()

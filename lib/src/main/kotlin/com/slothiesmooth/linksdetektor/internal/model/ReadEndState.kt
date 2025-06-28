@@ -1,4 +1,4 @@
-package com.slothiesmooth.linksdetektor.internal
+package com.slothiesmooth.linksdetektor.internal.model
 
 /**
  * The states to use to continue writing or not.

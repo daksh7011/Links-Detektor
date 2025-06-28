@@ -1,4 +1,4 @@
-package com.slothiesmooth.linksdetektor.internal
+package com.slothiesmooth.linksdetektor.internal.model
 
 /**
  * The response of character matching.

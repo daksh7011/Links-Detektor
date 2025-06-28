@@ -6,10 +6,10 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlpha
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isDot
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
-import com.slothiesmooth.linksdetektor.internal.CharacterMatch
+import com.slothiesmooth.linksdetektor.internal.model.CharacterMatch
 import com.slothiesmooth.linksdetektor.internal.DomainNameReader
 import com.slothiesmooth.linksdetektor.internal.InputTextReader
-import com.slothiesmooth.linksdetektor.internal.ReadEndState
+import com.slothiesmooth.linksdetektor.internal.model.ReadEndState
 import com.slothiesmooth.linksdetektor.internal.UrlMarker
 import java.util.Collections
 import java.util.Locale

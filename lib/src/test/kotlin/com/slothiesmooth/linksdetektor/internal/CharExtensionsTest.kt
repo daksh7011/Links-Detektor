@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils
  */
 class CharExtensionsTest {
 
+    //region isHex tests
     @ParameterizedTest
     @ValueSource(chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F'])
     fun `isHex returns true for valid hexadecimal characters`(char: Char) {
@@ -33,6 +34,14 @@ class CharExtensionsTest {
         assertFalse(char.isHex())
     }
 
+    @Test
+    fun `isHex handles non-ASCII characters`() {
+        assertFalse('\u00F6'.isHex()) // ö
+        assertFalse('\u20AC'.isHex()) // €
+    }
+    //endregion
+
+    //region isAlpha tests
     @ParameterizedTest
     @ValueSource(chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'])
     fun `isAlpha returns true for alphabetic characters`(char: Char) {
@@ -46,6 +55,14 @@ class CharExtensionsTest {
     }
 
     @ParameterizedTest
+    @ValueSource(chars = ['\u00E0', '\u00E1', '\u00E2', '\u00E3', '\u00E4', '\u00E5', '\u00C0', '\u00C1', '\u00C2', '\u00C3', '\u00C4', '\u00C5'])
+    fun `isAlpha returns false for accented characters`(char: Char) {
+        assertFalse(char.isAlpha())
+    }
+    //endregion
+
+    //region isNumeric tests
+    @ParameterizedTest
     @ValueSource(chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
     fun `isNumeric returns true for numeric characters`(char: Char) {
         assertTrue(char.isNumeric())
@@ -57,6 +74,14 @@ class CharExtensionsTest {
         assertFalse(char.isNumeric())
     }
 
+    @ParameterizedTest
+    @ValueSource(chars = ['\u00BD', '\u00BC', '\u00BE']) // ½, ¼, ¾
+    fun `isNumeric returns false for fraction characters`(char: Char) {
+        assertFalse(char.isNumeric())
+    }
+    //endregion
+
+    //region isAlphaNumeric tests
     @ParameterizedTest
     @ValueSource(chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
     fun `isAlphaNumeric returns true for alphanumeric characters`(char: Char) {
@@ -70,6 +95,20 @@ class CharExtensionsTest {
     }
 
     @ParameterizedTest
+    @ValueSource(chars = ['\u2113', '\u2118', '\u2126', '\u212A', '\u212B', '\u212E'])
+    fun `isAlphaNumeric returns false for Unicode characters that look like alphanumeric characters`(char: Char) {
+        assertFalse(char.isAlphaNumeric())
+    }
+
+    @ParameterizedTest
+    @ValueSource(chars = ['\u2160', '\u2161', '\u2162', '\u2163']) // Roman numerals I, II, III, IV
+    fun `isAlphaNumeric returns false for Roman numeral characters`(char: Char) {
+        assertFalse(char.isAlphaNumeric())
+    }
+    //endregion
+
+    //region isUnreserved tests
+    @ParameterizedTest
     @ValueSource(chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '.', '_', '~'])
     fun `isUnreserved returns true for unreserved characters`(char: Char) {
         assertTrue(char.isUnreserved())
@@ -81,6 +120,26 @@ class CharExtensionsTest {
         assertFalse(char.isUnreserved())
     }
 
+    @ParameterizedTest
+    @ValueSource(chars = ['\u2212', '\u2013', '\u2014', '\u2015', '\uFE63', '\uFF0D'])
+    fun `isUnreserved returns false for Unicode characters that look like hyphens`(char: Char) {
+        assertFalse(char.isUnreserved())
+    }
+
+    @ParameterizedTest
+    @ValueSource(chars = ['\u2040', '\u203F', '\uFE33', '\uFE34', '\uFE4D', '\uFE4E', '\uFE4F', '\uFF3F'])
+    fun `isUnreserved returns false for Unicode characters that look like underscores`(char: Char) {
+        assertFalse(char.isUnreserved())
+    }
+
+    @ParameterizedTest
+    @ValueSource(chars = ['\u02DC', '\u2053', '\u223C', '\u301C', '\uFF5E'])
+    fun `isUnreserved returns false for Unicode characters that look like tildes`(char: Char) {
+        assertFalse(char.isUnreserved())
+    }
+    //endregion
+
+    //region isDot tests
     @ParameterizedTest
     @ValueSource(chars = ['.', '\u3002', '\uFF0E', '\uFF61'])
     fun `isDot returns true for dot characters`(char: Char) {
@@ -94,6 +153,20 @@ class CharExtensionsTest {
     }
 
     @ParameterizedTest
+    @ValueSource(chars = [',', ';', ':', '·', '•'])
+    fun `isDot returns false for characters that might be confused with dots`(char: Char) {
+        assertFalse(char.isDot())
+    }
+
+    @ParameterizedTest
+    @ValueSource(chars = ['\u2022', '\u2023', '\u25E6', '\u2043', '\u2219']) // Various bullet characters
+    fun `isDot returns false for bullet and dot-like characters`(char: Char) {
+        assertFalse(char.isDot())
+    }
+    //endregion
+
+    //region isWhiteSpace tests
+    @ParameterizedTest
     @ValueSource(chars = ['\n', '\t', '\r', ' '])
     fun `isWhiteSpace returns true for whitespace characters`(char: Char) {
         assertTrue(char.isWhiteSpace())
@@ -105,6 +178,26 @@ class CharExtensionsTest {
         assertFalse(char.isWhiteSpace())
     }
 
+    @ParameterizedTest
+    @ValueSource(chars = ['\u00A0', '\u2000', '\u2001', '\u2002', '\u2003', '\u2004', '\u2005', '\u2006', '\u2007', '\u2008', '\u2009', '\u200A', '\u202F', '\u205F', '\u3000'])
+    fun `isWhiteSpace returns false for other Unicode whitespace characters`(char: Char) {
+        assertFalse(char.isWhiteSpace())
+    }
+
+    @ParameterizedTest
+    @ValueSource(chars = ['\u0000', '\u0001', '\u0002', '\u0003', '\u0004', '\u0005', '\u0006', '\u0007', '\u0008', '\u000B', '\u000C', '\u000E', '\u000F'])
+    fun `isWhiteSpace returns false for control characters`(char: Char) {
+        assertFalse(char.isWhiteSpace())
+    }
+
+    @ParameterizedTest
+    @ValueSource(chars = ['\u200B', '\u200C', '\u200D', '\u2060', '\uFEFF']) // Zero-width spaces and joiners
+    fun `isWhiteSpace returns false for zero-width spaces`(char: Char) {
+        assertFalse(char.isWhiteSpace())
+    }
+    //endregion
+
+    //region splitByDot tests
     @Test
     fun `splitByDot handles empty string`() {
         val result = "".splitByDot()
@@ -180,36 +273,6 @@ class CharExtensionsTest {
         assertArrayEquals(arrayOf("example%2"), result)
     }
 
-    @ParameterizedTest
-    @ValueSource(chars = ['\u00A0', '\u2000', '\u2001', '\u2002', '\u2003', '\u2004', '\u2005', '\u2006', '\u2007', '\u2008', '\u2009', '\u200A', '\u202F', '\u205F', '\u3000'])
-    fun `isWhiteSpace returns false for other Unicode whitespace characters`(char: Char) {
-        assertFalse(char.isWhiteSpace())
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = ['\u0000', '\u0001', '\u0002', '\u0003', '\u0004', '\u0005', '\u0006', '\u0007', '\u0008', '\u000B', '\u000C', '\u000E', '\u000F'])
-    fun `isWhiteSpace returns false for control characters`(char: Char) {
-        assertFalse(char.isWhiteSpace())
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = ['\u00E0', '\u00E1', '\u00E2', '\u00E3', '\u00E4', '\u00E5', '\u00C0', '\u00C1', '\u00C2', '\u00C3', '\u00C4', '\u00C5'])
-    fun `isAlpha returns false for accented characters`(char: Char) {
-        assertFalse(char.isAlpha())
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = ['\u2113', '\u2118', '\u2126', '\u212A', '\u212B', '\u212E'])
-    fun `isAlphaNumeric returns false for Unicode characters that look like alphanumeric characters`(char: Char) {
-        assertFalse(char.isAlphaNumeric())
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = ['\u2212', '\u2013', '\u2014', '\u2015', '\uFE63', '\uFF0D'])
-    fun `isUnreserved returns false for Unicode characters that look like hyphens`(char: Char) {
-        assertFalse(char.isUnreserved())
-    }
-
     @Test
     fun `splitByDot handles multiple consecutive URL-encoded dots`() {
         val result = "example%2E%2Ecom".splitByDot()
@@ -241,24 +304,6 @@ class CharExtensionsTest {
         assertArrayEquals(arrayOf("example%2com%2"), result)
     }
 
-    @ParameterizedTest
-    @ValueSource(chars = ['\u2040', '\u203F', '\uFE33', '\uFE34', '\uFE4D', '\uFE4E', '\uFE4F', '\uFF3F'])
-    fun `isUnreserved returns false for Unicode characters that look like underscores`(char: Char) {
-        assertFalse(char.isUnreserved())
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = ['\u02DC', '\u2053', '\u223C', '\u301C', '\uFF5E'])
-    fun `isUnreserved returns false for Unicode characters that look like tildes`(char: Char) {
-        assertFalse(char.isUnreserved())
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = [',', ';', ':', '·', '•'])
-    fun `isDot returns false for characters that might be confused with dots`(char: Char) {
-        assertFalse(char.isDot())
-    }
-
     @Test
     fun `splitByDot handles string with only dots`() {
         val result = "...".splitByDot()
@@ -283,41 +328,10 @@ class CharExtensionsTest {
         assertArrayEquals(arrayOf("a", "b", "c", "d"), result)
     }
 
-    @ParameterizedTest
-    @ValueSource(chars = ['\u00BD', '\u00BC', '\u00BE']) // ½, ¼, ¾
-    fun `isNumeric returns false for fraction characters`(char: Char) {
-        assertFalse(char.isNumeric())
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = ['\u2160', '\u2161', '\u2162', '\u2163']) // Roman numerals I, II, III, IV
-    fun `isAlphaNumeric returns false for Roman numeral characters`(char: Char) {
-        assertFalse(char.isAlphaNumeric())
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = ['\u2022', '\u2023', '\u25E6', '\u2043', '\u2219']) // Various bullet characters
-    fun `isDot returns false for bullet and dot-like characters`(char: Char) {
-        assertFalse(char.isDot())
-    }
-
     @Test
     fun `splitByDot handles URL-encoded dot followed by percent sign`() {
         val result = "example%2E%com".splitByDot()
         assertArrayEquals(arrayOf("example", "%com"), result)
-    }
-
-
-    @Test
-    fun `isHex handles non-ASCII characters`() {
-        assertFalse('\u00F6'.isHex()) // ö
-        assertFalse('\u20AC'.isHex()) // €
-    }
-
-    @ParameterizedTest
-    @ValueSource(chars = ['\u200B', '\u200C', '\u200D', '\u2060', '\uFEFF']) // Zero-width spaces and joiners
-    fun `isWhiteSpace returns false for zero-width spaces`(char: Char) {
-        assertFalse(char.isWhiteSpace())
     }
 
     @Test
@@ -325,4 +339,5 @@ class CharExtensionsTest {
         val result = "example%2E%20rest".splitByDot()
         assertArrayEquals(arrayOf("example", "%20rest"), result)
     }
+    //endregion
 }

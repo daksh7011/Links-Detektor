@@ -4,7 +4,7 @@ lib = "2.0.0" # Links Detektor library version
 detekt = "1.23.8"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 kotlin = "2.2.0"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 
-dokka = "1.9.20"  # Kotlin documentation generator
+dokka = "2.0.0"  # Kotlin documentation generator
 groovy = "3.0.25"
 jansi = "2.4.2"
 logback = "1.5.18"

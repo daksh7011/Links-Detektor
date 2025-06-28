@@ -659,7 +659,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         return state == ReadEndState.ValidUrl
     }
 
-    companion object {
+    private companion object {
         /**
          * Contains the string to check for and remove if the scheme is this.
          */

@@ -83,6 +83,15 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             url.append(query)
             return url.toString()
         }
+
+    /**
+     * Gets the scheme component of the URL (e.g., "http", "https", "ftp").
+     *
+     * If the URL doesn't explicitly specify a scheme and doesn't start with "//",
+     * the default scheme "http" is returned.
+     *
+     * @return The scheme of the URL, or an empty string if not present.
+     */
     val scheme: String
         get() {
             if (_scheme == null) {
@@ -98,6 +107,15 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             }
             return StringUtils.defaultString(_scheme)
         }
+
+    /**
+     * Gets the username component of the URL, if present.
+     *
+     * This property is lazily populated when first accessed by parsing
+     * the USERNAME_PASSWORD part of the URL.
+     *
+     * @return The username from the URL, or an empty string if not present.
+     */
     val username: String
         get() {
             if (_username == null) {
@@ -105,6 +123,15 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             }
             return StringUtils.defaultString(_username)
         }
+
+    /**
+     * Gets the password component of the URL, if present.
+     *
+     * This property is lazily populated when first accessed by parsing
+     * the USERNAME_PASSWORD part of the URL.
+     *
+     * @return The password from the URL, or an empty string if not present.
+     */
     val password: String
         get() {
             if (_password == null) {
@@ -112,6 +139,15 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             }
             return StringUtils.defaultString(_password)
         }
+
+    /**
+     * Gets the host component of the URL (domain name or IP address).
+     *
+     * This property is lazily populated when first accessed. If a port is specified
+     * in the URL, it's excluded from the host value.
+     *
+     * @return The host from the URL, or null if not present.
+     */
     open val host: String?
         get() {
             if (rawHost == null) {
@@ -144,6 +180,15 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             }
             return _port
         }
+
+    /**
+     * Gets the path component of the URL.
+     *
+     * This property is lazily populated when first accessed. If no path is specified
+     * in the URL, a default path of "/" is returned.
+     *
+     * @return The path from the URL, or "/" if not present.
+     */
     open val path: String?
         get() {
             if (rawPath == null) {
@@ -151,6 +196,14 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             }
             return rawPath
         }
+
+    /**
+     * Gets the query component of the URL (the part after '?').
+     *
+     * This property is lazily populated when first accessed.
+     *
+     * @return The query string from the URL, or an empty string if not present.
+     */
     val query: String
         get() {
             if (_query == null) {
@@ -158,6 +211,14 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             }
             return StringUtils.defaultString(_query)
         }
+
+    /**
+     * Gets the fragment component of the URL (the part after '#').
+     *
+     * This property is lazily populated when first accessed.
+     *
+     * @return The fragment string from the URL, or an empty string if not present.
+     */
     val fragment: String
         get() {
             if (_fragment == null) {
@@ -265,6 +326,9 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      */
     override fun toString(): String = fullUrl
 
+    /**
+     * Companion object providing factory methods
+     */
     companion object {
         private const val DEFAULT_SCHEME = "http"
         private var SCHEME_PORT_MAP: HashMap<String, Int> = HashMap()

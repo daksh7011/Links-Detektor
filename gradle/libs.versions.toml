@@ -4,6 +4,7 @@ lib = "2.0.0" # Links Detektor library version
 detekt = "1.23.8"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 kotlin = "2.2.0"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 
+dokka = "1.9.20"  # Kotlin documentation generator
 groovy = "3.0.25"
 jansi = "2.4.2"
 logback = "1.5.18"
@@ -32,3 +33,6 @@ junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jun
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+# Documentation
+dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }

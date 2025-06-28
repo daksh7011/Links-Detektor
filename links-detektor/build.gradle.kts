@@ -123,9 +123,9 @@ publishOnCentral {
     // The following values are the default, if they are ok with you, just omit them
     projectLongName.set("Links Detektor")
     licenseName.set("MIT License")
-    licenseUrl.set("https://github.com/slothiesmooth/links-detektor/LICENSE")
-    projectUrl.set("https://github.com/slothiesmooth/links-detektor")
-    scmConnection.set("scm:git:git://github.com/slothiesmooth/links-detektor.git")
+    licenseUrl.set("https://github.com/daksh7011/links-detektor/LICENSE")
+    projectUrl.set("https://github.com/daksh7011/links-detektor")
+    scmConnection.set("scm:git:git://github.com/daksh7011/links-detektor.git")
 
     /*
      * The publications can be sent to other destinations, e.g. GitHub

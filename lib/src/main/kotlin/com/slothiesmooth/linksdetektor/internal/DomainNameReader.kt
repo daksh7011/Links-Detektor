@@ -1,27 +1,36 @@
-package `in`.technowolf.linksDetekt.detector
+package com.slothiesmooth.linksdetektor.internal
 
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isAlpha
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isAlphaNumeric
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isDot
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isHex
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isNumeric
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isUnreserved
-import `in`.technowolf.linksDetekt.detector.CharExtensions.splitByDot
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlpha
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlphaNumeric
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isDot
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isUnreserved
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
+import com.slothiesmooth.linksdetektor.LinksDetektorOptions
 import java.util.Locale
 
 /**
- * The domain name reader reads input from a InputTextReader and validates if the content being read is a valid domain name.
- * After a domain name is read, the returning status is what to do next. If the domain is valid but a specific character is found,
- * the next state will be to read another part for the rest of the url. For example, if a "?" is found at the end and the
- * domain is valid, the return state will be to read a query string.
+ * Validates and processes domain names during URL detection.
+ * 
+ * This class reads input from an [InputTextReader] and determines if the content represents a valid domain name.
+ * It handles various domain formats including:
+ * - Standard domain names (e.g., example.com)
+ * - IPv4 addresses in various formats (decimal, hex, octal)
+ * - IPv6 addresses
+ * - Internationalized domain names
+ * 
+ * After processing a domain name, it returns a state indicating what part of the URL should be processed next.
+ * For example, if a "?" character is found after a valid domain, the return state will indicate that a query string
+ * should be read next.
  *
- * @param inputTextReader The input stream to read.
- * @param bufferStringBuilder The string buffer to use for storing a domain name.
- * @param_ current The current string that was thought to be a domain name.
- * @param linksDetektorOptions The detector options of this reader.
- * @param characterHandler The handler to call on each non-matching character to count matching quotes and stuff.
- **/
-class DomainNameReader(
+ * @property bufferStringBuilder Buffer used to accumulate the domain name characters.
+ * @property _current The initial string that might be part of a domain name.
+ * @param inputTextReader The input stream to read characters from.
+ * @param linksDetektorOptions Configuration options that affect domain name validation.
+ * @param characterHandler Handler called for each non-domain character to track special characters.
+ */
+internal class DomainNameReader(
     inputTextReader: InputTextReader,
     /**
      * The currently written string buffer.
@@ -35,45 +44,74 @@ class DomainNameReader(
     characterHandler: CharacterHandler,
 ) {
     /**
-     * This is the final return state of reading a domain name.
+     * Represents the possible states after attempting to read a domain name.
+     * 
+     * This enum defines the outcomes of domain name processing and indicates
+     * what part of the URL should be processed next (if any).
      */
-    enum class ReaderNextState {
+    internal enum class ReaderNextState {
         /**
-         * Trying to read the domain name caused it to be invalid.
+         * The domain name is invalid or could not be properly parsed.
+         * 
+         * This state indicates that URL detection should be aborted or restarted
+         * from a different position in the input.
          */
         InvalidDomainName,
 
         /**
-         * The domain name is found to be valid.
+         * The domain name is valid and complete.
+         * 
+         * This state indicates that a valid domain name was successfully parsed
+         * and no additional URL parts were detected.
          */
         ValidDomainName,
 
         /**
-         * Finished reading, next step should be to read the fragment.
+         * A valid domain name was found, followed by a fragment indicator (#).
+         * 
+         * This state indicates that the next part to process is the URL fragment.
          */
         ReadFragment,
 
         /**
-         * Finished reading, next step should be to read the path.
+         * A valid domain name was found, followed by a path separator (/).
+         * 
+         * This state indicates that the next part to process is the URL path.
          */
         ReadPath,
 
         /**
-         * Finished reading, next step should be to read the port.
+         * A valid domain name was found, followed by a port indicator (:).
+         * 
+         * This state indicates that the next part to process is the port number.
          */
         ReadPort,
 
         /**
-         * Finished reading, next step should be to read the query string.
+         * A valid domain name was found, followed by a query string indicator (?).
+         * 
+         * This state indicates that the next part to process is the URL query string.
          */
         ReadQueryString
     }
 
     /**
-     * The interface that gets called for each character that's non-matching (to a valid domain name character) in to count
-     * the matching quotes and parenthesis correctly.
+     * Interface for handling non-domain characters encountered during parsing.
+     * 
+     * This interface provides a callback mechanism for processing characters that are not
+     * valid domain name characters. It's primarily used to track special characters like
+     * quotes and brackets that may affect URL detection.
      */
-    interface CharacterHandler {
+    internal interface CharacterHandler {
+        /**
+         * Processes a non-domain character encountered during parsing.
+         * 
+         * This method is called whenever a character that is not part of a valid domain name
+         * is encountered. Implementations can use this to track special characters or
+         * perform other processing.
+         * 
+         * @param character The non-domain character that was encountered.
+         */
         fun addCharacter(character: Char)
     }
 
@@ -248,11 +286,21 @@ class DomainNameReader(
     }
 
     /**
-     * Reads the Dns and returns the next state the state machine should take in throwing this out, or continue processing
-     * if this is a valid domain name.
-     * @return The next state to take.
+     * Reads and validates a domain name from the input stream.
+     * 
+     * This method is the main entry point for domain name processing. It:
+     * 1. Processes any initial domain name content provided during construction
+     * 2. Reads additional characters from the input stream
+     * 3. Validates the domain name according to DNS rules
+     * 4. Detects special characters that indicate the start of other URL parts
+     * 
+     * The method handles various domain formats including standard domain names,
+     * IPv4 addresses in different notations, and IPv6 addresses.
+     *
+     * @return A [ReaderNextState] value indicating the result of domain name processing
+     *         and what part of the URL should be processed next (if any).
      */
-    fun readDomainName(): ReaderNextState {
+    internal fun readDomainName(): ReaderNextState {
 
         // Read the current, and if its bad, just return.
         if (readCurrent() == ReaderNextState.InvalidDomainName) {
@@ -376,12 +424,24 @@ class DomainNameReader(
     }
 
     /**
-     * Checks the current state of this object and returns if the valid state indicates that the
-     * object has a valid domain name. If it does, it will return append the last character
-     * and return the validState specified.
-     * @param validState The state to return if this check indicates that the dns is ok.
-     * @param lastChar The last character to add if the domain is ok.
-     * @return The validState if the domain is valid, else ReaderNextState.InvalidDomainName
+     * Validates the domain name based on DNS rules and current parsing state.
+     * 
+     * This method performs final validation of a domain name by checking:
+     * - Domain length constraints (max 255 characters)
+     * - Label count constraints (max 127 labels)
+     * - IPv4 address format (if the domain appears to be numeric)
+     * - IPv6 address format (if brackets were detected)
+     * - Top-level domain validity (length and format)
+     * 
+     * If the domain is valid, the method appends the last character (if provided)
+     * to the buffer and returns the specified valid state. Otherwise, it returns
+     * an invalid state.
+     *
+     * @param validState The state to return if the domain name is valid.
+     * @param lastChar The character to append to the buffer if the domain is valid (typically
+     *                 a character that indicates the start of another URL part like '/' or '?').
+     * @return The specified [validState] if the domain name is valid, or [ReaderNextState.InvalidDomainName]
+     *         if the domain name is invalid.
      */
     private fun checkDomainNameValid(validState: ReaderNextState, lastChar: Char?): ReaderNextState {
         var valid = false
@@ -438,9 +498,21 @@ class DomainNameReader(
     }
 
     /**
-     * Handles Hexadecimal, octal, decimal, dotted decimal, dotted hex, dotted octal.
-     * @param testDomain the string we are testing
-     * @return Returns true if it's a valid ipv4 address
+     * Validates if a string represents a valid IPv4 address in any supported format.
+     * 
+     * This method handles various IPv4 address formats:
+     * - Standard dotted decimal notation (e.g., 192.168.1.1)
+     * - Dotted hexadecimal notation (e.g., 0xC0.0xA8.0x01.0x01)
+     * - Dotted octal notation (e.g., 0300.0250.01.01)
+     * - Decimal notation (e.g., 3232235777)
+     * - Hexadecimal notation (e.g., 0xC0A80101)
+     * - Octal notation (e.g., 030052000401)
+     * 
+     * Each part of a dotted notation must be between 0-255 when converted to decimal.
+     * For non-dotted notations, the value must be between 16843008 and 4294967295.
+     *
+     * @param testDomain The string to validate as an IPv4 address.
+     * @return `true` if the string is a valid IPv4 address in any supported format, `false` otherwise.
      */
     private fun isValidIpv4(testDomain: String): Boolean {
         var valid = false
@@ -504,9 +576,23 @@ class DomainNameReader(
     }
 
     /**
-     * Sees that there's an open "[", and is now checking for ":"'s and stopping when there is a ']' or invalid character.
-     * Handles ipv4 formatted ipv6 addresses, zone indices, truncated notation.
-     * @return Returns true if it is a valid ipv6 address
+     * Validates if a string represents a valid IPv6 address.
+     * 
+     * This method validates IPv6 addresses enclosed in square brackets ([...]) and handles:
+     * - Standard IPv6 notation (e.g., [2001:0db8:85a3:0000:0000:8a2e:0370:7334])
+     * - Compressed notation with :: (e.g., [2001:0db8:85a3::8a2e:0370:7334])
+     * - IPv4-mapped IPv6 addresses (e.g., [::ffff:192.168.1.1])
+     * - IPv6 addresses with zone indices (e.g., [fe80::1%eth0])
+     * 
+     * The method enforces RFC 5952 compliance, including:
+     * - Maximum of 8 segments (or equivalent with IPv4 mapping)
+     * - Maximum of one :: compression
+     * - Valid hexadecimal digits in each segment
+     * - Proper format for zone indices
+     *
+     * @param testDomain The string to validate as an IPv6 address (including square brackets).
+     * @return `true` if the string is a valid IPv6 address, `false` otherwise.
+     * @see <a href="https://tools.ietf.org/html/rfc5952">RFC 5952: A Recommendation for IPv6 Address Text Representation</a>
      */
     private fun isValidIpv6(testDomain: String): Boolean {
         val domainArray = testDomain.toCharArray()

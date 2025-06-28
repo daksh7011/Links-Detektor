@@ -1,9 +1,9 @@
-package `in`.technowolf.linksDetekt
+package com.slothiesmooth.linksdetektor.internal
 
-import `in`.technowolf.linksDetekt.detector.LinksDetektor
-import `in`.technowolf.linksDetekt.detector.LinksDetektorOptions
-import org.apache.commons.lang3.StringUtils
+import com.slothiesmooth.linksdetektor.LinksDetektor
+import com.slothiesmooth.linksdetektor.LinksDetektorOptions
 import java.net.MalformedURLException
+import org.apache.commons.lang3.StringUtils
 
 /**
  * Creating own Uri class since java.net.Uri would throw parsing exceptions
@@ -18,7 +18,7 @@ import java.net.MalformedURLException
  * - Strips fragments (anything after #)
  *
  */
-open class Url(urlMarker: UrlMarker) {
+open class Url internal constructor(urlMarker: UrlMarker) {
     private val _urlMarker: UrlMarker
     private var _scheme: String? = null
     private var _username: String? = null
@@ -28,6 +28,11 @@ open class Url(urlMarker: UrlMarker) {
     protected var rawPath: String? = null
     private var _query: String? = null
     private var _fragment: String? = null
+
+    /**
+     * The original, unmodified URL string that was used to create this Url object.
+     * This is useful for debugging or when the original form needs to be preserved.
+     */
     val originalUrl: String?
 
     init {
@@ -36,26 +41,49 @@ open class Url(urlMarker: UrlMarker) {
     }
 
     /**
-     * Returns a normalized url given a url object
+     * Creates a normalized version of this URL.
+     *
+     * The normalized version provides canonical representations of URL components:
+     * - Host names are converted to lowercase and properly encoded
+     * - IP addresses are converted to their standard representation
+     * - Paths are normalized (resolving "./" and "../" segments)
+     *
+     * @return A new NormalizedUrl instance representing the normalized version of this URL.
      */
     fun normalize(): NormalizedUrl {
         return NormalizedUrl(_urlMarker)
     }
 
+    /**
+     * Returns a string representation of this URL.
+     *
+     * This method returns the full URL including all components (scheme, username, password,
+     * host, port, path, query, and fragment).
+     *
+     * @return The string representation of this URL.
+     */
     override fun toString(): String {
         return fullUrl
     }
 
     /**
-     * Note that this includes the fragment
-     * @return Formats the url to: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]#[fragment]
+     * Gets the complete URL string including all components.
+     *
+     * This property returns a formatted URL string that includes all parts of the URL,
+     * including the fragment (if present).
+     *
+     * @return A string in the format: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]#[fragment]
      */
     val fullUrl: String
         get() = fullUrlWithoutFragment + StringUtils.defaultString(fragment)
 
     /**
+     * Gets the URL string without the fragment component.
      *
-     * @return Formats the url to: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]
+     * This property returns a formatted URL string that includes all parts of the URL
+     * except for the fragment.
+     *
+     * @return A string in the format: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]
      */
     val fullUrlWithoutFragment: String
         get() {
@@ -167,10 +195,20 @@ open class Url(urlMarker: UrlMarker) {
 
     /**
      * Always returns null for non normalized urls.
+     * Subclasses like NormalizedUrl may override this to provide the byte representation.
+     *
+     * @return The byte representation of the host if it's an IP address, or null for non-normalized URLs.
      */
     open val hostBytes: ByteArray?
         get() = null
 
+    /**
+     * Parses and populates the username and password fields from the URL.
+     *
+     * This method is called lazily when the username or password properties are accessed.
+     * It extracts the username and password from the USERNAME_PASSWORD part of the URL
+     * if it exists.
+     */
     private fun populateUsernamePassword() {
         if (exists(UrlPart.USERNAME_PASSWORD)) {
             val usernamePassword = getPart(UrlPart.USERNAME_PASSWORD)
@@ -188,17 +226,23 @@ open class Url(urlMarker: UrlMarker) {
     }
 
     /**
-     * @param urlPart The url part we are checking for existence
-     * @return Returns true if the part exists.
+     * Checks if a specific URL part exists in this URL.
+     *
+     * @param urlPart The URL part to check for existence.
+     * @return True if the part exists in this URL, false otherwise.
      */
     private fun exists(urlPart: UrlPart?): Boolean {
         return urlPart != null && _urlMarker.indexOf(urlPart) >= 0
     }
 
     /**
-     * For example, in http://yahoo.com/lala/, nextExistingPart(UrlPart.HOST) would return UrlPart.PATH
-     * @param urlPart The current url part
-     * @return Returns the next part; if there is no existing next part, it returns null
+     * Finds the next existing URL part after the specified part.
+     *
+     * This method traverses the URL structure to find the next part that exists in this URL.
+     * For example, in "http://yahoo.com/lala/", nextExistingPart(UrlPart.HOST) would return UrlPart.PATH.
+     *
+     * @param urlPart The current URL part.
+     * @return The next existing URL part, or null if there are no more parts.
      */
     private fun nextExistingPart(urlPart: UrlPart): UrlPart? {
         val nextPart: UrlPart? = urlPart.nextPart
@@ -212,7 +256,13 @@ open class Url(urlMarker: UrlMarker) {
     }
 
     /**
-     * @param part The part that we want. Ex: host, path
+     * Extracts a specific part of the URL from the original string.
+     *
+     * This method uses the URL marker indices to extract the substring corresponding
+     * to the requested URL part.
+     *
+     * @param part The URL part to extract (e.g., HOST, PATH, QUERY).
+     * @return The extracted part as a string, or null if the part doesn't exist in this URL.
      */
     private fun getPart(part: UrlPart): String? {
         if (!exists(part)) {
@@ -222,7 +272,7 @@ open class Url(urlMarker: UrlMarker) {
         return originalUrl!!.substring(_urlMarker.indexOf(part), _urlMarker.indexOf(nextPart))
     }
 
-    protected val urlMarker: UrlMarker
+    internal val urlMarker: UrlMarker
         get() = _urlMarker
 
     companion object {
@@ -236,7 +286,15 @@ open class Url(urlMarker: UrlMarker) {
         }
 
         /**
-         * Returns a url given a single url.
+         * Creates a Url object from a string representation.
+         *
+         * This method parses the input string to extract a single URL. It handles various URL formats
+         * and performs basic preprocessing like trimming and space replacement.
+         *
+         * @param url The URL string to parse.
+         * @return A new Url instance representing the parsed URL.
+         * @throws java.net.MalformedURLException If the input string is not a valid URL, contains no URLs,
+         *                               or contains multiple URLs.
          */
         @Throws(MalformedURLException::class)
         fun create(url: String): Url {

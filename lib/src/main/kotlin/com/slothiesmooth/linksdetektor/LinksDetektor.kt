@@ -1,19 +1,36 @@
-package `in`.technowolf.linksDetekt.detector
+package com.slothiesmooth.linksdetektor
 
-import `in`.technowolf.linksDetekt.Url
-import `in`.technowolf.linksDetekt.UrlMarker
-import `in`.technowolf.linksDetekt.UrlPart
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isAlpha
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isDot
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isHex
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isNumeric
+import com.slothiesmooth.linksdetektor.internal.Url
+import com.slothiesmooth.linksdetektor.internal.UrlPart
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlpha
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isDot
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
+import com.slothiesmooth.linksdetektor.internal.DomainNameReader
+import com.slothiesmooth.linksdetektor.internal.InputTextReader
+import com.slothiesmooth.linksdetektor.internal.UrlMarker
 import java.util.Collections
 import java.util.Locale
 
 /**
- * Creates a new UrlDetector object used to find urls inside of text.
- * @param content [String] The content to search inside.
- * @param options [LinksDetektorOptions] The UrlDetectorOptions to use when detecting the content.
+ * Detects and extracts URLs from text content.
+ * 
+ * This class provides a robust URL detection engine that can identify various URL formats
+ * within arbitrary text content. It handles:
+ * 
+ * - Standard URLs (http, https, ftp, ftps)
+ * - URLs with usernames and passwords
+ * - URLs with IPv4 addresses in various formats (decimal, hex, octal)
+ * - URLs with IPv6 addresses
+ * - URLs in different contexts (plain text, JSON, XML, HTML)
+ * - URLs with international domain names
+ * 
+ * The detector uses a state machine approach to parse text character by character,
+ * with backtracking capabilities to handle complex cases. Detection behavior can be
+ * customized through [LinksDetektorOptions].
+ *
+ * @property content The text content to search for URLs.
+ * @property options Configuration options that control detection behavior.
  */
 class LinksDetektor(content: String, options: LinksDetektorOptions) {
     /**
@@ -31,7 +48,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         CharacterMatchStop,
 
         /**
-         * The character was matched which is a start of parentheses.
+         * The character was matched, which is a start of parentheses.
          */
         CharacterMatchStart
     }
@@ -39,12 +56,12 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
     /**
      * Stores options for detection.
      */
-    private val linksDetektorOptions: LinksDetektorOptions
+    private val linksDetektorOptions: LinksDetektorOptions = options
 
     /**
      * The input stream to read.
      */
-    private val inputTextReader: InputTextReader
+    private val inputTextReader: InputTextReader = InputTextReader(content)
 
     /**
      * Buffer to store temporary urls inside.
@@ -82,7 +99,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
     private val characterMatchHashMap = HashMap<Char, Int>()
 
     /**
-     * Keeps track of certain indices to create a Url object.
+     * Keeps track of certain indices to create an Url object.
      */
     private var currentUrlMarker: UrlMarker = UrlMarker()
 
@@ -101,22 +118,26 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         InvalidUrl
     }
 
-    init {
-        inputTextReader = InputTextReader(content)
-        linksDetektorOptions = options
-    }
-
     /**
-     * Gets the number of characters that were backtracked while reading the input. This is useful for performance
-     * measurement.
-     * @return The count of characters that were backtracked while reading.
+     * Gets the number of characters that were backtracked during URL detection.
+     * 
+     * This property is useful for performance measurement and debugging, as it indicates
+     * how many times the parser had to go back and reread characters during the detection process.
+     * A high number of backtracking might indicate complex content or potential optimization opportunities.
+     * 
+     * @return The count of characters that were backtracked while reading the input.
      */
     val backtracked: Int
         get() = inputTextReader.backtrackedCount
 
     /**
-     * Detects the urls and returns a list of detected url strings.
-     * @return A list with detected urls.
+     * Detects URLs in the content string and returns them as a list of Url objects.
+     * 
+     * This method parses the content string using the specified options to identify
+     * and extract URLs. It handles various URL formats and can detect multiple URLs
+     * within a single string.
+     * 
+     * @return A list of detected Url objects. The list may be empty if no URLs are found.
      */
     fun detect(): List<Url> {
         readDefault()
@@ -205,7 +226,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                         linksDetektorOptions.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
                         bufferStringBuilder.length > 1
                     ) {
-                        // we already have the scheme, so then we already read:
+                        // We already have the scheme, so then we already read:
                         // http://something/ <- if something is all numeric then its a valid url.
                         // OR we are searching for single level domains. We have buffer length > 1 condition
                         // to weed out infinite backtrack in cases of html5 roots
@@ -217,7 +238,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                     } else {
 
                         // we don't have a scheme already, then clear state, then check for html5 root such as: "//google.com/"
-                        // remember the state of the quote when clearing state just in case its "//google.com" so its not cleared.
+                        // remember the state of the quote when clearing state just in case it's "//google.com" so it's not cleared.
                         readEnd(ReadEndState.InvalidUrl)
                         bufferStringBuilder.append(curr)
                         hasScheme = readHtml5Root()
@@ -344,7 +365,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && (curr == '>')
         ) {
 
-            // If we catch a end bracket increment its count and get rid of not ipv6 flag
+            // If we catch an end bracket increment its count and get rid of not ipv6 flag
             val currVal = getCharacterCount(curr) + 1
             characterMatchHashMap[curr] = currVal
 
@@ -358,7 +379,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                 else -> {}
             }
 
-            // If the number of open is greater then the number of closed, return a stop.
+            // If the number of open is greater, then the number of closed, return a stop.
             return if (getCharacterCount(match) > currVal) CharacterMatch.CharacterMatchStop else CharacterMatch.CharacterMatchStart
         }
 
@@ -377,13 +398,13 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             return false
         }
 
-        // read the next character. If its // then return true.
+        // Read the next character. If it's //, then return true.
         val curr: Char = inputTextReader.read()
         if (curr == '/') {
             bufferStringBuilder.append(curr)
             return true
         } else {
-            // if its not //, then go back and reset by 1 character.
+            // if it's not //, then go back and reset by 1 character.
             inputTextReader.goBack()
             readEnd(ReadEndState.InvalidUrl)
         }
@@ -392,10 +413,10 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
 
     /**
      * Reads the scheme and allows returns true if the scheme is http(s?):// or ftp(s?)://
-     * @return True if the scheme was found, else false.
+     * @return True, if the scheme was found, else false.
      */
     private fun readScheme(): Boolean {
-        // Check if we are checking html and the length is longer than mailto:
+        // Check if we are checking HTML and the length is longer than mailto:
         if (linksDetektorOptions.hasFlag(LinksDetektorOptions.HTML) && bufferStringBuilder.length >= HTML_MAILTO.length) {
             // Check if the string is actually mailto: then just return nothing.
             if (HTML_MAILTO.equals(
@@ -415,7 +436,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             if (curr == '/') {
                 bufferStringBuilder.append(curr)
                 if (numSlashes == 1) {
-                    // return only if its an approved protocol. This can be expanded to allow others
+                    // Return only if it's approved protocol. This can be expanded to allow others
                     if (VALID_SCHEMES.contains(bufferStringBuilder.toString().lowercase(Locale.getDefault()))) {
                         currentUrlMarker.setIndex(UrlPart.SCHEME, 0)
                         return true
@@ -431,7 +452,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                 inputTextReader.goBack() // unread the '[', so that we can start looking for ipv6
                 return false
             } else if (originalLength > 0 || numSlashes > 0 || curr.isAlpha().not()) {
-                // if it's not a character a-z or A-Z then assume we aren't matching scheme, but instead
+                // if it's not a character a-z or A-Z, then assume we aren't matching scheme, but instead
                 // matching username and password.
                 inputTextReader.goBack()
                 return readUserPass(0)
@@ -460,21 +481,21 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         while (!done && !inputTextReader.eof()) {
             val curr: Char = inputTextReader.read()
 
-            // if we hit this, then everything is ok and we are matching a domain name.
+            // if we hit this, then everything is ok, and we are matching a domain name.
             if (curr == '@') {
                 bufferStringBuilder.append(curr)
                 currentUrlMarker.setIndex(UrlPart.USERNAME_PASSWORD, beginningOfUsername)
                 return readDomainName("")
             } else if (curr.isDot() || curr == '[') {
-                // everything is still ok, just remember that we found a dot or '[' in case we might need to backtrack
+                // everything is still ok, remember that we found a dot or '[' in case we might need to backtrack
                 bufferStringBuilder.append(curr)
                 rollback = true
             } else if (curr == '#' || curr == ' ' || curr == '/' || curr == ':' || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
-                // one of these characters indicates we are invalid state and should just return.
+                // one of these characters indicates we are in an invalid state and should just return.
                 rollback = true
                 done = true
             } else {
-                // all else, just append character assuming its ok so far.
+                // all else, append character assuming it's ok so far.
                 bufferStringBuilder.append(curr)
             }
         }
@@ -579,11 +600,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             val curr: Char = inputTextReader.read()
             portLen++
             if (curr == '/') {
-                // continue to read path
+                // continue to read a path
                 bufferStringBuilder.append(curr)
                 return readPath()
             } else if (curr == '?') {
-                // continue to read query string
+                // continue to read the query string
                 bufferStringBuilder.append(curr)
                 return readQueryString()
             } else if (curr == '#') {
@@ -639,13 +660,13 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             }
         }
 
-        // end of input then this url is good.
+        // end of input, then this url is good.
         return readEnd(ReadEndState.ValidUrl)
     }
 
     /**
-     * The url has been read to here. Remember the url if its valid, and reset state.
-     * @param state The state indicating if this url is valid. If its valid it will be added to the list of urls.
+     * The url has been read to here. Remember the url if it's valid and reset the state.
+     * @param state The state indicating if this url is valid. If it's valid, it will be added to the list of urls.
      * @return True if the url was valid.
      */
     private fun readEnd(state: ReadEndState): Boolean {
@@ -686,6 +707,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         /**
          * Valid protocol schemes.
          */
+        @Suppress("HttpUrlsUsage")
         private val VALID_SCHEMES = Collections.unmodifiableSet(
             HashSet(
                 listOf(

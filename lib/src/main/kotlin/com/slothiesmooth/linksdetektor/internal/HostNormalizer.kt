@@ -1,21 +1,40 @@
-package `in`.technowolf.linksDetekt
+package com.slothiesmooth.linksdetektor.internal
 
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isHex
-import `in`.technowolf.linksDetekt.detector.CharExtensions.splitByDot
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
 import org.apache.commons.lang3.StringUtils
 import java.net.IDN
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.UnknownHostException
 import java.util.Locale
+import kotlin.text.iterator
 
 /**
- * Normalizes the host by converting hex characters to the actual textual representation, changes ip addresses
- * to a formal format. Then re-encodes the final host name.
+ * Normalizes the host part of a URL by converting hex characters to their actual textual representation
+ * and formatting IP addresses to their canonical form.
+ * 
+ * This class handles various host formats including:
+ * - Domain names (e.g., example.com)
+ * - IPv4 addresses in various formats (decimal, hex, octal)
+ * - IPv6 addresses
+ * 
+ * After normalization, the host is re-encoded to ensure consistent representation.
+ *
+ * @property _host The original host string to normalize.
  */
 class HostNormalizer(private val _host: String?) {
+    /**
+     * The byte representation of the host if it's an IP address.
+     * Will be null if the host is not an IP address or if normalization failed.
+     */
     var bytes: ByteArray? = null
         private set
+
+    /**
+     * The normalized host string after processing.
+     * Will be null if normalization failed or if the input host was null or empty.
+     */
     var normalizedHost: String? = null
         private set
 
@@ -60,7 +79,10 @@ class HostNormalizer(private val _host: String?) {
     }
 
     /**
-     * Checks if the host is an ip address. Returns the byte representation of it
+     * Attempts to decode the host as an IP address (either IPv4 or IPv6).
+     * 
+     * @param host The host string to decode.
+     * @return The byte representation of the IP address, or null if the host is not a valid IP address.
      */
     private fun tryDecodeHostToIp(host: String): ByteArray? {
         return if (host.startsWith("[") && host.endsWith("]")) {
@@ -69,16 +91,20 @@ class HostNormalizer(private val _host: String?) {
     }
 
     /**
-     * This covers cases like:
-     * Hexadecimal: 0x1283983
-     * Decimal: 12839273
-     * Octal: 037362273110
-     * Dotted Decimal: 192.168.1.1
-     * Dotted Hexadecimal: 0xfe.0x83.0x18.0x1
-     * Dotted Octal: 0301.00.046.00
-     * Dotted Mixed: 0x38.168.077.1
+     * Attempts to decode the host as an IPv4 address in various formats.
+     * 
+     * This method handles the following IPv4 address formats:
+     * - Hexadecimal: 0x1283983
+     * - Decimal: 12839273
+     * - Octal: 037362273110
+     * - Dotted Decimal: 192.168.1.1
+     * - Dotted Hexadecimal: 0xfe.0x83.0x18.0x1
+     * - Dotted Octal: 0301.00.046.00
+     * - Dotted Mixed: 0x38.168.077.1
      *
-     * if ipv4 was found, _bytes is set to the byte representation of the ipv4 address
+     * @param host The host string to decode as an IPv4 address.
+     * @return The byte representation of the IPv4 address (as an IPv4-mapped IPv6 address), 
+     *         or null if the host is not a valid IPv4 address.
      */
     private fun tryDecodeHostToIPv4(host: String): ByteArray? {
         val parts: Array<String> = host.splitByDot()
@@ -132,10 +158,18 @@ class HostNormalizer(private val _host: String?) {
     }
 
     /**
-     * Recommendation for IPv6 Address Text Representation
-     * http://tools.ietf.org/html/rfc5952
+     * Attempts to decode the host as an IPv6 address.
+     * 
+     * This method follows the recommendations for IPv6 Address Text Representation
+     * as specified in RFC 5952 (http://tools.ietf.org/html/rfc5952).
+     * It handles various IPv6 formats including:
+     * - Standard notation (e.g., 2001:0db8:85a3:0000:0000:8a2e:0370:7334)
+     * - Compressed notation with :: (e.g., 2001:0db8:85a3::8a2e:0370:7334)
+     * - IPv4-mapped IPv6 addresses (e.g., ::ffff:192.168.1.1)
+     * - IPv6 addresses with zone indices (e.g., fe80::1%eth0)
      *
-     * if ipv6 was found, _bytes is set to the byte representation of the ipv6 address
+     * @param host The host string to decode as an IPv6 address (including the square brackets).
+     * @return The byte representation of the IPv6 address, or null if the host is not a valid IPv6 address.
      */
     private fun tryDecodeHostToIPv6(host: String): ByteArray? {
         val ip = host.substring(1, host.length - 1)

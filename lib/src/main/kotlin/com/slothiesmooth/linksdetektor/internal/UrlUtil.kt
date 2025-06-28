@@ -1,8 +1,8 @@
-package `in`.technowolf.linksDetekt
+package com.slothiesmooth.linksdetektor.internal
 
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isHex
-import `in`.technowolf.linksDetekt.detector.CharExtensions.isWhiteSpace
-import `in`.technowolf.linksDetekt.detector.InputTextReader
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
+import com.slothiesmooth.linksdetektor.internal.InputTextReader
 import java.util.Stack
 
 internal object UrlUtil {

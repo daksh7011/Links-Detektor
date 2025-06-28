@@ -7,6 +7,7 @@
 - Suggest improvements to the codebase, such as refactoring opportunities, performance enhancements, or code
   organization.
 - When a method or a class can have unit tests, Please add tests. If there are already existing tests, please modify them in accordance to new changes
+- The project uses JUnit and Mockk for testing various functionality to make sure they are working as expected
 - The project is written in Kotlin, use Kotlin 2.2 features when applicable. No Java code is allowed. Refactor Java code
   to Kotlin when applicable.
 - The project does not allow warnings or deprecated APIs in the codebase, ensure there are no warnings.

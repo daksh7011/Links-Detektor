@@ -47,7 +47,7 @@ comments:
   CommentOverPrivateProperty:
     active: false
   EndOfSentenceFormat:
-    active: true
+    active: false
     endOfSentenceFormat: '([.?!][ \t\n\r\f<])|([.?!:]$)'
     excludes: [ '**/test/**', '**/androidTest/**', '**/*.Test.kt', '**/*.Spec.kt', '**/*.Spek.kt' ]
   UndocumentedPublicClass:
@@ -558,7 +558,7 @@ style:
     active: true
     maxJumpCount: 3
   MagicNumber:
-    active: true
+    active: false
     excludes: [ '**/test/**', '**/androidTest/**', '**/*.Test.kt', '**/*.Spec.kt', '**/*.Spek.kt' ]
     ignoreNumbers: [ '-1', '0', '1', '2' ]
     ignoreHashCodeFunction: true
@@ -577,6 +577,7 @@ style:
   MaxLineLength:
     active: true
     maxLineLength: 180
+    excludes: ['**/test/**', '**/*.Test.kt']
     excludePackageStatements: true
     excludeImportStatements: true
     excludeCommentStatements: false
@@ -623,7 +624,7 @@ style:
   TrailingWhitespace:
     active: true
   UnderscoresInNumericLiterals:
-    active: true
+    active: false
     acceptableDecimalLength: 5
   UnnecessaryAbstractClass:
     active: true

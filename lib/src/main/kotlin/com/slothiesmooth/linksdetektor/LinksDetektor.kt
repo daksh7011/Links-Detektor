@@ -1,32 +1,32 @@
 package com.slothiesmooth.linksdetektor
 
-import com.slothiesmooth.linksdetektor.internal.Url
-import com.slothiesmooth.linksdetektor.internal.UrlPart
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlpha
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isDot
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
-import com.slothiesmooth.linksdetektor.internal.model.CharacterMatch
 import com.slothiesmooth.linksdetektor.internal.DomainNameReader
 import com.slothiesmooth.linksdetektor.internal.InputTextReader
-import com.slothiesmooth.linksdetektor.internal.model.ReadEndState
+import com.slothiesmooth.linksdetektor.internal.Url
 import com.slothiesmooth.linksdetektor.internal.UrlMarker
+import com.slothiesmooth.linksdetektor.internal.UrlPart
+import com.slothiesmooth.linksdetektor.internal.model.CharacterMatch
+import com.slothiesmooth.linksdetektor.internal.model.ReadEndState
 import java.util.Collections
 import java.util.Locale
 
 /**
  * Detects and extracts URLs from text content.
- * 
+ *
  * This class provides a robust URL detection engine that can identify various URL formats
  * within arbitrary text content. It handles:
- * 
+ *
  * - Standard URLs (http, https, ftp, ftps)
  * - URLs with usernames and passwords
  * - URLs with IPv4 addresses in various formats (decimal, hex, octal)
  * - URLs with IPv6 addresses
  * - URLs in different contexts (plain text, JSON, XML, HTML)
  * - URLs with international domain names
- * 
+ *
  * The detector uses a state machine approach to parse text character by character,
  * with backtracking capabilities to handle complex cases. Detection behavior can be
  * customized through [LinksDetektorOptions].
@@ -88,11 +88,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
 
     /**
      * Gets the number of characters that were backtracked during URL detection.
-     * 
+     *
      * This property is useful for performance measurement and debugging, as it indicates
      * how many times the parser had to go back and reread characters during the detection process.
      * A high number of backtracking might indicate complex content or potential optimization opportunities.
-     * 
+     *
      * @return The count of characters that were backtracked while reading the input.
      */
     val backtracked: Int
@@ -100,11 +100,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
 
     /**
      * Detects URLs in the content string and returns them as a list of Url objects.
-     * 
+     *
      * This method parses the content string using the specified options to identify
      * and extract URLs. It handles various URL formats and can detect multiple URLs
      * within a single string.
-     * 
+     *
      * @return A list of detected Url objects. The list may be empty if no URLs are found.
      */
     fun detect(): List<Url> {
@@ -204,7 +204,6 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                         readDomainName(bufferStringBuilder.substring(length))
                         length = 0
                     } else {
-
                         // we don't have a scheme already, then clear state, then check for html5 root such as: "//google.com/"
                         // remember the state of the quote when clearing state just in case it's "//google.com" so it's not cleared.
                         readEnd(ReadEndState.InvalidUrl)
@@ -294,7 +293,6 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      * @return The state that this character requires.
      */
     private fun checkMatchingCharacter(curr: Char): CharacterMatch {
-
         // This is a quote and we are matching quotes.
         if (curr == '\"' && linksDetektorOptions.hasFlag(LinksDetektorOptions.QUOTE_MATCH) || curr == '\'' && linksDetektorOptions.hasFlag(
                 LinksDetektorOptions.SINGLE_QUOTE_MATCH
@@ -332,7 +330,6 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
             (curr == ']' || curr == '}' || curr == ')') ||
             linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && (curr == '>')
         ) {
-
             // If we catch an end bracket increment its count and get rid of not ipv6 flag
             val currVal = getCharacterCount(curr) + 1
             characterMatchHashMap[curr] = currVal
@@ -437,7 +434,6 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      * @return True if a valid username and password was found.
      */
     private fun readUserPass(beginningOfUsername: Int): Boolean {
-
         // The start of where we are.
         val start = bufferStringBuilder.length
 
@@ -498,7 +494,8 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                 override fun addCharacter(character: Char) {
                     checkMatchingCharacter(character)
                 }
-            })
+            }
+        )
 
         // Try to read the dns and act on the response.
         return when (reader.readDomainName()) {

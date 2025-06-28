@@ -13,12 +13,12 @@ import kotlin.text.iterator
 /**
  * Normalizes the host part of a URL by converting hex characters to their actual textual representation
  * and formatting IP addresses to their canonical form.
- * 
+ *
  * This class handles various host formats including:
  * - Domain names (e.g., example.com)
  * - IPv4 addresses in various formats (decimal, hex, octal)
  * - IPv6 addresses
- * 
+ *
  * After normalization, the host is re-encoded to ensure consistent representation.
  *
  * @property _host The original host string to normalize.
@@ -80,19 +80,21 @@ class HostNormalizer(private val _host: String?) {
 
     /**
      * Attempts to decode the host as an IP address (either IPv4 or IPv6).
-     * 
+     *
      * @param host The host string to decode.
      * @return The byte representation of the IP address, or null if the host is not a valid IP address.
      */
     private fun tryDecodeHostToIp(host: String): ByteArray? {
         return if (host.startsWith("[") && host.endsWith("]")) {
             tryDecodeHostToIPv6(host)
-        } else tryDecodeHostToIPv4(host)
+        } else {
+            tryDecodeHostToIPv4(host)
+        }
     }
 
     /**
      * Attempts to decode the host as an IPv4 address in various formats.
-     * 
+     *
      * This method handles the following IPv4 address formats:
      * - Hexadecimal: 0x1283983
      * - Decimal: 12839273
@@ -103,7 +105,7 @@ class HostNormalizer(private val _host: String?) {
      * - Dotted Mixed: 0x38.168.077.1
      *
      * @param host The host string to decode as an IPv4 address.
-     * @return The byte representation of the IPv4 address (as an IPv4-mapped IPv6 address), 
+     * @return The byte representation of the IPv4 address (as an IPv4-mapped IPv6 address),
      *         or null if the host is not a valid IPv4 address.
      */
     private fun tryDecodeHostToIPv4(host: String): ByteArray? {
@@ -159,7 +161,7 @@ class HostNormalizer(private val _host: String?) {
 
     /**
      * Attempts to decode the host as an IPv6 address.
-     * 
+     *
      * This method follows the recommendations for IPv6 Address Text Representation
      * as specified in RFC 5952 (http://tools.ietf.org/html/rfc5952).
      * It handles various IPv6 formats including:

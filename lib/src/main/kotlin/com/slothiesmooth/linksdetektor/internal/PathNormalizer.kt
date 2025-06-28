@@ -1,6 +1,5 @@
 package com.slothiesmooth.linksdetektor.internal
 
-import com.slothiesmooth.linksdetektor.internal.UrlUtil
 import org.apache.commons.lang3.StringUtils
 import java.util.Stack
 

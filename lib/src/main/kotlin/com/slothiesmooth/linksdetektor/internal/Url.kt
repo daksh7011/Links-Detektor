@@ -2,8 +2,8 @@ package com.slothiesmooth.linksdetektor.internal
 
 import com.slothiesmooth.linksdetektor.LinksDetektor
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions
-import java.net.MalformedURLException
 import org.apache.commons.lang3.StringUtils
+import java.net.MalformedURLException
 
 /**
  * Creating own Uri class since java.net.Uri would throw parsing exceptions

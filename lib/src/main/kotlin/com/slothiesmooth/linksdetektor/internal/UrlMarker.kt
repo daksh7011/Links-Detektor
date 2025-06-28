@@ -1,7 +1,5 @@
 package com.slothiesmooth.linksdetektor.internal
 
-import com.slothiesmooth.linksdetektor.internal.Url
-
 /**
  * Tracks the positions of different URL parts within a string.
  * This class is used during URL parsing to mark where each component of a URL begins,

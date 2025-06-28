@@ -19,5 +19,5 @@ internal enum class UrlPart(
     PORT(PATH),
     HOST(PORT),
     USERNAME_PASSWORD(HOST),
-    SCHEME(USERNAME_PASSWORD);
+    SCHEME(USERNAME_PASSWORD)
 }

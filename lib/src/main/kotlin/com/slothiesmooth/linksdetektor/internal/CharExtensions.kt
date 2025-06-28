@@ -1,20 +1,19 @@
 package com.slothiesmooth.linksdetektor.internal
 
-import com.slothiesmooth.linksdetektor.internal.InputTextReader
 import org.apache.commons.lang3.StringUtils
 
 /**
  * Provides extension functions for character and string operations used in URL detection.
- * 
+ *
  * This object contains utility extension functions for character validation, classification,
  * and string manipulation specifically tailored for URL parsing and normalization.
  */
 internal object CharExtensions {
     /**
      * Determines if a character is a valid hexadecimal digit.
-     * 
+     *
      * Valid hexadecimal digits include 0-9, a-f, and A-F.
-     * 
+     *
      * @return `true` if the character is a valid hexadecimal digit, `false` otherwise.
      */
     internal fun Char.isHex(): Boolean {
@@ -23,9 +22,9 @@ internal object CharExtensions {
 
     /**
      * Determines if a character is a valid alphabetic character.
-     * 
+     *
      * Valid alphabetic characters include a-z and A-Z.
-     * 
+     *
      * @return `true` if the character is a valid alphabetic character, `false` otherwise.
      */
     internal fun Char.isAlpha(): Boolean {
@@ -34,9 +33,9 @@ internal object CharExtensions {
 
     /**
      * Determines if a character is a valid numeric digit.
-     * 
+     *
      * Valid numeric digits include 0-9.
-     * 
+     *
      * @return `true` if the character is a valid numeric digit, `false` otherwise.
      */
     internal fun Char.isNumeric(): Boolean {
@@ -45,9 +44,9 @@ internal object CharExtensions {
 
     /**
      * Determines if a character is a valid alphanumeric character.
-     * 
+     *
      * Valid alphanumeric characters include a-z, A-Z, and 0-9.
-     * 
+     *
      * @return `true` if the character is a valid alphanumeric character, `false` otherwise.
      */
     internal fun Char.isAlphaNumeric(): Boolean {
@@ -56,14 +55,14 @@ internal object CharExtensions {
 
     /**
      * Determines if a character is a valid unreserved character as defined by RFC 3986.
-     * 
+     *
      * According to RFC 3986, unreserved characters include:
      * - Alphanumeric characters (a-z, A-Z, 0-9)
      * - Hyphen (-)
      * - Period (.)
      * - Underscore (_)
      * - Tilde (~)
-     * 
+     *
      * @return `true` if the character is a valid unreserved character, `false` otherwise.
      * @see <a href="https://tools.ietf.org/html/rfc3986#section-2.3">RFC 3986 Section 2.3</a>
      */
@@ -73,13 +72,13 @@ internal object CharExtensions {
 
     /**
      * Determines if a character is a dot or a Unicode equivalent of a dot.
-     * 
+     *
      * This method recognizes the following characters as dots:
      * - ASCII period (.)
      * - Ideographic full stop (。) - U+3002
      * - Fullwidth full stop (．) - U+FF0E
      * - Halfwidth ideographic full stop (｡) - U+FF61
-     * 
+     *
      * @return `true` if the character is a dot or a Unicode equivalent, `false` otherwise.
      * @see <a href="https://www.unicode.org/reports/tr46/">Unicode IDNA Compatibility Processing</a>
      */
@@ -89,13 +88,13 @@ internal object CharExtensions {
 
     /**
      * Determines if a character is a whitespace character.
-     * 
+     *
      * This method recognizes the following characters as whitespace:
      * - Line feed (\n)
      * - Tab (\t)
      * - Carriage return (\r)
      * - Space ( )
-     * 
+     *
      * @return `true` if the character is a whitespace character, `false` otherwise.
      */
     internal fun Char.isWhiteSpace(): Boolean {
@@ -104,12 +103,12 @@ internal object CharExtensions {
 
     /**
      * Splits a string by dot characters, including both standard and URL-encoded dots.
-     * 
+     *
      * This method provides a more robust alternative to standard string splitting by:
      * 1. Recognizing both standard ASCII dots (.) and Unicode equivalents via [isDot]
      * 2. Handling URL-encoded dots (%2E or %2e)
      * 3. Avoiding regex-based splitting for better performance
-     * 
+     *
      * For example, the string "example.com" or "example%2ecom" would both be split into
      * ["example", "com"].
      *

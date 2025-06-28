@@ -1,11 +1,11 @@
 package com.slothiesmooth.linksdetektor.internal
 
-import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlpha
-import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlphaNumeric
-import com.slothiesmooth.linksdetektor.internal.CharExtensions.isUnreserved
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isDot
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isUnreserved
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
 import org.junit.jupiter.api.Assertions.assertArrayEquals
@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import org.apache.commons.lang3.StringUtils
 
 /**
  * Tests for [CharExtensions] utility functions.

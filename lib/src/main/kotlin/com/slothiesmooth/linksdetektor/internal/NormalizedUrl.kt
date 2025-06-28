@@ -1,6 +1,5 @@
 package com.slothiesmooth.linksdetektor.internal
 
-import com.slothiesmooth.linksdetektor.internal.Url
 import java.net.MalformedURLException
 
 /**

@@ -10,5 +10,5 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation(project(":lib"))
+    implementation(project(":links-detektor"))
 }

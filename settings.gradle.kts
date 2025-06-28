@@ -7,5 +7,5 @@ pluginManagement {
 }
 
 rootProject.name = "links-detektor"
-include("lib")
+include("links-detektor")
 include("sample")

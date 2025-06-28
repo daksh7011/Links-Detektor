@@ -16,9 +16,9 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
  * The reader maintains a current position in the text and provides methods to read,
  * peek ahead, and move backward as needed during parsing.
  *
- * @property _content The text content to be read.
+ * @property content The text content to be read.
  */
-internal class InputTextReader(private val _content: String) {
+internal class InputTextReader(private val content: String) {
     /**
      * The current reading position within the content.
      *
@@ -49,7 +49,7 @@ internal class InputTextReader(private val _content: String) {
      * @return The next character in the content, with whitespace normalized to a space.
      */
     fun read(): Char {
-        val chr = _content[position++]
+        val chr = content[position++]
         return if (chr.isWhiteSpace()) ' ' else chr
     }
 
@@ -63,9 +63,7 @@ internal class InputTextReader(private val _content: String) {
      * @return A string containing the next [numberChars] characters from the current position.
      * @throws StringIndexOutOfBoundsException If there aren't enough characters remaining.
      */
-    fun peek(numberChars: Int): String {
-        return _content.substring(position, position + numberChars)
-    }
+    fun peek(numberChars: Int): String = content.substring(position, position + numberChars)
 
     /**
      * Looks ahead at a single character at a specified offset from the current position.
@@ -81,7 +79,7 @@ internal class InputTextReader(private val _content: String) {
         if (!canReadChars(offset)) {
             throw ArrayIndexOutOfBoundsException()
         }
-        return _content[position + offset]
+        return content[position + offset]
     }
 
     /**
@@ -93,9 +91,7 @@ internal class InputTextReader(private val _content: String) {
      * @param numberChars The number of characters to check for availability.
      * @return `true` if at least [numberChars] characters remain in the content, `false` otherwise.
      */
-    fun canReadChars(numberChars: Int): Boolean {
-        return _content.length >= position + numberChars
-    }
+    fun canReadChars(numberChars: Int): Boolean = content.length >= position + numberChars
 
     /**
      * Checks if the reader has reached the end of the content.
@@ -105,9 +101,7 @@ internal class InputTextReader(private val _content: String) {
      *
      * @return `true` if the reader has reached the end of the content, `false` otherwise.
      */
-    fun eof(): Boolean {
-        return _content.length <= position
-    }
+    fun eof(): Boolean = content.length <= position
 
     /**
      * Moves the current position to a specified index in the content.
@@ -158,15 +152,15 @@ internal class InputTextReader(private val _content: String) {
      */
     private fun checkBacktrackLoop(backtrackLength: Int) {
         var backtrackLength = backtrackLength
-        if (backtrackedCount > _content.length * MAX_BACKTRACK_MULTIPLIER) {
+        if (backtrackedCount > content.length * MAX_BACKTRACK_MULTIPLIER) {
             if (backtrackLength < MINIMUM_BACKTRACK_LENGTH) {
                 backtrackLength = MINIMUM_BACKTRACK_LENGTH
             }
             val start = position.coerceAtLeast(0)
-            if (start + backtrackLength > _content.length) {
-                backtrackLength = _content.length - start
+            if (start + backtrackLength > content.length) {
+                backtrackLength = content.length - start
             }
-            val badText: String = _content.substring(start, start + backtrackLength)
+            val badText: String = content.substring(start, start + backtrackLength)
             throw NegativeArraySizeException(
                 "Backtracked max amount of characters. Endless loop detected. Bad Text: '" +
                         badText + "'"

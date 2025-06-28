@@ -6,11 +6,11 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
 import com.slothiesmooth.linksdetektor.internal.DomainNameReader
 import com.slothiesmooth.linksdetektor.internal.InputTextReader
-import com.slothiesmooth.linksdetektor.internal.Url
 import com.slothiesmooth.linksdetektor.internal.UrlMarker
 import com.slothiesmooth.linksdetektor.internal.UrlPart
 import com.slothiesmooth.linksdetektor.internal.model.CharacterMatch
 import com.slothiesmooth.linksdetektor.internal.model.ReadEndState
+import com.slothiesmooth.linksdetektor.internal.model.ReaderNextState
 import java.util.Collections
 import java.util.Locale
 
@@ -166,13 +166,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
                     length = 0
                 }
                 '[' -> {
-                    if (dontMatchIpv6) {
-                        // Check if we need to match characters. If we match characters and this is a start or stop of range,
-                        // either way reset the world and start processing again.
-                        if (checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
-                            readEnd(ReadEndState.InvalidUrl)
-                            length = 0
-                        }
+                    // Check if we need to match characters. If we match characters and this is a start or stop of range,
+                    // either way reset the world and start processing again.
+                    if (dontMatchIpv6 && checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
+                        readEnd(ReadEndState.InvalidUrl)
+                        length = 0
                     }
                     val beginning: Int = inputTextReader.position
 
@@ -328,7 +326,7 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         } else if (
             linksDetektorOptions.hasFlag(LinksDetektorOptions.BRACKET_MATCH) &&
             (curr == ']' || curr == '}' || curr == ')') ||
-            linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && (curr == '>')
+            linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && curr == '>'
         ) {
             // If we catch an end bracket increment its count and get rid of not ipv6 flag
             val currVal = getCharacterCount(curr) + 1
@@ -382,15 +380,13 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      */
     private fun readScheme(): Boolean {
         // Check if we are checking HTML and the length is longer than mailto:
-        if (linksDetektorOptions.hasFlag(LinksDetektorOptions.HTML) && bufferStringBuilder.length >= HTML_MAILTO.length) {
-            // Check if the string is actually mailto: then just return nothing.
-            if (HTML_MAILTO.equals(
-                    bufferStringBuilder.substring(bufferStringBuilder.length - HTML_MAILTO.length),
-                    ignoreCase = true
-                )
-            ) {
-                return readEnd(ReadEndState.InvalidUrl)
-            }
+        // Check if the string is actually mailto: then just return nothing.
+        if (linksDetektorOptions.hasFlag(LinksDetektorOptions.HTML) && bufferStringBuilder.length >= HTML_MAILTO.length && HTML_MAILTO.equals(
+                bufferStringBuilder.substring(bufferStringBuilder.length - HTML_MAILTO.length),
+                ignoreCase = true
+            )
+        ) {
+            return readEnd(ReadEndState.InvalidUrl)
         }
         val originalLength = bufferStringBuilder.length
         var numSlashes = 0
@@ -499,11 +495,11 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
 
         // Try to read the dns and act on the response.
         return when (reader.readDomainName()) {
-            DomainNameReader.ReaderNextState.ValidDomainName -> readEnd(ReadEndState.ValidUrl)
-            DomainNameReader.ReaderNextState.ReadFragment -> readFragment()
-            DomainNameReader.ReaderNextState.ReadPath -> readPath()
-            DomainNameReader.ReaderNextState.ReadPort -> readPort()
-            DomainNameReader.ReaderNextState.ReadQueryString -> readQueryString()
+            ReaderNextState.ValidDomainName -> readEnd(ReadEndState.ValidUrl)
+            ReaderNextState.ReadFragment -> readFragment()
+            ReaderNextState.ReadPath -> readPath()
+            ReaderNextState.ReadPort -> readPort()
+            ReaderNextState.ReadQueryString -> readQueryString()
             else -> readEnd(ReadEndState.InvalidUrl)
         }
     }

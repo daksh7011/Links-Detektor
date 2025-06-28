@@ -21,9 +21,9 @@ import kotlin.text.iterator
  *
  * After normalization, the host is re-encoded to ensure consistent representation.
  *
- * @property _host The original host string to normalize.
+ * @property host The original host string to normalize.
  */
-class HostNormalizer(private val _host: String?) {
+class HostNormalizer(private val host: String?) {
     /**
      * The byte representation of the host if it's an IP address.
      * Will be null if the host is not an IP address or if normalization failed.
@@ -43,13 +43,13 @@ class HostNormalizer(private val _host: String?) {
     }
 
     private fun normalizeHost() {
-        if (StringUtils.isEmpty(_host)) {
+        if (StringUtils.isEmpty(host)) {
             return
         }
         var host: String
         host = try {
             // replace high unicode characters
-            IDN.toASCII(_host)
+            IDN.toASCII(this@HostNormalizer.host)
         } catch (ex: IllegalArgumentException) {
             // occurs when the url is invalid. Just return
             return
@@ -109,7 +109,7 @@ class HostNormalizer(private val _host: String?) {
      *         or null if the host is not a valid IPv4 address.
      */
     private fun tryDecodeHostToIPv4(host: String): ByteArray? {
-        val parts: Array<String> = host.splitByDot()
+        val parts: List<String> = host.splitByDot()
         val numParts = parts.size
         if (numParts != 4 && numParts != 1) {
             return null
@@ -175,7 +175,7 @@ class HostNormalizer(private val _host: String?) {
      */
     private fun tryDecodeHostToIPv6(host: String): ByteArray? {
         val ip = host.substring(1, host.length - 1)
-        val parts: List<String> = ArrayList(listOf(*ip.split(":".toRegex()).toTypedArray()))
+        val parts: List<String> = ip.split(":".toRegex())
         if (parts.size < 3) {
             return null
         }

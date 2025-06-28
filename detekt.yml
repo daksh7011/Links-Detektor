@@ -263,6 +263,7 @@ formatting:
   MaximumLineLength:
     active: true
     maxLineLength: 180
+    excludes: ['**/test/**', '**/*.Test.kt']
   ModifierOrdering:
     active: true
     autoCorrect: true

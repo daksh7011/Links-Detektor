@@ -2,7 +2,7 @@ package com.slothiesmooth.linksdetektor.internal
 
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
-import java.util.Stack
+import java.util.*
 
 internal object UrlUtil {
     /**
@@ -19,7 +19,7 @@ internal object UrlUtil {
                 if (stringBuilder[i + 1].isHex() && stringBuilder[i + 2].isHex()) {
                     val decodedChar = String.format(
                         "%s",
-                            stringBuilder.substring(i + 1, i + 3).toShort(16)
+                        stringBuilder.substring(i + 1, i + 3).toShort(16)
                             .toInt().toChar()
                     )[0]
                     stringBuilder.delete(i, i + 3) // delete the % and two hex digits
@@ -27,12 +27,7 @@ internal object UrlUtil {
                     if (decodedChar == '%') {
                         i-- // backtrack one character to check for another decoding with this %.
                     } else if (
-                        (
-                            nonDecodedPercentIndices.isEmpty().not() &&
-                                decodedChar.isHex() &&
-                                stringBuilder[i - 1].isHex()
-                        ) &&
-                        i - nonDecodedPercentIndices.peek() == 2
+                        nonDecodedPercentIndices.isEmpty().not() && decodedChar.isHex() && stringBuilder[i - 1].isHex() && i - nonDecodedPercentIndices.peek() == 2
                     ) {
                         // Go back to the last non-decoded percent sign if it can be decoded.
                         // We only need to go back if it's of form %[HEX][HEX]

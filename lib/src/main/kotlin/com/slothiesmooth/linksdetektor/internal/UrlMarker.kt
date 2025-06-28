@@ -1,5 +1,7 @@
 package com.slothiesmooth.linksdetektor.internal
 
+import com.slothiesmooth.linksdetektor.Url
+
 /**
  * Tracks the positions of different URL parts within a string.
  * This class is used during URL parsing to mark where each component of a URL begins,
@@ -23,9 +25,7 @@ internal class UrlMarker {
      *
      * @return A new Url instance initialized with this marker.
      */
-    fun createUrl(): Url {
-        return Url(this)
-    }
+    fun createUrl(): Url = Url(this)
 
     /**
      * Sets the starting index for a specific URL part.

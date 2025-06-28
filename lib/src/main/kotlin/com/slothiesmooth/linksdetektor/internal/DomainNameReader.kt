@@ -8,7 +8,8 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isUnreserved
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
-import java.util.Locale
+import com.slothiesmooth.linksdetektor.internal.model.ReaderNextState
+import java.util.*
 
 /**
  * Validates and processes domain names during URL detection.
@@ -25,75 +26,27 @@ import java.util.Locale
  * should be read next.
  *
  * @property bufferStringBuilder Buffer used to accumulate the domain name characters.
- * @property _current The initial string that might be part of a domain name.
+ * @property currentDomain The initial string that might be part of a domain name.
  * @param inputTextReader The input stream to read characters from.
  * @param linksDetektorOptions Configuration options that affect domain name validation.
  * @param characterHandler Handler called for each non-domain character to track special characters.
  */
 internal class DomainNameReader(
+
     private val inputTextReader: InputTextReader,
+
     /**
      * The currently written string buffer.
      */
     private val bufferStringBuilder: StringBuilder,
+
     /**
      * The domain name started with a partial domain name found. This is the original string of the domain name only.
      */
-    private val _current: String?,
+    private val currentDomain: String?,
     private val linksDetektorOptions: LinksDetektorOptions,
     private val characterHandler: CharacterHandler,
 ) {
-    /**
-     * Represents the possible states after attempting to read a domain name.
-     *
-     * This enum defines the outcomes of domain name processing and indicates
-     * what part of the URL should be processed next (if any).
-     */
-    internal enum class ReaderNextState {
-        /**
-         * The domain name is invalid or could not be properly parsed.
-         *
-         * This state indicates that URL detection should be aborted or restarted
-         * from a different position in the input.
-         */
-        InvalidDomainName,
-
-        /**
-         * The domain name is valid and complete.
-         *
-         * This state indicates that a valid domain name was successfully parsed
-         * and no additional URL parts were detected.
-         */
-        ValidDomainName,
-
-        /**
-         * A valid domain name was found, followed by a fragment indicator (#).
-         *
-         * This state indicates that the next part to process is the URL fragment.
-         */
-        ReadFragment,
-
-        /**
-         * A valid domain name was found, followed by a path separator (/).
-         *
-         * This state indicates that the next part to process is the URL path.
-         */
-        ReadPath,
-
-        /**
-         * A valid domain name was found, followed by a port indicator (:).
-         *
-         * This state indicates that the next part to process is the port number.
-         */
-        ReadPort,
-
-        /**
-         * A valid domain name was found, followed by a query string indicator (?).
-         *
-         * This state indicates that the next part to process is the URL query string.
-         */
-        ReadQueryString
-    }
 
     /**
      * Interface for handling non-domain characters encountered during parsing.
@@ -183,23 +136,23 @@ internal class DomainNameReader(
      * @return The next state to use after reading the current.
      */
     private fun readCurrent(): ReaderNextState {
-        if (_current != null) {
+        if (currentDomain != null) {
             // Handles the case where the string is ".hello"
-            if (_current.length == 1 && _current[0].isDot()) {
+            if (currentDomain.length == 1 && currentDomain[0].isDot()) {
                 return ReaderNextState.InvalidDomainName
-            } else if (_current.length == 3 && _current.equals("%$HEX_ENCODED_DOT", ignoreCase = true)) {
+            } else if (currentDomain.length == 3 && currentDomain.equals("%$HEX_ENCODED_DOT", ignoreCase = true)) {
                 return ReaderNextState.InvalidDomainName
             }
 
             // The location where the domain name started.
-            _startDomainName = bufferStringBuilder.length - _current.length
+            _startDomainName = bufferStringBuilder.length - currentDomain.length
 
             // flag that the domain is currently all numbers and/or dots.
             _numeric = true
 
             // If an invalid char is found, we can just restart the domain from there.
             var newStart = 0
-            val currArray = _current.toCharArray()
+            val currArray = currentDomain.toCharArray()
             val length = currArray.size
 
             // hex special case
@@ -264,15 +217,15 @@ internal class DomainNameReader(
             // http://asdf%asdf.google.com <- asdf.google.com is still valid, so restart from the %
             if (newStart > 0) {
                 // make sure the location is not at the end. Otherwise the thing is just invalid.
-                if (newStart < _current.length) {
-                    bufferStringBuilder.replace(0, bufferStringBuilder.length, _current.substring(newStart))
+                if (newStart < currentDomain.length) {
+                    bufferStringBuilder.replace(0, bufferStringBuilder.length, currentDomain.substring(newStart))
 
                     // cut out the previous part, so now the domain name has to be from here.
                     _startDomainName = 0
                 }
 
                 // now after cutting if the buffer is just "." newStart > current (last character in current is invalid)
-                if (newStart >= _current.length || bufferStringBuilder.toString() == ".") {
+                if (newStart >= currentDomain.length || bufferStringBuilder.toString() == ".") {
                     return ReaderNextState.InvalidDomainName
                 }
             }
@@ -480,8 +433,7 @@ internal class DomainNameReader(
 
             // There is no size restriction if the top level domain is international (starts with "xn--")
             valid =
-                topLevelStart.equals("xn--", ignoreCase = true) ||
-                        (_topLevelLength in MIN_TOP_LEVEL_DOMAIN..MAX_TOP_LEVEL_DOMAIN)
+                topLevelStart.equals("xn--", ignoreCase = true) || _topLevelLength in MIN_TOP_LEVEL_DOMAIN..MAX_TOP_LEVEL_DOMAIN
         }
         if (valid) {
             // if it's valid, add the last character (if specified) and return the valid state.

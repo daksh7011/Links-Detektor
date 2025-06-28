@@ -1,7 +1,8 @@
-package com.slothiesmooth.linksdetektor.internal
+package com.slothiesmooth.linksdetektor
 
-import com.slothiesmooth.linksdetektor.LinksDetektor
-import com.slothiesmooth.linksdetektor.LinksDetektorOptions
+import com.slothiesmooth.linksdetektor.internal.UrlMarker
+import com.slothiesmooth.linksdetektor.internal.UrlPart
+import com.slothiesmooth.linksdetektor.internal.UrlUtil
 import org.apache.commons.lang3.StringUtils
 import java.net.MalformedURLException
 
@@ -19,7 +20,7 @@ import java.net.MalformedURLException
  *
  */
 open class Url internal constructor(urlMarker: UrlMarker) {
-    private val _urlMarker: UrlMarker
+    private val _urlMarker: UrlMarker = urlMarker
     private var _scheme: String? = null
     private var _username: String? = null
     private var _password: String? = null
@@ -33,38 +34,10 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      * The original, unmodified URL string that was used to create this Url object.
      * This is useful for debugging or when the original form needs to be preserved.
      */
-    val originalUrl: String?
+    val originalUrl: String? = urlMarker.originalUrl
 
-    init {
-        _urlMarker = urlMarker
-        originalUrl = urlMarker.originalUrl
-    }
-
-    /**
-     * Creates a normalized version of this URL.
-     *
-     * The normalized version provides canonical representations of URL components:
-     * - Host names are converted to lowercase and properly encoded
-     * - IP addresses are converted to their standard representation
-     * - Paths are normalized (resolving "./" and "../" segments)
-     *
-     * @return A new NormalizedUrl instance representing the normalized version of this URL.
-     */
-    fun normalize(): NormalizedUrl {
-        return NormalizedUrl(_urlMarker)
-    }
-
-    /**
-     * Returns a string representation of this URL.
-     *
-     * This method returns the full URL including all components (scheme, username, password,
-     * host, port, path, query, and fragment).
-     *
-     * @return The string representation of this URL.
-     */
-    override fun toString(): String {
-        return fullUrl
-    }
+    internal val urlMarker: UrlMarker
+        get() = _urlMarker
 
     /**
      * Gets the complete URL string including all components.
@@ -231,9 +204,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      * @param urlPart The URL part to check for existence.
      * @return True if the part exists in this URL, false otherwise.
      */
-    private fun exists(urlPart: UrlPart?): Boolean {
-        return urlPart != null && _urlMarker.indexOf(urlPart) >= 0
-    }
+    private fun exists(urlPart: UrlPart?): Boolean = urlPart != null && _urlMarker.indexOf(urlPart) >= 0
 
     /**
      * Finds the next existing URL part after the specified part.
@@ -272,8 +243,27 @@ open class Url internal constructor(urlMarker: UrlMarker) {
         return originalUrl!!.substring(_urlMarker.indexOf(part), _urlMarker.indexOf(nextPart))
     }
 
-    internal val urlMarker: UrlMarker
-        get() = _urlMarker
+    /**
+     * Creates a normalized version of this URL.
+     *
+     * The normalized version provides canonical representations of URL components:
+     * - Host names are converted to lowercase and properly encoded
+     * - IP addresses are converted to their standard representation
+     * - Paths are normalized (resolving "./" and "../" segments)
+     *
+     * @return A new NormalizedUrl instance representing the normalized version of this URL.
+     */
+    fun normalize(): NormalizedUrl = NormalizedUrl(_urlMarker)
+
+    /**
+     * Returns a string representation of this URL.
+     *
+     * This method returns the full URL including all components (scheme, username, password,
+     * host, port, path, query, and fragment).
+     *
+     * @return The string representation of this URL.
+     */
+    override fun toString(): String = fullUrl
 
     companion object {
         private const val DEFAULT_SCHEME = "http"
@@ -293,7 +283,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
          *
          * @param url The URL string to parse.
          * @return A new Url instance representing the parsed URL.
-         * @throws java.net.MalformedURLException If the input string is not a valid URL, contains no URLs,
+         * @throws MalformedURLException If the input string is not a valid URL, contains no URLs,
          *                               or contains multiple URLs.
          */
         @Throws(MalformedURLException::class)
@@ -301,15 +291,9 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             val formattedString: String = UrlUtil.removeSpecialSpaces(url.trim { it <= ' ' }.replace(" ", "%20"))
             val urls: List<Url> = LinksDetektor(formattedString, LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).detect()
             return when (urls.size) {
-                1 -> {
-                    urls[0]
-                }
-                0 -> {
-                    throw MalformedURLException("We couldn't find any urls in string: $url")
-                }
-                else -> {
-                    throw MalformedURLException("We found more than one url in string: $url")
-                }
+                1 -> urls[0]
+                0 -> throw MalformedURLException("We couldn't find any urls in string: $url")
+                else -> throw MalformedURLException("We found more than one url in string: $url")
             }
         }
     }

@@ -113,7 +113,5 @@ enum class LinksDetektorOptions(
      * @param flag The option flag to check for.
      * @return `true` if the specified flag is enabled in this options instance, `false` otherwise.
      */
-    fun hasFlag(flag: LinksDetektorOptions): Boolean {
-        return value and flag.value == flag.value
-    }
+    fun hasFlag(flag: LinksDetektorOptions): Boolean = value and flag.value == flag.value
 }

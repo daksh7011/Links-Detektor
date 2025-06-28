@@ -1,5 +1,8 @@
-package com.slothiesmooth.linksdetektor.internal
+package com.slothiesmooth.linksdetektor
 
+import com.slothiesmooth.linksdetektor.internal.HostNormalizer
+import com.slothiesmooth.linksdetektor.internal.PathNormalizer
+import com.slothiesmooth.linksdetektor.internal.UrlMarker
 import java.net.MalformedURLException
 
 /**
@@ -19,7 +22,7 @@ class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlMarker) 
     /**
      * Gets the normalized host part of the URL.
      *
-     * The host is normalized using [HostNormalizer] which handles:
+     * The host is normalized using [com.slothiesmooth.linksdetektor.internal.HostNormalizer] which handles:
      * - Converting to lowercase
      * - Handling IDN (Internationalized Domain Names)
      * - Converting IP addresses to their canonical form
@@ -37,7 +40,7 @@ class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlMarker) 
     /**
      * Gets the normalized path part of the URL.
      *
-     * The path is normalized using [PathNormalizer] which:
+     * The path is normalized using [com.slothiesmooth.linksdetektor.internal.PathNormalizer] which:
      * - Resolves relative path segments (e.g., "./" and "../")
      * - Removes duplicate slashes
      * - Decodes and re-encodes special characters
@@ -80,7 +83,7 @@ class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlMarker) 
         }
     }
 
-    companion object {
+    internal companion object {
         /**
          * Creates a normalized URL from a string representation.
          *
@@ -88,11 +91,9 @@ class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlMarker) 
          *
          * @param url The URL string to normalize.
          * @return A new NormalizedUrl instance.
-         * @throws java.net.MalformedURLException If the input string is not a valid URL or contains multiple URLs.
+         * @throws MalformedURLException If the input string is not a valid URL or contains multiple URLs.
          */
         @Throws(MalformedURLException::class)
-        fun create(url: String): NormalizedUrl {
-            return Url.Companion.create(url).normalize()
-        }
+        fun create(url: String): NormalizedUrl = Url.Companion.create(url).normalize()
     }
 }

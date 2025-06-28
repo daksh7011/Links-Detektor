@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils
  * This object contains utility extension functions for character validation, classification,
  * and string manipulation specifically tailored for URL parsing and normalization.
  */
+// TODO: Write tests
 internal object CharExtensions {
     /**
      * Determines if a character is a valid hexadecimal digit.

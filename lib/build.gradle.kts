@@ -1,12 +1,8 @@
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization")
 
     id("com.github.johnrengelman.shadow")
     id("io.gitlab.arturbosch.detekt")
-
-    // Apply the java-library plugin for API and implementation separation.
-    `java-library`
 
     // Apply maven-publish to provide library as dependency.
     `maven-publish`
@@ -42,8 +38,21 @@ dependencies {
     api("org.apache.commons:commons-math3:3.6.1")
 
     implementation("org.apache.commons:commons-lang3:3.12.0")
+
+    // Testing dependencies
+    testImplementation(libs.junit.api)
+    testImplementation(libs.junit.params)
+    testRuntimeOnly(libs.junit.engine)
 }
 
+
+// Configure test task
+tasks.withType<Test> {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
 
 // Publishing meta for Jitpack.
 publishing {

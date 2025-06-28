@@ -31,7 +31,7 @@ import java.util.Locale
  * @param characterHandler Handler called for each non-domain character to track special characters.
  */
 internal class DomainNameReader(
-    inputTextReader: InputTextReader,
+    private val inputTextReader: InputTextReader,
     /**
      * The currently written string buffer.
      */
@@ -40,8 +40,8 @@ internal class DomainNameReader(
      * The domain name started with a partial domain name found. This is the original string of the domain name only.
      */
     private val _current: String?,
-    linksDetektorOptions: LinksDetektorOptions,
-    characterHandler: CharacterHandler,
+    private val linksDetektorOptions: LinksDetektorOptions,
+    private val characterHandler: CharacterHandler,
 ) {
     /**
      * Represents the possible states after attempting to read a domain name.

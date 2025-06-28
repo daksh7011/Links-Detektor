@@ -6,8 +6,10 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlpha
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isDot
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
+import com.slothiesmooth.linksdetektor.internal.CharacterMatch
 import com.slothiesmooth.linksdetektor.internal.DomainNameReader
 import com.slothiesmooth.linksdetektor.internal.InputTextReader
+import com.slothiesmooth.linksdetektor.internal.ReadEndState
 import com.slothiesmooth.linksdetektor.internal.UrlMarker
 import java.util.Collections
 import java.util.Locale
@@ -33,25 +35,6 @@ import java.util.Locale
  * @property options Configuration options that control detection behavior.
  */
 class LinksDetektor(content: String, options: LinksDetektorOptions) {
-    /**
-     * The response of character matching.
-     */
-    private enum class CharacterMatch {
-        /**
-         * The character was not matched.
-         */
-        CharacterNotMatched,
-
-        /**
-         * A character was matched with requires a stop.
-         */
-        CharacterMatchStop,
-
-        /**
-         * The character was matched, which is a start of parentheses.
-         */
-        CharacterMatchStart
-    }
 
     /**
      * Stores options for detection.
@@ -102,21 +85,6 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
      * Keeps track of certain indices to create an Url object.
      */
     private var currentUrlMarker: UrlMarker = UrlMarker()
-
-    /**
-     * The states to use to continue writing or not.
-     */
-    enum class ReadEndState {
-        /**
-         * The current url is valid.
-         */
-        ValidUrl,
-
-        /**
-         * The current url is invalid.
-         */
-        InvalidUrl
-    }
 
     /**
      * Gets the number of characters that were backtracked during URL detection.

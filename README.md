@@ -4,6 +4,7 @@ A library for detecting links in text.
 
 # Plan
 - [ ] Enable magic number rule in detekt
+- [ ] Enable complexity rule in detekt
 
 ## License
 

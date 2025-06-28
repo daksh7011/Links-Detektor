@@ -62,7 +62,7 @@ comments:
     active: false
 
 complexity:
-  active: true
+  active: false
   ComplexCondition:
     active: true
     threshold: 10

@@ -8,7 +8,7 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isUnreserved
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
-import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -200,143 +200,143 @@ class CharExtensionsTest {
     @Test
     fun `splitByDot handles empty string`() {
         val result = "".splitByDot()
-        assertArrayEquals(arrayOf(""), result)
+        assertEquals(emptyList<String>(), result)
     }
 
     @Test
     fun `splitByDot splits by standard dots`() {
         val result = "example.com".splitByDot()
-        assertArrayEquals(arrayOf("example", "com"), result)
+        assertEquals(listOf("example", "com"), result)
     }
 
     @Test
     fun `splitByDot splits by URL-encoded dots`() {
         val result = "example%2Ecom".splitByDot()
-        assertArrayEquals(arrayOf("example", "com"), result)
+        assertEquals(listOf("example", "com"), result)
     }
 
     @Test
     fun `splitByDot splits by mixed standard and URL-encoded dots`() {
         val result = "sub.example%2Ecom".splitByDot()
-        assertArrayEquals(arrayOf("sub", "example", "com"), result)
+        assertEquals(listOf("sub", "example", "com"), result)
     }
 
     @Test
     fun `splitByDot splits by Unicode dot equivalents`() {
         val result = "example\u3002com".splitByDot()
-        assertArrayEquals(arrayOf("example", "com"), result)
+        assertEquals(listOf("example", "com"), result)
     }
 
     @Test
     fun `splitByDot handles consecutive dots`() {
         val result = "example..com".splitByDot()
-        assertArrayEquals(arrayOf("example", "", "com"), result)
+        assertEquals(listOf("example", "", "com"), result)
     }
 
     @Test
     fun `splitByDot handles dots at the beginning and end`() {
         val result = ".example.com.".splitByDot()
-        assertArrayEquals(arrayOf("", "example", "com", ""), result)
+        assertEquals(listOf("", "example", "com", ""), result)
     }
 
     @Test
     fun `splitByDot handles complex cases with mixed dot types`() {
         val result = "sub%2Eexample\u3002co\uFF0Em\uFF61org".splitByDot()
-        assertArrayEquals(arrayOf("sub", "example", "co", "m", "org"), result)
+        assertEquals(listOf("sub", "example", "co", "m", "org"), result)
     }
 
     @Test
     fun `splitByDot handles null input`() {
         val nullString: String? = null
         val result = (nullString ?: "").splitByDot()
-        assertArrayEquals(arrayOf(""), result)
+        assertEquals(emptyList<String>(), result)
     }
 
     @Test
     fun `splitByDot handles URL-encoded dots at beginning and end`() {
         val result = "%2Eexample.com%2E".splitByDot()
-        assertArrayEquals(arrayOf("", "example", "com", ""), result)
+        assertEquals(listOf("", "example", "com", ""), result)
     }
 
     @Test
     fun `splitByDot handles lowercase and uppercase URL-encoded dots`() {
         val resultLower = "example%2ecom".splitByDot()
         val resultUpper = "example%2Ecom".splitByDot()
-        assertArrayEquals(arrayOf("example", "com"), resultLower)
-        assertArrayEquals(arrayOf("example", "com"), resultUpper)
+        assertEquals(listOf("example", "com"), resultLower)
+        assertEquals(listOf("example", "com"), resultUpper)
     }
 
     @Test
     fun `splitByDot handles incomplete URL-encoded dots`() {
         val result = "example%2".splitByDot()
-        assertArrayEquals(arrayOf("example%2"), result)
+        assertEquals(listOf("example%2"), result)
     }
 
     @Test
     fun `splitByDot handles multiple consecutive URL-encoded dots`() {
         val result = "example%2E%2Ecom".splitByDot()
-        assertArrayEquals(arrayOf("example", "", "com"), result)
+        assertEquals(listOf("example", "", "com"), result)
     }
 
     @Test
     fun `splitByDot handles very long strings`() {
         val longString = "a".repeat(1000) + "." + "b".repeat(1000) + ".c"
         val result = longString.splitByDot()
-        assertArrayEquals(arrayOf("a".repeat(1000), "b".repeat(1000), "c"), result)
+        assertEquals(listOf("a".repeat(1000), "b".repeat(1000), "c"), result)
     }
 
     @Test
     fun `splitByDot handles mixed URL-encoded and Unicode dots`() {
         val result = "example%2E\u3002com\uFF0Eorg%2eio".splitByDot()
-        assertArrayEquals(arrayOf("example", "", "com", "org", "io"), result)
+        assertEquals(listOf("example", "", "com", "org", "io"), result)
     }
 
     @Test
     fun `splitByDot handles URL-encoded dots with mixed case combinations`() {
         val result = "example%2E%2ecom%2E%2Eorg".splitByDot()
-        assertArrayEquals(arrayOf("example", "", "com", "", "org"), result)
+        assertEquals(listOf("example", "", "com", "", "org"), result)
     }
 
     @Test
     fun `splitByDot handles malformed URL-encoded dots`() {
         val result = "example%2com%2".splitByDot()
-        assertArrayEquals(arrayOf("example%2com%2"), result)
+        assertEquals(listOf("example%2com%2"), result)
     }
 
     @Test
     fun `splitByDot handles string with only dots`() {
         val result = "...".splitByDot()
-        assertArrayEquals(arrayOf("", "", "", ""), result)
+        assertEquals(listOf("", "", "", ""), result)
     }
 
     @Test
     fun `splitByDot handles string with only URL-encoded dots`() {
         val result = "%2E%2e%2E".splitByDot()
-        assertArrayEquals(arrayOf("", "", "", ""), result)
+        assertEquals(listOf("", "", "", ""), result)
     }
 
     @Test
     fun `splitByDot handles string with partial URL-encoded sequence at the end`() {
         val result = "example%".splitByDot()
-        assertArrayEquals(arrayOf("example%"), result)
+        assertEquals(listOf("example%"), result)
     }
 
     @Test
     fun `splitByDot handles mix of URL-encoded dots and non-dot characters`() {
         val result = "a%2Eb%2Ec%2Ed".splitByDot()
-        assertArrayEquals(arrayOf("a", "b", "c", "d"), result)
+        assertEquals(listOf("a", "b", "c", "d"), result)
     }
 
     @Test
     fun `splitByDot handles URL-encoded dot followed by percent sign`() {
         val result = "example%2E%com".splitByDot()
-        assertArrayEquals(arrayOf("example", "%com"), result)
+        assertEquals(listOf("example", "%com"), result)
     }
 
     @Test
     fun `splitByDot handles string with URL-encoded dot followed by another percent sign and valid hex`() {
         val result = "example%2E%20rest".splitByDot()
-        assertArrayEquals(arrayOf("example", "%20rest"), result)
+        assertEquals(listOf("example", "%20rest"), result)
     }
     //endregion
 }

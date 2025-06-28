@@ -535,7 +535,7 @@ internal class DomainNameReader(
                 }
             } else if (_dots == 3) {
                 // Dotted decimal/hex/octal format
-                val parts: Array<String> = testDomain.splitByDot()
+                val parts: List<String> = testDomain.splitByDot()
                 valid = true
 
                 // check each part of the ip and make sure its valid.

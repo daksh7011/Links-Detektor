@@ -16,9 +16,7 @@ internal object CharExtensions {
      *
      * @return `true` if the character is a valid hexadecimal digit, `false` otherwise.
      */
-    internal fun Char.isHex(): Boolean {
-        return this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
-    }
+    internal fun Char.isHex(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 
     /**
      * Determines if a character is a valid alphabetic character.
@@ -27,9 +25,7 @@ internal object CharExtensions {
      *
      * @return `true` if the character is a valid alphabetic character, `false` otherwise.
      */
-    internal fun Char.isAlpha(): Boolean {
-        return this in 'a'..'z' || this in 'A'..'Z'
-    }
+    internal fun Char.isAlpha(): Boolean = this in 'a'..'z' || this in 'A'..'Z'
 
     /**
      * Determines if a character is a valid numeric digit.
@@ -38,9 +34,7 @@ internal object CharExtensions {
      *
      * @return `true` if the character is a valid numeric digit, `false` otherwise.
      */
-    internal fun Char.isNumeric(): Boolean {
-        return this in '0'..'9'
-    }
+    internal fun Char.isNumeric(): Boolean = this in '0'..'9'
 
     /**
      * Determines if a character is a valid alphanumeric character.
@@ -49,9 +43,7 @@ internal object CharExtensions {
      *
      * @return `true` if the character is a valid alphanumeric character, `false` otherwise.
      */
-    internal fun Char.isAlphaNumeric(): Boolean {
-        return this.isAlpha() || this.isNumeric()
-    }
+    internal fun Char.isAlphaNumeric(): Boolean = isAlpha() || isNumeric()
 
     /**
      * Determines if a character is a valid unreserved character as defined by RFC 3986.
@@ -66,9 +58,7 @@ internal object CharExtensions {
      * @return `true` if the character is a valid unreserved character, `false` otherwise.
      * @see <a href="https://tools.ietf.org/html/rfc3986#section-2.3">RFC 3986 Section 2.3</a>
      */
-    internal fun Char.isUnreserved(): Boolean {
-        return this.isAlphaNumeric() || this == '-' || this == '.' || this == '_' || this == '~'
-    }
+    internal fun Char.isUnreserved(): Boolean = isAlphaNumeric() || this == '-' || this == '.' || this == '_' || this == '~'
 
     /**
      * Determines if a character is a dot or a Unicode equivalent of a dot.
@@ -82,9 +72,7 @@ internal object CharExtensions {
      * @return `true` if the character is a dot or a Unicode equivalent, `false` otherwise.
      * @see <a href="https://www.unicode.org/reports/tr46/">Unicode IDNA Compatibility Processing</a>
      */
-    internal fun Char.isDot(): Boolean {
-        return this == '.' || this == '\u3002' || this == '\uFF0E' || this == '\uFF61'
-    }
+    internal fun Char.isDot(): Boolean = this == '.' || this == '\u3002' || this == '\uFF0E' || this == '\uFF61'
 
     /**
      * Determines if a character is a whitespace character.
@@ -97,9 +85,7 @@ internal object CharExtensions {
      *
      * @return `true` if the character is a whitespace character, `false` otherwise.
      */
-    internal fun Char.isWhiteSpace(): Boolean {
-        return this == '\n' || this == '\t' || this == '\r' || this == ' '
-    }
+    internal fun Char.isWhiteSpace(): Boolean = this == '\n' || this == '\t' || this == '\r' || this == ' '
 
     /**
      * Splits a string by dot characters, including both standard and URL-encoded dots.
@@ -115,14 +101,15 @@ internal object CharExtensions {
      * @return An array of strings resulting from splitting the original string at all dot characters.
      *         Returns an array containing an empty string if the input is empty.
      */
-    internal fun String.splitByDot(): Array<String> {
-        val splitList = ArrayList<String>()
-        val section = StringBuilder()
+    internal fun String.splitByDot(): List<String> {
         if (StringUtils.isEmpty(this)) {
-            return arrayOf("")
+            return emptyList()
         }
+        val splitList = mutableListOf<String>()
+        val section = StringBuilder()
         val inputTextReader = InputTextReader(this)
-        while (inputTextReader.eof().not()) {
+
+        while (!inputTextReader.eof()) {
             val currentCharacter: Char = inputTextReader.read()
             when {
                 currentCharacter.isDot() -> {
@@ -134,16 +121,15 @@ internal object CharExtensions {
                         inputTextReader.peek(2).equals("2e", ignoreCase = true) ->
                 {
                     inputTextReader.read()
-                    inputTextReader.read() // advance past the 2e
+                    inputTextReader.read()
                     splitList.add(section.toString())
                     section.setLength(0)
                 }
-                else -> {
-                    section.append(currentCharacter)
-                }
+                else -> section.append(currentCharacter)
             }
         }
+
         splitList.add(section.toString())
-        return splitList.toTypedArray()
+        return splitList
     }
 }

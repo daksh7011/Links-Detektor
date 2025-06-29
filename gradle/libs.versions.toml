@@ -1,5 +1,5 @@
 [versions]
-lib = "2.0.0" # Links Detektor library version
+lib = "2.0.1" # Links Detektor library version
 
 detekt = "1.23.8"  # Note: Plugin versions must be updated in the settings.gradle.kts too
 kotlin = "2.2.0"  # Note: Plugin versions must be updated in the settings.gradle.kts too

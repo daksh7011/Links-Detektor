@@ -47,6 +47,9 @@ jobs:
       - name: Execute tests
         run: "./gradlew test"
 
+      - name: Release to Maven central
+        run: "./gradlew publishAllPublicationsToProjectLocalRepository zipMavenCentralPortalPublication releaseMavenCentralPortalPublication"
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

@@ -8,9 +8,14 @@ ci:
   - changed-files:
       - any-glob-to-any-file: 'github/**/*'
 
-commands:
+library:
   - changed-files:
-      - any-glob-to-any-file: 'src/main/kotlin/qbtbot/commands/**/*'
+      - any-glob-to-any-file: 'links-detektor/src/main/kotlin/**/*'
+
+sample:
+  - changed-files:
+      - any-glob-to-any-file: 'sample/src/main/kotlin/**/*'
+
 
 # Add 'feature' label to any PR where the head branch name starts with `feature` or has a `feature` section in the name
 feature:

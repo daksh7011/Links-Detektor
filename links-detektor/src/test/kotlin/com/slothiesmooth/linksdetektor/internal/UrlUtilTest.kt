@@ -131,7 +131,7 @@ class UrlUtilTest {
     fun `decode handles mixed case in percent encoding`() {
         val input = "example%2e%2E%2f%2F"
         val result = decode(input)
-        assertEquals("example..//" , result)
+        assertEquals("example..//", result)
     }
 
     @Test

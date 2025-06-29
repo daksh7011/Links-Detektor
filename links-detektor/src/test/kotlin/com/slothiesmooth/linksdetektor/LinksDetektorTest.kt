@@ -596,7 +596,11 @@ class LinksDetektorTest {
 
     @ParameterizedTest
     @MethodSource("provideOptionCombinations")
-    fun `detect works with various option combinations`(options: LinksDetektorOptions, content: String, expectedUrls: List<String>) {
+    fun `detect works with various option combinations`(
+        options: LinksDetektorOptions,
+        content: String,
+        expectedUrls: List<String>
+    ) {
         val detector = LinksDetektor(content, options)
         val urls = detector.detect()
 
@@ -1155,6 +1159,7 @@ class LinksDetektorTest {
         } catch (e: MalformedURLException) {
             // If an exception is thrown, that's also acceptable
             // Just verify it's the expected type of exception
+            @Suppress("USELESS_IS_CHECK")
             assertTrue(e is MalformedURLException)
         }
     }

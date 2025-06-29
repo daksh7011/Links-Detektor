@@ -29,7 +29,6 @@ internal object UrlUtil {
                 if (decodedUrlBuilder.getOrNull(currentPosition + 1)?.isHex() == true &&
                     decodedUrlBuilder.getOrNull(currentPosition + 2)?.isHex() == true
                 ) {
-
                     val hexDigits = decodedUrlBuilder.substring(currentPosition + 1, currentPosition + 3)
                     val decodedCharacter = hexDigits.toInt(16).toChar()
 
@@ -38,10 +37,10 @@ internal object UrlUtil {
 
                     if (decodedCharacter == '%') {
                         currentPosition-- // backtrack one character to check for another decoding with this %.
-                    } else if (pendingPercentIndices.isNotEmpty()
-                        && decodedCharacter.isHex()
-                        && decodedUrlBuilder.getOrNull(currentPosition - 1)?.isHex() == true
-                        && currentPosition - pendingPercentIndices.peek() == 2
+                    } else if (pendingPercentIndices.isNotEmpty() &&
+                        decodedCharacter.isHex() &&
+                        decodedUrlBuilder.getOrNull(currentPosition - 1)?.isHex() == true &&
+                        currentPosition - pendingPercentIndices.peek() == 2
                     ) {
                         // Go back to the last non-decoded percent sign if it can be decoded.
                         // We only need to go back if it's of form %[HEX][HEX]
@@ -82,9 +81,7 @@ internal object UrlUtil {
         return buildString(url.length * 2) {
             url.forEach { character ->
                 when {
-                    character.code <= 32 || character.code >= 127 || character == '#' || character == '%' -> {
-                        append(String.format("%%%02X", character.code.toByte()))
-                    }
+                    character.code <= 32 || character.code >= 127 || character == '#' || character == '%' -> append(String.format("%%%02X", character.code.toByte()))
                     else -> append(character)
                 }
             }

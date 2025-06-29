@@ -46,7 +46,10 @@ labels:
     color: D93F0B
   - name: feature
     color: 0E8A16
-  - name: commands
+  - name: library
+    color: 1D76DB
+    oldname: commands
+  - name: sample
     color: 1D76DB
   - name: ci
     color: 1D76DB

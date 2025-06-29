@@ -1,0 +1,30 @@
+# Note: Quotation marks are required for the leading asterisk
+
+dependency:
+  - changed-files:
+      - any-glob-to-any-file: 'gradle/*.toml'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: 'github/**/*'
+
+commands:
+  - changed-files:
+      - any-glob-to-any-file: 'src/main/kotlin/qbtbot/commands/**/*'
+
+# Add 'feature' label to any PR where the head branch name starts with `feature` or has a `feature` section in the name
+feature:
+  - head-branch: ['^feature', 'feature']
+
+# Add 'fix' label to any PR where the head branch name starts with `fix` or has a `fix` section in the name
+fix:
+  - head-branch: ['^fix', 'fix']
+
+# Add 'maintenance' label to any PR where the head branch name
+# starts with `chore, maintenance` or has a `fix, maintenance` section in the name
+maintenance:
+  - head-branch: ['^maintenance', 'maintenance','^chore', 'chore']
+
+# Add 'release' label to any PR that is opened against the `master` branch
+release:
+  - base-branch: 'master'

@@ -65,10 +65,10 @@ internal object UrlUtil {
      * Removes TAB (0x09), CR (0x0d), LF (0x0a), and spaces from the URL
      *
      * @param urlPart The part of the url we are canonicalizing
-     * @return The URL part with all whitespace characters removed
+     * @return The URL part with all whitespace characters removed, or empty string if input is null
      */
-    internal fun removeSpecialSpaces(urlPart: String): String =
-        urlPart.filterNot { it.isWhiteSpace() }
+    internal fun removeSpecialSpaces(urlPart: String?): String =
+        urlPart?.filterNot { it.isWhiteSpace() } ?: ""
 
     /**
      * Replaces all special characters in the url with hex strings.
@@ -96,9 +96,10 @@ internal object UrlUtil {
      * Ex: ".local.....com." -> "local.com"
      *
      * @param host The host string to normalize
-     * @return The normalized host string with extra dots removed
+     * @return The normalized host string with extra dots removed, or empty string if input is null
      */
-    internal fun removeExtraDots(host: String): String {
+    internal fun removeExtraDots(host: String?): String {
+        host ?: return ""
         if (host.isEmpty()) return ""
 
         // First, replace consecutive dots with a single dot

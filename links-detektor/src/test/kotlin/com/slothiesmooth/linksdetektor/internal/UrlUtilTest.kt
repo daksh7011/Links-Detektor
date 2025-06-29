@@ -166,8 +166,16 @@ class UrlUtilTest {
 
     //region removeSpecialSpaces tests
     @Test
-    fun `removeSpecialSpaces handles empty string`() {
-        val result = removeSpecialSpaces("")
+    fun `removeSpecialSpaces handles null input`() {
+        val result = removeSpecialSpaces(null)
+        assertEquals("", result)
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = [" ", "\t", "\r", "\n", " \t\r\n"])
+    fun `removeSpecialSpaces handles empty and whitespace-only strings`(input: String?) {
+        val result = removeSpecialSpaces(input)
         assertEquals("", result)
     }
 
@@ -228,13 +236,6 @@ class UrlUtilTest {
     }
 
     @Test
-    fun `removeSpecialSpaces handles string with only whitespace`() {
-        val input = " \t\r\n"
-        val result = removeSpecialSpaces(input)
-        assertEquals("", result)
-    }
-
-    @Test
     fun `removeSpecialSpaces handles whitespace scattered throughout the string`() {
         val input = "e x a m p\tl\re\n.c o m"
         val result = removeSpecialSpaces(input)
@@ -249,9 +250,10 @@ class UrlUtilTest {
         assertEquals("", result)
     }
 
-    @Test
-    fun `encode handles empty string`() {
-        val result = encode("")
+    @ParameterizedTest
+    @NullAndEmptySource
+    fun `encode handles empty string`(input: String?) {
+        val result = encode(input)
         assertEquals("", result)
     }
 
@@ -343,8 +345,16 @@ class UrlUtilTest {
 
     //region removeExtraDots tests
     @Test
-    fun `removeExtraDots handles empty string`() {
-        val result = removeExtraDots("")
+    fun `removeExtraDots handles null input`() {
+        val result = removeExtraDots(null)
+        assertEquals("", result)
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = ["...", "..", ".", "....", "....."])
+    fun `removeExtraDots handles empty and dot-only strings`(input: String?) {
+        val result = removeExtraDots(input)
         assertEquals("", result)
     }
 
@@ -355,74 +365,21 @@ class UrlUtilTest {
         assertEquals(input, result)
     }
 
-    @Test
-    fun `removeExtraDots removes leading dot`() {
-        val input = ".example.com"
+    @ParameterizedTest
+    @CsvSource(
+        ".example.com, example.com",
+        "example.com., example.com",
+        ".example.com., example.com",
+        "example..com, example.com",
+        "example.....com, example.com",
+        ".local.....com., local.com",
+        "..example...domain....com..., example.domain.com",
+        ".a.b.c.d.e., a.b.c.d.e",
+        "...sub...example....co....uk..., sub.example.co.uk"
+    )
+    fun `removeExtraDots handles various dot patterns`(input: String, expected: String) {
         val result = removeExtraDots(input)
-        assertEquals("example.com", result)
-    }
-
-    @Test
-    fun `removeExtraDots removes trailing dot`() {
-        val input = "example.com."
-        val result = removeExtraDots(input)
-        assertEquals("example.com", result)
-    }
-
-    @Test
-    fun `removeExtraDots removes both leading and trailing dots`() {
-        val input = ".example.com."
-        val result = removeExtraDots(input)
-        assertEquals("example.com", result)
-    }
-
-    @Test
-    fun `removeExtraDots replaces consecutive dots with a single dot`() {
-        val input = "example..com"
-        val result = removeExtraDots(input)
-        assertEquals("example.com", result)
-    }
-
-    @Test
-    fun `removeExtraDots handles multiple consecutive dots`() {
-        val input = "example.....com"
-        val result = removeExtraDots(input)
-        assertEquals("example.com", result)
-    }
-
-    @Test
-    fun `removeExtraDots handles the example from documentation`() {
-        val input = ".local.....com."
-        val result = removeExtraDots(input)
-        assertEquals("local.com", result)
-    }
-
-    @Test
-    fun `removeExtraDots handles dots at various positions`() {
-        val input = "..example...domain....com..."
-        val result = removeExtraDots(input)
-        assertEquals("example.domain.com", result)
-    }
-
-    @Test
-    fun `removeExtraDots handles string with only dots`() {
-        val input = "..."
-        val result = removeExtraDots(input)
-        assertEquals("", result)
-    }
-
-    @Test
-    fun `removeExtraDots handles string with alternating characters and dots`() {
-        val input = ".a.b.c.d.e."
-        val result = removeExtraDots(input)
-        assertEquals("a.b.c.d.e", result)
-    }
-
-    @Test
-    fun `removeExtraDots handles complex domain names`() {
-        val input = "...sub...example....co....uk..."
-        val result = removeExtraDots(input)
-        assertEquals("sub.example.co.uk", result)
+        assertEquals(expected, result)
     }
 
     @Test

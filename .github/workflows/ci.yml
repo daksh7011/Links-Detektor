@@ -45,4 +45,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: JARs
-          path: lib/build/libs/*.jar
+          path: links-detektor/build/libs/*.jar
+
+# TODO: Add automation for auto artifactory push

@@ -69,6 +69,19 @@ tasks.withType<Test> {
     }
 }
 
+// Task to copy Dokka documentation to docs directory in the root project
+tasks.register<Copy>("copyDokkaToDocsDir") {
+    dependsOn("dokkaHtml")
+    from(layout.buildDirectory.dir("dokka"))
+    into(rootProject.file("docs"))
+    description = "Copies Dokka documentation to docs directory in the root project"
+}
+
+// Make build task finalized by copyDokkaToDocsDir task
+tasks.named("build") {
+    finalizedBy("copyDokkaToDocsDir")
+}
+
 // TODO: Migrate to dokka2 standards
 // Configure Dokka to generate KDoc documentation
 tasks.dokkaHtml {
@@ -164,10 +177,7 @@ publishing {
 
 
 signing {
-    val signingKey = System.getenv("SIGNING_KEY") ?: project.findProperty("signingKey") as String?
-    val signingPassword = System.getenv("SIGNING_PASSWORD") ?: project.findProperty("signingPassword") as String?
-
-    if (signingKey != null && signingPassword != null) {
-        useInMemoryPgpKeys(signingKey, signingPassword)
-    }
+    val signingKey: String? by project
+    val signingPassword: String? by project
+    useInMemoryPgpKeys(signingKey, signingPassword)
 }

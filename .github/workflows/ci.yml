@@ -53,5 +53,3 @@ jobs:
         with:
           name: JARs
           path: links-detektor/build/libs/*.jar
-
-# TODO: Add automation for auto artifactory push

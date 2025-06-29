@@ -4,22 +4,25 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-blue.svg)](https://kotlinlang.org)
 
-> 🚀 **A robust library for detecting and extracting URLs from text content.** Links Detektor provides a powerful URL detection engine that can identify various URL formats within arbitrary text.
+🚀 **A robust library for detecting and extracting URLs from text content.** Links Detektor provides a powerful URL detection engine that can identify various URL formats within
+arbitrary text.
 
 ## ✨ Features
 
 - 🔎 **Detects URLs** in plain text, JSON, XML, JavaScript, and HTML content
 - 🌐 **Handles various URL formats**:
-  - Standard URLs (http, https, ftp, ftps)
-  - URLs with usernames and passwords
-  - URLs with IPv4 addresses in various formats (decimal, hex, octal)
-  - URLs with IPv6 addresses
-  - URLs with international domain names
+    - Standard URLs (http, https, ftp, ftps)
+    - URLs with usernames and passwords
+    - URLs with IPv4 addresses in various formats (decimal, hex, octal)
+    - URLs with IPv6 addresses
+    - URLs with international domain names
 - 🧹 **Normalizes URLs** for consistent representation and comparison
 - 🔓 **More lenient** than standard URL parsers (handles URLs that browsers accept but standard parsers reject)
 - ⚙️ **Customizable detection** behavior through options
 
 ## 📦 Installation
+
+> 💡 **Tip:** You can always check for the latest version on [Maven Central](https://central.sonatype.com/artifact/com.slothiesmooth/links-detektor)
 
 <details open>
 <summary><b>📋 Gradle (Kotlin DSL)</b></summary>
@@ -29,6 +32,7 @@ dependencies {
     implementation("com.slothiesmooth:links-detektor:<latest_version>")
 }
 ```
+
 </details>
 
 <details>
@@ -39,18 +43,21 @@ dependencies {
     implementation 'com.slothiesmooth:links-detektor:<latest_version>'
 }
 ```
+
 </details>
 
 <details>
 <summary><b>📋 Maven</b></summary>
 
 ```xml
+
 <dependency>
     <groupId>com.slothiesmooth</groupId>
     <artifactId>links-detektor</artifactId>
     <version>latest_version</version>
 </dependency>
 ```
+
 </details>
 
 ## 🚀 Quick Start
@@ -99,6 +106,7 @@ try {
     println("Invalid URL: ${e.message}")
 }
 ```
+
 </details>
 
 <details>
@@ -205,6 +213,7 @@ The library provides the following main classes:
 2. 🧰 Open the project in your IDE (IntelliJ IDEA recommended)
 3. 🏗️ Build the project with Gradle: `./gradlew build`
 4. 🧪 Run tests: `./gradlew test`
+
 </details>
 
 ### 📏 Code Style
@@ -233,6 +242,7 @@ The project uses [detekt](https://github.com/detekt/detekt) for static code anal
 
 | Status | Feature              | Description                                   |
 |--------|----------------------|-----------------------------------------------|
+| ⬜      | 🛠️ **Extensions**   | Add extensions to make the library usage easy |
 | ⬜      | 🔢 **Magic Numbers** | Enable magic number rule in detekt            |
 | ⬜      | 🧩 **Complexity**    | Enable complexity rule in detekt              |
 | ⬜      | 📱 **Multiplatform** | Make library KMP (Kotlin Multiplatform) ready |

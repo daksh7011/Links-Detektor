@@ -55,7 +55,7 @@ dependencies {
 
 ## 🚀 Quick Start
 
-<div align="center">
+<div style="text-align: center;">
 
 ### 🏃‍♂️ Get started in just a few lines of code!
 
@@ -108,8 +108,8 @@ try {
 val url = Url.create("HTTP://ExAmPlE.com/a/b/.//./../c")
 val normalizedUrl = url.normalize()
 
-println("Original: ${url}")
-println("Normalized: ${normalizedUrl}")
+println("Original: $url")
+println("Normalized: $normalizedUrl")
 // Output: Normalized: http://example.com/a/c
 ```
 
@@ -141,27 +141,27 @@ println("Found domains: $links")
 
 > 🛠️ Links Detektor provides various configuration options through the `LinksDetektorOptions` enum:
 
-<div align="center">
+<div style="text-align: center;">
 
 ### 🎛️ Fine-tune URL detection with these powerful options
 
 </div>
 
-| Option | Description | Use Case |
-|--------|-------------|----------|
-| `Default` | 🔄 Base configuration with no additional detection features | Simple text parsing |
-| `QUOTE_MATCH` | 🔤 Enables double quote matching at the beginning and end of URLs | URLs in quoted strings |
-| `SINGLE_QUOTE_MATCH` | 🔠 Enables single quote matching at the beginning and end of URLs | URLs in single-quoted strings |
-| `BRACKET_MATCH` | 🔣 Enables bracket matching for URLs (handles (), {}, and []) | URLs in code or structured text |
-| `JSON` | 📊 Configures detection for URLs in JSON content | API responses, config files |
-| `JAVASCRIPT` | 📜 Configures detection for URLs in JavaScript content | Web scraping, code analysis |
-| `XML` | 📋 Configures detection for URLs in XML content | Configuration files, feeds |
-| `HTML` | 🌐 Configures detection for URLs in HTML content | Web pages, HTML emails |
-| `ALLOW_SINGLE_LEVEL_DOMAIN` | 🏠 Enables detection of single-level domain URLs | Local development (http://localhost) |
+| Option                      | Description                                                       | Use Case                             |
+|-----------------------------|-------------------------------------------------------------------|--------------------------------------|
+| `Default`                   | 🔄 Base configuration with no additional detection features       | Simple text parsing                  |
+| `QUOTE_MATCH`               | 🔤 Enables double quote matching at the beginning and end of URLs | URLs in quoted strings               |
+| `SINGLE_QUOTE_MATCH`        | 🔠 Enables single quote matching at the beginning and end of URLs | URLs in single-quoted strings        |
+| `BRACKET_MATCH`             | 🔣 Enables bracket matching for URLs (handles (), {}, and [])     | URLs in code or structured text      |
+| `JSON`                      | 📊 Configures detection for URLs in JSON content                  | API responses, config files          |
+| `JAVASCRIPT`                | 📜 Configures detection for URLs in JavaScript content            | Web scraping, code analysis          |
+| `XML`                       | 📋 Configures detection for URLs in XML content                   | Configuration files, feeds           |
+| `HTML`                      | 🌐 Configures detection for URLs in HTML content                  | Web pages, HTML emails               |
+| `ALLOW_SINGLE_LEVEL_DOMAIN` | 🏠 Enables detection of single-level domain URLs                  | Local development (http://localhost) |
 
 ## 📚 API Documentation
 
-<div align="center">
+<div style="text-align: center;">
 
 ### 🧩 Core Components
 
@@ -169,12 +169,12 @@ println("Found domains: $links")
 
 The library provides the following main classes:
 
-| Class | Description |
-|-------|-------------|
-| 🔍 `LinksDetektor` | The main class for detecting URLs in text |
-| ⚙️ `LinksDetektorOptions` | Configuration options for URL detection |
-| 🔗 `Url` | Represents a URL with various components (scheme, host, path, etc.) |
-| ✨ `NormalizedUrl` | A normalized version of a URL for consistent representation |
+| Class                     | Description                                                         |
+|---------------------------|---------------------------------------------------------------------|
+| 🔍 `LinksDetektor`        | The main class for detecting URLs in text                           |
+| ⚙️ `LinksDetektorOptions` | Configuration options for URL detection                             |
+| 🔗 `Url`                  | Represents a URL with various components (scheme, host, path, etc.) |
+| ✨ `NormalizedUrl`         | A normalized version of a URL for consistent representation         |
 
 > 📖 For detailed API documentation, please refer to the KDoc comments in the source code.
 
@@ -182,19 +182,19 @@ The library provides the following main classes:
 
 > 🤝 Contributions are welcome! We appreciate your help in making this library better.
 
-<div align="center">
+<div style="text-align: center;">
 
 ### 🌟 Ways to Contribute
 
 </div>
 
-| Type | Description |
-|------|-------------|
-| 🐛 **Bug Reports** | Report bugs and issues by creating GitHub issues |
-| 💡 **Feature Requests** | Suggest new features or improvements |
-| 📝 **Documentation** | Improve or correct documentation |
-| ✅ **Testing** | Write tests to increase code coverage |
-| 🔧 **Code** | Submit pull requests to fix bugs or add features |
+| Type                    | Description                                      |
+|-------------------------|--------------------------------------------------|
+| 🐛 **Bug Reports**      | Report bugs and issues by creating GitHub issues |
+| 💡 **Feature Requests** | Suggest new features or improvements             |
+| 📝 **Documentation**    | Improve or correct documentation                 |
+| ✅ **Testing**           | Write tests to increase code coverage            |
+| 🔧 **Code**             | Submit pull requests to fix bugs or add features |
 
 ### 🛠️ Development Setup
 
@@ -223,7 +223,7 @@ The project uses [detekt](https://github.com/detekt/detekt) for static code anal
 
 ## 🗺️ Roadmap
 
-<div align="center">
+<div style="text-align: center;">
 
 ### 🚀 Future Plans
 
@@ -231,22 +231,22 @@ The project uses [detekt](https://github.com/detekt/detekt) for static code anal
 
 > 🔮 Here's what we're planning for upcoming releases:
 
-| Status | Feature | Description |
-|--------|---------|-------------|
-| ⬜ | 🔢 **Magic Numbers** | Enable magic number rule in detekt |
-| ⬜ | 🧩 **Complexity** | Enable complexity rule in detekt |
-| ⬜ | 📱 **Multiplatform** | Make library KMP (Kotlin Multiplatform) ready |
-| ⬜ | 📚 **Documentation** | Make project dokka2 ready |
-| ⬜ | 🧪 **Testing** | Write more tests for utils and other methods |
-| ✅ | 🧪 **Core Tests** | Added tests for utils and main detektor class |
+| Status | Feature              | Description                                   |
+|--------|----------------------|-----------------------------------------------|
+| ⬜      | 🔢 **Magic Numbers** | Enable magic number rule in detekt            |
+| ⬜      | 🧩 **Complexity**    | Enable complexity rule in detekt              |
+| ⬜      | 📱 **Multiplatform** | Make library KMP (Kotlin Multiplatform) ready |
+| ⬜      | 📚 **Documentation** | Make project dokka2 ready                     |
+| ⬜      | 🧪 **Testing**       | Write more tests for utils and other methods  |
+| ✅      | 🧪 **Core Tests**    | Added tests for utils and main detektor class |
 
-<div align="right">
+<div style="text-align: right;">
 <i>✅ = Completed &nbsp;⬜ = Planned</i>
 </div>
 
 ## 📜 License
 
-<div align="center">
+<div style="text-align: center;">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

@@ -49,7 +49,7 @@ internal object UrlUtil {
      * Removes TAB (0x09), CR (0x0d), and LF (0x0a) from the URL
      * @param urlPart The part of the url we are canonicalizing
      */
-    internal fun removeSpecialSpaces(urlPart: String?): String {
+    internal fun removeSpecialSpaces(urlPart: String): String {
         val stringBuilder = StringBuilder(urlPart)
         for (i in stringBuilder.indices) {
             val curr = stringBuilder[i]

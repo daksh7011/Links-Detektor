@@ -10,5 +10,5 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    implementation(project(":links-detektor"))
+    implementation("com.slothiesmooth:links-detektor:2.0.0")
 }

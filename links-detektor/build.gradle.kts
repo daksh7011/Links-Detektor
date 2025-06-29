@@ -10,7 +10,7 @@ plugins {
     signing
 }
 
-val projectVersion: String =  libs.versions.lib.get()
+val projectVersion: String = System.getenv("VERSION")?: libs.versions.lib.get()
 
 group = "com.slothiesmooth"
 version = projectVersion

@@ -20,21 +20,25 @@ jobs:
 
       - name: Gradle (Setup)
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            jdks
+            wrapper
 
       - name: Make sure gradlew is executable
         run: "chmod +x ./gradlew"
 
-      - name: Gradle (Build)
+      - name: Build project
         run: "./gradlew build"
 
-      - name: Upload artifacts (Main JAR)
-        uses: actions/upload-artifact@v4
-        with:
-          name: Main JAR
-          path: build/libs/*-all.jar
+      - name: Execute tests
+        run: "./gradlew test"
 
-      - name: Upload artifacts (JARs)
+      - name: Upload JARs
         uses: actions/upload-artifact@v4
         with:
           name: JARs
-          path: build/libs/*.jar
+          path: links-detektor/build/libs/*.jar

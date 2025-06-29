@@ -87,7 +87,7 @@ urls.forEach { url ->
 }
 ```
 
-> 💡 **Tip:** Use various `LinksDetektorOptions` for to cater the detection to your needs.
+> 💡 **Tip:** Use various `LinksDetektorOptions` to cater the detection to your needs.
 
 ## 🔧 Advanced Usage
 

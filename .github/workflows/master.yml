@@ -35,12 +35,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           dependency-graph: generate-and-submit
-          cache-read-only: false
-          gradle-home-cache-includes: |
-            caches
-            notifications
-            jdks
-            wrapper
 
       - name: Make sure gradlew is executable
         run: "chmod +x ./gradlew"

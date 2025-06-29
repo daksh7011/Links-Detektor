@@ -77,6 +77,11 @@ tasks.register<Copy>("copyDokkaToDocsDir") {
     description = "Copies Dokka documentation to docs directory in the root project"
 }
 
+// Make build task finalized by copyDokkaToDocsDir task
+tasks.named("build") {
+    finalizedBy("copyDokkaToDocsDir")
+}
+
 // TODO: Migrate to dokka2 standards
 // Configure Dokka to generate KDoc documentation
 tasks.dokkaHtml {

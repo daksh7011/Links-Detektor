@@ -47,9 +47,6 @@ jobs:
       - name: Execute tests
         run: "./gradlew test"
 
-      - name: Generate Dokka documentation
-        run: "./gradlew copyDokkaToDocsDir"
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

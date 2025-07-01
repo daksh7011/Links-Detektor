@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>LinksDetektorOptions</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    links-detektor
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+2.0.3        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":links-detektor/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":links-detektor/main"
+                                       data-filter=":links-detektor/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    links-detektor
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="links-detektor::com.slothiesmooth.linksdetektor/LinksDetektorOptions///PointingToDeclaration//961769746">
+  <div class="breadcrumbs"><a href="../../../index.html">links-detektor</a><span class="delimiter">/</span><a href="../index.html">com.slothiesmooth.linksdetektor</a><span class="delimiter">/</span><span class="current">LinksDetektorOptions</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Links</span><wbr></wbr><span>Detektor</span><wbr></wbr><span><span>Options</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="index.html">LinksDetektorOptions</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="index.html">LinksDetektorOptions</a><span class="token operator">&gt; </span></div><p class="paragraph">Options for configuring URL detection behavior.</p><p class="paragraph">This enum is implemented as a bit mask, allowing multiple options to be combined. Each option represents a specific detection behavior that can be enabled or disabled. Options can be combined using bitwise operations through the <a href="has-flag.html">hasFlag</a> method.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="ENTRY">Entries</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="ENTRY">
+        <h2 class="">Entries</h2>
+        <div class="table"><a data-name="1711386573%2FClasslikes%2F961769746" anchor-label="Default" id="1711386573%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-default/index.html">Default</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1711386573%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-default/index.html">Default</a></div></div><div class="brief "><p class="paragraph">Default options with no special checks.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1671405586%2FClasslikes%2F961769746" anchor-label="QUOTE_MATCH" id="-1671405586%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-q-u-o-t-e_-m-a-t-c-h/index.html">QUOTE_MATCH</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1671405586%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-q-u-o-t-e_-m-a-t-c-h/index.html">QUOTE_MATCH</a></div></div><div class="brief "><p class="paragraph">Enables double quote matching at the beginning and end of URLs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1648909817%2FClasslikes%2F961769746" anchor-label="SINGLE_QUOTE_MATCH" id="-1648909817%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-s-i-n-g-l-e_-q-u-o-t-e_-m-a-t-c-h/index.html">SINGLE_QUOTE_MATCH</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1648909817%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-s-i-n-g-l-e_-q-u-o-t-e_-m-a-t-c-h/index.html">SINGLE_QUOTE_MATCH</a></div></div><div class="brief "><p class="paragraph">Enables single quote matching at the beginning and end of URLs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="623281690%2FClasslikes%2F961769746" anchor-label="BRACKET_MATCH" id="623281690%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-b-r-a-c-k-e-t_-m-a-t-c-h/index.html">BRACKET_MATCH</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="623281690%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-b-r-a-c-k-e-t_-m-a-t-c-h/index.html">BRACKET_MATCH</a></div></div><div class="brief "><p class="paragraph">Enables bracket matching for URLs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-987738204%2FClasslikes%2F961769746" anchor-label="JSON" id="-987738204%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-j-s-o-n/index.html">JSON</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-987738204%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-j-s-o-n/index.html">JSON</a></div></div><div class="brief "><p class="paragraph">Configures detection for URLs in JSON content.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1754611863%2FClasslikes%2F961769746" anchor-label="JAVASCRIPT" id="-1754611863%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-j-a-v-a-s-c-r-i-p-t/index.html">JAVASCRIPT</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1754611863%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-j-a-v-a-s-c-r-i-p-t/index.html">JAVASCRIPT</a></div></div><div class="brief "><p class="paragraph">Configures detection for URLs in JavaScript content.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-716218589%2FClasslikes%2F961769746" anchor-label="XML" id="-716218589%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-x-m-l/index.html">XML</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-716218589%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-x-m-l/index.html">XML</a></div></div><div class="brief "><p class="paragraph">Configures detection for URLs in XML content.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1117647065%2FClasslikes%2F961769746" anchor-label="HTML" id="-1117647065%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-h-t-m-l/index.html">HTML</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1117647065%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-h-t-m-l/index.html">HTML</a></div></div><div class="brief "><p class="paragraph">Configures detection for URLs in HTML content.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2004881900%2FClasslikes%2F961769746" anchor-label="ALLOW_SINGLE_LEVEL_DOMAIN" id="2004881900%2FClasslikes%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-togglable="ENTRY" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-l-l-o-w_-s-i-n-g-l-e_-l-e-v-e-l_-d-o-m-a-i-n/index.html">ALLOW_SINGLE_LEVEL_DOMAIN</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2004881900%2FClasslikes%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><div class="block"><a href="-a-l-l-o-w_-s-i-n-g-l-e_-l-e-v-e-l_-d-o-m-a-i-n/index.html">ALLOW_SINGLE_LEVEL_DOMAIN</a></div></div><div class="brief "><p class="paragraph">Enables detection of single-level domain URLs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1301395542%2FProperties%2F961769746" anchor-label="entries" id="1301395542%2FProperties%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="entries.html"><span><span>entries</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1301395542%2FProperties%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="entries.html">entries</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.enums/-enum-entries/index.html">EnumEntries</a><span class="token operator">&lt;</span><a href="index.html">LinksDetektorOptions</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a representation of an immutable list of all enum entries, in the order they're declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-372974862%2FProperties%2F961769746" anchor-label="name" id="-372974862%2FProperties%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-l-l-o-w_-s-i-n-g-l-e_-l-e-v-e-l_-d-o-m-a-i-n/index.html#-372974862%2FProperties%2F961769746"><span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-372974862%2FProperties%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="-a-l-l-o-w_-s-i-n-g-l-e_-l-e-v-e-l_-d-o-m-a-i-n/index.html#-372974862%2FProperties%2F961769746">name</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-739389684%2FProperties%2F961769746" anchor-label="ordinal" id="-739389684%2FProperties%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-l-l-o-w_-s-i-n-g-l-e_-l-e-v-e-l_-d-o-m-a-i-n/index.html#-739389684%2FProperties%2F961769746"><span><span>ordinal</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-739389684%2FProperties%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="-a-l-l-o-w_-s-i-n-g-l-e_-l-e-v-e-l_-d-o-m-a-i-n/index.html#-739389684%2FProperties%2F961769746">ordinal</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="784134357%2FProperties%2F961769746" anchor-label="value" id="784134357%2FProperties%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="value.html"><span><span>value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="784134357%2FProperties%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="value.html">value</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The numeric bit value of this option.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-55690981%2FFunctions%2F961769746" anchor-label="hasFlag" id="-55690981%2FFunctions%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="has-flag.html"><span>has</span><wbr></wbr><span><span>Flag</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-55690981%2FFunctions%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="has-flag.html"><span class="token function">hasFlag</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">flag<span class="token operator">: </span><a href="index.html">LinksDetektorOptions</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Checks if this options instance has the specified flag enabled.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1296490758%2FFunctions%2F961769746" anchor-label="valueOf" id="1296490758%2FFunctions%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="value-of.html"><span>value</span><wbr></wbr><span><span>Of</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1296490758%2FFunctions%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="value-of.html"><span class="token function">valueOf</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">LinksDetektorOptions</a></div><div class="brief "><p class="paragraph">Returns the enum constant of this type with the specified name. The string must match exactly an identifier used to declare an enum constant in this type. (Extraneous whitespace characters are not permitted.)</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="104616082%2FFunctions%2F961769746" anchor-label="values" id="104616082%2FFunctions%2F961769746" data-filterable-set=":links-detektor/main"></a>
+          <div class="table-row" data-filterable-current=":links-detektor/main" data-filterable-set=":links-detektor/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="values.html"><span><span>values</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="104616082%2FFunctions%2F961769746"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":links-detektor/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="values.html"><span class="token function">values</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="index.html">LinksDetektorOptions</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns an array containing the constants of this enum type, in the order they're declared.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -44,9 +44,6 @@ jobs:
       - name: Build project
         run: "VERSION=${{steps.release_drafter.outputs.tag_name}} ./gradlew build"
 
-      - name: Execute tests
-        run: "./gradlew test"
-
       - name: Release to Maven central
         run: "./gradlew links-detektor:publishAllPublicationsToMavenCentralRepository"
         env:

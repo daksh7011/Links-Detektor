@@ -72,7 +72,7 @@ tasks.withType<Test> {
 // Task to copy Dokka documentation to docs directory in the root project
 tasks.register<Copy>("copyDokkaToDocsDir") {
     dependsOn("dokkaHtml")
-    from(layout.buildDirectory.dir("dokka"))
+    from(layout.buildDirectory.dir("dokka/html"))
     into(rootProject.file("docs"))
     description = "Copies Dokka documentation to docs directory in the root project"
 }
@@ -116,7 +116,7 @@ tasks.dokkaHtml {
         // Add source links to GitHub
         sourceLink {
             localDirectory.set(file("src/main/kotlin"))
-            remoteUrl.set(uri("https://github.com/slothiesmooth/links-detektor/blob/main/lib/src/main/kotlin").toURL())
+            remoteUrl.set(uri("https://github.com/daksh7011/links-detektor/blob/master/lib/src/main/kotlin").toURL())
             remoteLineSuffix.set("#L")
         }
 

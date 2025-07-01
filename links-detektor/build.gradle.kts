@@ -6,11 +6,11 @@ plugins {
 
     // Apply Dokka for Kotlin documentation
     id("org.jetbrains.dokka")
-    id ("org.danilopianini.publish-on-central")
+    id("com.vanniktech.maven.publish")
     signing
 }
 
-val projectVersion: String = System.getenv("VERSION")?: libs.versions.lib.get()
+val projectVersion: String = System.getenv("VERSION") ?: libs.versions.lib.get()
 
 group = "com.slothiesmooth"
 version = projectVersion
@@ -136,45 +136,39 @@ tasks.dokkaHtml {
     }
 }
 
-/*
- * The plugin comes with defaults that are useful to myself. You should configure it to behave as you please:
- */
-publishOnCentral {
-    repoOwner.set("daksh7011") // Used to populate the default value for projectUrl and scmConnection
-    projectDescription.set("A library for detecting links in text")
-    // The following values are the default, if they are ok with you, just omit them
-    projectLongName.set("Links Detektor")
-    licenseName.set("MIT License")
-    licenseUrl.set("https://github.com/daksh7011/links-detektor/LICENSE")
-    projectUrl.set("https://github.com/daksh7011/links-detektor")
-    scmConnection.set("scm:git:git://github.com/daksh7011/links-detektor.git")
 
-    /*
-     * The publications can be sent to other destinations, e.g. GitHub
-     * The task name would be 'publishAllPublicationsToGitHubRepository'
-     */
-   // TODO: Setup this to send publications to github
-}
-
-/*
- * Developers and contributors must be added manually
- */
-publishing {
-    publications {
-        withType<MavenPublication> {
-            pom {
-                developers {
-                    developer {
-                        name.set("Daksh Desai")
-                        email.set("contact@slothiesmooth.com")
-                        url.set("https://slothiesmooth.dev")
-                    }
-                }
+mavenPublishing {
+    coordinates("com.slothiesmooth.links-detektor", "links-detektor", projectVersion)
+    pom {
+        name.set("Links Detektor")
+        description.set("A robust library for detecting and extracting URLs from text content. It provides a powerful URL detection engine that can identify various URL formats within arbitrary text.")
+        inceptionYear.set("2025")
+        url.set("https://github.com/daksh7011/links-detektor")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://github.com/daksh7011/links-detektor/LICENSE")
+                distribution.set("https://github.com/daksh7011/links-detektor/LICENSE")
             }
         }
+        developers {
+            developer {
+                id.set("slothiesmooth")
+                name.set("Daksh Desai")
+                url.set("https://slothiesmooth.dev")
+                email.set("contact@slothiesmooth.com")
+            }
+        }
+        scm {
+            url.set("https://github.com/daksh7011/links-detektor")
+            connection.set("scm:git:git://github.com/daksh7011/links-detektor.git")
+            developerConnection.set("scm:git:git://github.com/daksh7011/links-detektor.git")
+        }
     }
-}
 
+    publishToMavenCentral(automaticRelease = true)
+    signAllPublications()
+}
 
 signing {
     val signingKey = System.getenv("SIGNING_KEY") ?: project.findProperty("signingKey") as String?

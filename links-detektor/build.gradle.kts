@@ -138,7 +138,7 @@ tasks.dokkaHtml {
 
 
 mavenPublishing {
-    coordinates("com.slothiesmooth.links-detektor", "links-detektor", projectVersion)
+    coordinates("com.slothiesmooth", "links-detektor", projectVersion)
     pom {
         name.set("Links Detektor")
         description.set("A robust library for detecting and extracting URLs from text content. It provides a powerful URL detection engine that can identify various URL formats within arbitrary text.")

@@ -9,7 +9,7 @@ repository:
   description: Finds and extracts links in any given text.
 
   # A URL with more information about the repository
-  homepage: https://github.com/daksh7011/Links-Detektor
+  homepage: https://daksh7011.github.io/Links-Detektor
 
   # Either `true` to make the repository private, or `false` to make it public.
   private: false

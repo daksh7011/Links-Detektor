@@ -14,7 +14,7 @@ commonsMath3 = "3.6.1"
 commonsLang3 = "3.17.0"
 
 # Testing dependencies
-junit = "5.13.2"
+junit = "5.13.3"
 mockk = "1.14.4"
 
 [libraries]

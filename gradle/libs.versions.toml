@@ -15,7 +15,7 @@ commonsLang3 = "3.17.0"
 
 # Testing dependencies
 junit = "5.13.3"
-mockk = "1.14.4"
+mockk = "1.14.5"
 
 [libraries]
 detekt = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }

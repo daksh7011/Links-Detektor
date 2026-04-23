@@ -1,6 +1,6 @@
 plugins {
     // Apply Kotlin plugin at the root level with version
-    kotlin("jvm") version "2.2.0" apply false
+    kotlin("jvm") version "2.3.21" apply false
 
     // Other plugins that might be needed at the root level with versions
     id("io.gitlab.arturbosch.detekt") version "1.23.8" apply false

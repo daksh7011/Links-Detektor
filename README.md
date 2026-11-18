@@ -144,6 +144,8 @@ try {
 
 > `MalformedUrlException` is `java.net.MalformedURLException` on JVM and Android, and a library class everywhere else.
 
+> `Url.create` expects a bare URL. Text glued before the scheme (as in `seehttp://example.com`) is not stripped; use `LinksDetektor` to find URLs inside running text.
+
 </details>
 
 <details>

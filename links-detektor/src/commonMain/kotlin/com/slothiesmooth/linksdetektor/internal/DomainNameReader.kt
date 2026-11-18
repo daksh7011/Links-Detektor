@@ -189,7 +189,7 @@ internal class DomainNameReader(
                     currArray[index + 2].isHex()
                 ) {
                     // handle url encoded dot
-                    if (currArray[index + 1] == '2' && currArray[index + 2] == 'e') {
+                    if (currArray[index + 1] == '2' && currArray[index + 2].equals('e', ignoreCase = true)) {
                         _dots++
                         _currentLabelLength = 0
                     } else {

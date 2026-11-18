@@ -25,7 +25,7 @@ private const val HALF = 2f
  * How far the centre line of a ring sits from the edge of the control: [outside] puts it clear of the edge by [gap] (negative is
  * outside), otherwise the ring sits half its [stroke] inside the edge.
  */
-fun focusRingInset(outside: Boolean, gap: Float, stroke: Float): Float =
+internal fun focusRingInset(outside: Boolean, gap: Float, stroke: Float): Float =
     if (outside) -(gap + stroke / HALF) else stroke / HALF
 
 /**

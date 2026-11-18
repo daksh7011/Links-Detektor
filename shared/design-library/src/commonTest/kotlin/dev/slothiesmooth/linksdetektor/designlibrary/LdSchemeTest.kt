@@ -4,6 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import dev.slothiesmooth.linksdetektor.designlibrary.atoms.LdButtonStyle
 import dev.slothiesmooth.linksdetektor.designlibrary.atoms.buttonFill
+import dev.slothiesmooth.linksdetektor.designlibrary.atoms.chipFill
 import dev.slothiesmooth.linksdetektor.designlibrary.tokens.LdColorsDark
 import dev.slothiesmooth.linksdetektor.designlibrary.tokens.ldColorScheme
 import kotlinx.collections.immutable.ImmutableList
@@ -65,6 +66,16 @@ class LdSchemeTest {
     fun `a disabled primary button fades its fill`() {
         assertEquals(c.amber, buttonFill(LdButtonStyle.Primary, hovered = false, enabled = true, colors = c))
         val off = buttonFill(LdButtonStyle.Primary, hovered = false, enabled = false, colors = c)
-        assertTrue(off.alpha < 1f)
+        assertEquals(c.amber.copy(alpha = 0.5f), off)
+    }
+
+    @Test
+    fun `a chip is amber when selected and tinted when only hovered or pressed`() {
+        assertEquals(c.amber, chipFill(selected = true, hovered = false, pressed = false, colors = c))
+        assertEquals(c.amberHover, chipFill(selected = true, hovered = true, pressed = false, colors = c))
+        assertEquals(c.amberHover, chipFill(selected = true, hovered = false, pressed = true, colors = c))
+        assertEquals(c.surface, chipFill(selected = false, hovered = true, pressed = false, colors = c))
+        assertEquals(c.surface, chipFill(selected = false, hovered = false, pressed = true, colors = c))
+        assertEquals(Color.Transparent, chipFill(selected = false, hovered = false, pressed = false, colors = c))
     }
 }

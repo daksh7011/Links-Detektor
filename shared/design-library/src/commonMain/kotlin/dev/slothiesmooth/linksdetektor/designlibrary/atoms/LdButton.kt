@@ -48,6 +48,7 @@ fun LdButton(
     val interactions = remember { MutableInteractionSource() }
     val hovered by interactions.collectIsHoveredAsState()
     val label = if (style == LdButtonStyle.Primary) colors.amberInk else colors.fg
+    val borderColor = if (enabled) colors.line else colors.line.copy(alpha = colors.line.alpha * DISABLED_ALPHA)
     Surface(
         onClick = onClick,
         enabled = enabled,
@@ -55,7 +56,7 @@ fun LdButton(
         shape = RoundedCornerShape(dimens.radiusPill),
         color = buttonFill(style, hovered && enabled, enabled, colors),
         contentColor = label,
-        border = if (style == LdButtonStyle.Ghost) BorderStroke(HairlineWidth, colors.line) else null,
+        border = if (style == LdButtonStyle.Ghost) BorderStroke(HairlineWidth, borderColor) else null,
         shadowElevation = 0.dp,
         tonalElevation = 0.dp,
         modifier = modifier.ldFocusRing(interactions, dimens.radiusPill),

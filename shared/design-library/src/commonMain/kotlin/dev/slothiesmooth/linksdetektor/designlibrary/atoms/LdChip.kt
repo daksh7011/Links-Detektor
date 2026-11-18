@@ -21,12 +21,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import dev.slothiesmooth.linksdetektor.designlibrary.tokens.LdColors
 import dev.slothiesmooth.linksdetektor.designlibrary.tokens.ldColors
 import dev.slothiesmooth.linksdetektor.designlibrary.tokens.ldDimens
 
 private val ChipHeight = 40.dp
 private val ChipSidePadding = 16.dp
 private val HairlineWidth = 1.dp
+
+/** The fill of a chip: amber when selected (brighter while hovered or pressed), a surface tint when only hovered or pressed. */
+internal fun chipFill(selected: Boolean, hovered: Boolean, pressed: Boolean, colors: LdColors): Color = when {
+    selected -> if (hovered || pressed) colors.amberHover else colors.amber
+    hovered || pressed -> colors.surface
+    else -> Color.Transparent
+}
 
 /** A pill toggle: a hairline outline, or amber when [selected]. Announced as a checkbox. */
 @Composable
@@ -36,11 +44,7 @@ fun LdChip(text: String, selected: Boolean, onToggle: () -> Unit, modifier: Modi
     val interactions = remember { MutableInteractionSource() }
     val hovered by interactions.collectIsHoveredAsState()
     val pressed by interactions.collectIsPressedAsState()
-    val fill = when {
-        selected -> if (hovered || pressed) colors.amberHover else colors.amber
-        hovered || pressed -> colors.surface
-        else -> Color.Transparent
-    }
+    val fill = chipFill(selected, hovered, pressed, colors)
     Box(
         modifier = modifier
             // Outermost: a 48 dp touch target around the 40 dp pill, so the focus ring still hugs the pill.

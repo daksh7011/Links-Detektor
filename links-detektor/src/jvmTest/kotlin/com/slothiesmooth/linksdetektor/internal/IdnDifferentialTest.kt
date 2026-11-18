@@ -7,7 +7,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
- * JVM-only: `PureIdn` must agree with `java.net.IDN` on the shared corpus.
+ * JVM-only: `PureIdn` must agree with `java.net.IDN` (the 2.x implementation) on every host both accept.
  */
 class IdnDifferentialTest {
 

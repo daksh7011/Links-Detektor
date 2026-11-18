@@ -5,11 +5,11 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Pure-Kotlin host name to ASCII conversion (IDNA 2003 style), for targets without `java.net.IDN`.
+ * Pure-Kotlin host name to ASCII conversion (IDNA 2003 style), the one implementation on every target.
  *
- * Documented divergence from `java.net.IDN`: the Nameprep prohibited-character, bidirectional and unassigned
- * code point checks are not performed, so this accepts some hosts that `java.net.IDN` rejects (for example
- * emoji and U+1E9E).
+ * Documented divergence from `java.net.IDN` (which 2.x used): the Nameprep prohibited-character, bidirectional
+ * and unassigned code point checks are not performed, so this accepts some hosts that `java.net.IDN` rejects
+ * (for example emoji and U+1E9E).
  */
 internal object PureIdn {
     private const val MAX_LABEL_LENGTH = 63

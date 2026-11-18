@@ -45,7 +45,7 @@ internal class HostNormalizer(private val host: String?) {
         var host: String
         host = try {
             // replace high unicode characters
-            idnToAscii(this@HostNormalizer.host)
+            PureIdn.toAscii(this@HostNormalizer.host)
         } catch (ex: IllegalArgumentException) {
             // occurs when the url is invalid. Just return
             return

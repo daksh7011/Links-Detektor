@@ -194,10 +194,10 @@ println("Found domains: $links")
 - Maven users must depend on `links-detektor-jvm` (see Installation). Gradle resolves the right variant on its own.
 - Host lowercasing is locale independent (a Turkish default locale no longer turns `I` into a dotless `i`).
 - The backtrack guard throws `IllegalStateException` instead of a platform-specific error.
-- Outside the JVM and Android, IDN conversion does not run the Nameprep prohibited-character, bidi and unassigned
-  checks. Hosts such as emoji domains are therefore encoded instead of rejected.
-- Outside the JVM and Android, internationalized hosts are normalized (NFKC) with bundled Unicode 15.0 tables, the
-  same on every platform. JVM and Android keep using `java.net.IDN`.
+- Internationalized hosts are converted by one implementation on every platform, with bundled Unicode 15.0 tables;
+  `java.net.IDN` is no longer used. Hosts it accepted convert the same way.
+- That implementation does not run the Nameprep prohibited-character, bidi and unassigned checks. Hosts that 2.x
+  rejected on the JVM (`NormalizedUrl.host` was `null`), such as emoji domains, are now encoded (`xn--e28h.com`).
 - `LinksDetektor` is stateful and not thread-safe; `detect()` is idempotent. `Url.rawHost`/`rawPath` are no longer
   `protected`.
 

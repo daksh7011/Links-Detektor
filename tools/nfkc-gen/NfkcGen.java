@@ -138,7 +138,7 @@ public final class NfkcGen {
         Files.createDirectories(out.getParent());
         Files.writeString(out, sb.toString(), StandardCharsets.UTF_8);
         System.out.println("ccc ranges=" + rangeCount + " decompositions=" + mapping.size() + " pairs=" + pairs.size()
-            + " bytes=" + sb.length());
+            + " bytes=" + sb.toString().getBytes(StandardCharsets.UTF_8).length);
     }
 
     private static void expand(int cp, TreeMap<Integer, int[]> mapping, List<Integer> out) {

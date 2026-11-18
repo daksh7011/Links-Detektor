@@ -118,7 +118,9 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
             if (_scheme == null) {
                 if (exists(UrlPart.SCHEME)) {
                     val schemePart = getPart(UrlPart.SCHEME).orEmpty()
-                    val index = schemePart.indexOf(":")
+                    val colon = schemePart.indexOf(":")
+                    // The detector also accepts a percent-encoded colon, as in "http%3a//".
+                    val index = if (colon != -1) colon else schemePart.indexOf(ENCODED_COLON, ignoreCase = true)
                     _scheme = if (index != -1) schemePart.substring(0, index) else schemePart
                 } else if (originalUrl?.startsWith("//") != true) {
                     _scheme = DEFAULT_SCHEME
@@ -356,6 +358,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
      */
     public companion object {
         private const val DEFAULT_SCHEME = "http"
+        private const val ENCODED_COLON = "%3a"
         private val SCHEME_PORT_MAP: ImmutableMap<String, Int> =
             persistentMapOf("http" to 80, "https" to 443, "ftp" to 21)
 

@@ -25,3 +25,4 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":links-detektor")
 include(":shared:presentation")
+include(":shared:design-library")

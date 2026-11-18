@@ -40,7 +40,7 @@ export function main(args) {
   const budgetIndex = args.indexOf("--budget-mb");
   const budgetMb = budgetIndex >= 0 ? Number(args[budgetIndex + 1]) : DEFAULT_BUDGET_MB;
   const dir = args.find((arg, index) => !arg.startsWith("--") && (budgetIndex < 0 || index !== budgetIndex + 1));
-  if (!dir || Number.isNaN(budgetMb) || !existsSync(dir) || !statSync(dir).isDirectory()) {
+  if (!dir || !Number.isFinite(budgetMb) || budgetMb <= 0 || !existsSync(dir) || !statSync(dir).isDirectory()) {
     console.error("usage: node scripts/wasm-size.mjs <dir> [--budget-mb N]  (N in MiB; source maps and licence files excluded)");
     return 2;
   }

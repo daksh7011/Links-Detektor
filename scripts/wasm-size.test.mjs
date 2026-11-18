@@ -46,4 +46,6 @@ test("main exits 2 for a missing directory or a bad budget", () => {
   assert.equal(quietly([join(dir, "missing")]), 2);
   assert.equal(quietly([]), 2);
   assert.equal(quietly([dir, "--budget-mb", "x"]), 2);
+  assert.equal(quietly([dir, "--budget-mb", ""]), 2);
+  assert.equal(quietly([dir, "--budget-mb", "-1"]), 2);
 });

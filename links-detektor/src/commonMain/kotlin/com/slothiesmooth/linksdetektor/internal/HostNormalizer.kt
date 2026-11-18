@@ -151,7 +151,9 @@ internal class HostNormalizer(private val host: String?) {
      * - Standard notation (e.g., 2001:0db8:85a3:0000:0000:8a2e:0370:7334)
      * - Compressed notation with :: (e.g., 2001:0db8:85a3::8a2e:0370:7334)
      * - IPv4-mapped IPv6 addresses (e.g., ::ffff:192.168.1.1)
-     * - IPv6 addresses with zone indices (e.g., fe80::1%eth0)
+     *
+     * An address with a zone index (e.g., fe80::1%eth0) is not decoded: the zone makes the last section fail to
+     * parse, so this returns null and the host stays textual, with the `%` written as `%25`.
      *
      * @param host The host string to decode as an IPv6 address (including the square brackets).
      * @return The byte representation of the IPv6 address, or null if the host is not a valid IPv6 address.

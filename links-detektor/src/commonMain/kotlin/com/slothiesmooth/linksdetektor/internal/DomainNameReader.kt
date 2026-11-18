@@ -544,13 +544,14 @@ internal class DomainNameReader(
      * - Standard IPv6 notation (e.g., [2001:0db8:85a3:0000:0000:8a2e:0370:7334])
      * - Compressed notation with :: (e.g., [2001:0db8:85a3::8a2e:0370:7334])
      * - IPv4-mapped IPv6 addresses (e.g., [::ffff:192.168.1.1])
-     * - IPv6 addresses with zone indices (e.g., [fe80::1%eth0])
+     * - IPv6 addresses with a zone index (e.g., [fe80::1%eth0]) are accepted as hosts, but only syntactically;
+     *   the zone is not interpreted
      *
      * The method enforces RFC 5952 compliance, including:
      * - Maximum of 8 segments (or equivalent with IPv4 mapping)
      * - Maximum of one :: compression
      * - Valid hexadecimal digits in each segment
-     * - Proper format for zone indices
+     * - A zone index, when present, starts at a `%` and is not validated further
      *
      * @param testDomain The string to validate as an IPv6 address (including square brackets).
      * @return `true` if the string is a valid IPv6 address, `false` otherwise.

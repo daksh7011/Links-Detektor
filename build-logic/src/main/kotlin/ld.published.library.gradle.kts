@@ -35,7 +35,7 @@ kotlin {
     linuxX64()
     linuxArm64()
     mingwX64()
-    js(IR) {
+    js {
         nodejs()
         browser { testTask { enabled = false } }
     }
@@ -68,9 +68,6 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.findLibrary("kotlinx-collections-immutable").get())
-        }
-        getByName("nativeNonAppleMain").dependencies {
-            implementation(libs.findLibrary("doist-normalize").get())
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

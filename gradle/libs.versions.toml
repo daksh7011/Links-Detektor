@@ -8,7 +8,6 @@ dokka = "2.3.0"
 vanniktech = "0.37.0"
 
 kotlinx-collections-immutable = "0.5.2"
-doist-normalize = "1.2.0"
 junit-bom = "5.14.4"
 
 android-compileSdk = "37"
@@ -16,7 +15,6 @@ android-minSdk = "23"
 
 [libraries]
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
-doist-normalize = { module = "com.doist.x:normalize", version.ref = "doist-normalize" }
 
 # Tests
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

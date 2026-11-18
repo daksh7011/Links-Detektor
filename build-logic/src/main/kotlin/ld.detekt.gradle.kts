@@ -25,6 +25,7 @@ val detektCheck by tasks.registering(Detekt::class) {
     exclude(
         "**/build/**",
         "**/generated/**",
+        "**/nfkc/NfkcData.kt", // emitted by tools/nfkc-gen
         "**/resources/**",
         "build-logic/**",
         ".claude/**",

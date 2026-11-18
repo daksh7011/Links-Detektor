@@ -1,6 +1,5 @@
 package com.slothiesmooth.linksdetektor.internal
 
-import doist.x.normalize.Form
-import doist.x.normalize.normalize
+import com.slothiesmooth.linksdetektor.internal.nfkc.TableNfkc
 
-internal actual fun nfkc(input: String): String = input.normalize(Form.NFKC)
+internal actual fun nfkc(input: String): String = TableNfkc.normalize(input)

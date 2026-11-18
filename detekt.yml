@@ -399,8 +399,11 @@ naming:
   MatchingDeclarationName:
     active: true
     mustBeFirst: true
-    # Platform actual files are named <Declaration>.<sourceSet>.kt.
-    excludes: [ '**/*.nonJvm.kt', '**/*.jvmAndAndroid.kt' ]
+    # The defaults plus the source-set names this project suffixes its actual files with.
+    multiplatformTargets: [
+      'ios', 'android', 'js', 'jvm', 'native', 'iosArm64', 'iosX64', 'macosX64', 'mingwX64', 'linuxX64',
+      'nonJvm', 'jvmAndAndroid', 'apple', 'web', 'nativeNonApple'
+    ]
   MemberNameEqualsClassName:
     active: true
     ignoreOverridden: true
@@ -673,7 +676,7 @@ style:
   UnusedParameter:
     active: true
     # Kotlin/JS `js("...")` bodies use the parameter by name inside the string literal.
-    excludes: [ '**/webMain/**' ]
+    excludes: [ '**/webMain/**/Nfkc.web.kt' ]
   UnusedPrivateClass:
     active: true
   UnusedPrivateMember:

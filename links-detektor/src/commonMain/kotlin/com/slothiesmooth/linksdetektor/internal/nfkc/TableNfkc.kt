@@ -1,7 +1,7 @@
 package com.slothiesmooth.linksdetektor.internal.nfkc
 
 /**
- * Unicode 15.0.0 NFKC for every platform without a normalizer of its own, driven by the tables in [NfkcData].
+ * Unicode 15.0.0 NFKC, driven by the tables in [NfkcData]. Common code, so every target normalizes identically.
  */
 internal object TableNfkc {
     private const val HANGUL_BASE = 0xAC00

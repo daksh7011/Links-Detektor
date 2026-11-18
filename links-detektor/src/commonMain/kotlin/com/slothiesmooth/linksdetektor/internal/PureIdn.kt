@@ -1,5 +1,6 @@
 package com.slothiesmooth.linksdetektor.internal
 
+import com.slothiesmooth.linksdetektor.internal.nfkc.TableNfkc
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
@@ -65,7 +66,7 @@ internal object PureIdn {
             require(label.length <= MAX_LABEL_LENGTH) { "The label in the input is too long" }
             return label
         }
-        val mapped = nfkc(
+        val mapped = TableNfkc.normalize(
             label.filterNot { isMappedToNothing(it) }
                 .lowercase()
                 .replace("ß", "ss")

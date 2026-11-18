@@ -53,7 +53,6 @@ kotlin {
                 withCompilations { it.target is KotlinMultiplatformAndroidLibraryTarget }
             }
             group("nonJvm") { group("native"); group("web") }
-            group("native") { group("nativeNonApple") { withLinux(); withMingw() } }
         }
     }
 

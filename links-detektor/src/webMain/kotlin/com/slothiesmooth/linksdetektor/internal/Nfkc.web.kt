@@ -1,6 +1,0 @@
-package com.slothiesmooth.linksdetektor.internal
-
-@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
-private fun jsNfkc(s: String): String = js("s.normalize('NFKC')")
-
-internal actual fun nfkc(input: String): String = jsNfkc(input)

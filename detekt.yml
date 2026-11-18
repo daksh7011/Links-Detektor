@@ -402,7 +402,7 @@ naming:
     # The defaults plus the source-set names this project suffixes its actual files with.
     multiplatformTargets: [
       'ios', 'android', 'js', 'jvm', 'native', 'iosArm64', 'iosX64', 'macosX64', 'mingwX64', 'linuxX64',
-      'nonJvm', 'jvmAndAndroid', 'apple', 'web', 'nativeNonApple'
+      'nonJvm', 'jvmAndAndroid'
     ]
   MemberNameEqualsClassName:
     active: true
@@ -675,8 +675,6 @@ style:
     active: true
   UnusedParameter:
     active: true
-    # Kotlin/JS `js("...")` bodies use the parameter by name inside the string literal.
-    excludes: [ '**/webMain/**/Nfkc.web.kt' ]
   UnusedPrivateClass:
     active: true
   UnusedPrivateMember:

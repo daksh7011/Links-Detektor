@@ -193,9 +193,8 @@ println("Found domains: $links")
 - The backtrack guard throws `IllegalStateException` instead of a platform-specific error.
 - Outside the JVM and Android, IDN conversion does not run the Nameprep prohibited-character, bidi and unassigned
   checks. Hosts such as emoji domains are therefore encoded instead of rejected.
-- Unicode normalization (NFKC) of internationalized hosts depends on the platform: JVM and Android use `java.net.IDN`,
-  JS and Wasm use the web engine's Unicode version, Apple targets use the OS's, and Linux and Windows (mingw) use bundled
-  Unicode 15.0 tables. Rare IDN results can therefore differ between platforms.
+- Outside the JVM and Android, internationalized hosts are normalized (NFKC) with bundled Unicode 15.0 tables, the
+  same on every platform. JVM and Android keep using `java.net.IDN`.
 - `LinksDetektor` is stateful and not thread-safe; `detect()` is idempotent. `Url.rawHost`/`rawPath` are no longer
   `protected`.
 

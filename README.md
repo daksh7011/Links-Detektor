@@ -114,7 +114,12 @@ urls.forEach { url -> println(text.substring(url.range)) }
 Several options can be combined by passing a set (`kotlinx.collections.immutable.persistentSetOf`):
 
 ```kotlin
-val detector = LinksDetektor(text, persistentSetOf(QUOTE_MATCH, BRACKET_MATCH))
+import kotlinx.collections.immutable.persistentSetOf
+
+val detector = LinksDetektor(
+    text,
+    persistentSetOf(LinksDetektorOptions.QUOTE_MATCH, LinksDetektorOptions.BRACKET_MATCH)
+)
 ```
 
 > 💡 **Tip:** Use various `LinksDetektorOptions` to cater the detection to your needs.
@@ -150,10 +155,10 @@ val normalizedUrl = url.normalize()
 
 println("Original: $url")
 println("Normalized: $normalizedUrl")
-// Output: Normalized: http://example.com/a/c
+// Output: Normalized: HTTP://example.com/a/c
 ```
 
-> 🧹 **Normalization** cleans up URLs by converting to lowercase, resolving path segments, and standardizing IP addresses.
+> 🧹 **Normalization** cleans up URLs by lowercasing the host, resolving path segments, and standardizing IP addresses. The scheme is kept as written (`HTTP` stays `HTTP`).
 </details>
 
 <details>
@@ -188,6 +193,11 @@ println("Found domains: $links")
 - The backtrack guard throws `IllegalStateException` instead of a platform-specific error.
 - Outside the JVM and Android, IDN conversion does not run the Nameprep prohibited-character, bidi and unassigned
   checks. Hosts such as emoji domains are therefore encoded instead of rejected.
+- Unicode normalization (NFKC) of internationalized hosts depends on the platform: JVM and Android use `java.net.IDN`,
+  JS and Wasm use the web engine's Unicode version, Apple targets use the OS's, and Linux and Windows (mingw) use bundled
+  Unicode 15.0 tables. Rare IDN results can therefore differ between platforms.
+- `LinksDetektor` is stateful and not thread-safe; `detect()` is idempotent. `Url.rawHost`/`rawPath` are no longer
+  `protected`.
 
 ## ⚙️ Configuration Options
 

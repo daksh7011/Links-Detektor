@@ -21,8 +21,8 @@ mavenPublishing {
         licenses {
             license {
                 name.set("MIT License")
-                url.set("https://github.com/daksh7011/links-detektor/LICENSE")
-                distribution.set("https://github.com/daksh7011/links-detektor/LICENSE")
+                url.set("https://github.com/daksh7011/links-detektor/blob/master/LICENSE")
+                distribution.set("https://github.com/daksh7011/links-detektor/blob/master/LICENSE")
             }
         }
         developers {

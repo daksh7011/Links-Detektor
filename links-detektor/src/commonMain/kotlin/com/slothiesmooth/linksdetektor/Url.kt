@@ -18,7 +18,7 @@ import kotlinx.collections.immutable.toImmutableList
  * would make it http://host/%25252525252525 (one less 25)
  * - Removes tabs and new lines: http://www.google.com/foo\tbar\rbaz\n2 becomes "http://www.google.com/foobarbaz2"
  * - Converts IP addresses: http://3279880203/blah becomes http://195.127.0.11/blah
- * - Strips fragments (anything after #)
+ * - Keeps the fragment in [fullUrl] (anything after #); [fullUrlWithoutFragment] leaves it out
  *
  */
 public open class Url internal constructor(urlMarker: UrlMarker) {
@@ -26,9 +26,9 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
     private var _scheme: String? = null
     private var _username: String? = null
     private var _password: String? = null
-    protected var rawHost: String? = null
+    internal var rawHost: String? = null
     private var _port = 0
-    protected var rawPath: String? = null
+    internal var rawPath: String? = null
     private var _query: String? = null
     private var _fragment: String? = null
 

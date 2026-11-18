@@ -7,7 +7,7 @@ import com.slothiesmooth.linksdetektor.internal.OptionMask
  *
  * This enum is implemented as a bit mask, allowing multiple options to be combined.
  * Each option represents a specific detection behavior that can be enabled or disabled.
- * Options can be combined using bitwise operations through the [hasFlag] method.
+ * Options are combined by passing an `ImmutableSet` of them to the [LinksDetektor] constructor.
  *
  * @property value The numeric bit value of the option, used in bitwise operations.
  */

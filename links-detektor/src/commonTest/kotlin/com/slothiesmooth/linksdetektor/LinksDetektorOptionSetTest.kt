@@ -157,6 +157,14 @@ class LinksDetektorOptionSetTest {
     }
 
     @Test
+    fun `detect is idempotent`() {
+        for (input in inputs) {
+            val detector = LinksDetektor(input, LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN)
+            assertEquals(found(detector), found(detector), "case: $input")
+        }
+    }
+
+    @Test
     fun `seeded fuzz never throws and every accessor of every result works`() {
         val alphabet = "aAzZ09:/@.[]()%?#'\"<>{}\u3002\uFF0E\u30A4\u00E9\u00DF -_=&~+;,"
         val random = Random(20261118)

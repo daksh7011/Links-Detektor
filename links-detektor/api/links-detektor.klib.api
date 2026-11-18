@@ -78,13 +78,6 @@ open class com.slothiesmooth.linksdetektor/Url { // com.slothiesmooth.linksdetek
     open val path // com.slothiesmooth.linksdetektor/Url.path|{}path[0]
         open fun <get-path>(): kotlin/String? // com.slothiesmooth.linksdetektor/Url.path.<get-path>|<get-path>(){}[0]
 
-    final var rawHost // com.slothiesmooth.linksdetektor/Url.rawHost|{}rawHost[0]
-        final fun <get-rawHost>(): kotlin/String? // com.slothiesmooth.linksdetektor/Url.rawHost.<get-rawHost>|<get-rawHost>(){}[0]
-        final fun <set-rawHost>(kotlin/String?) // com.slothiesmooth.linksdetektor/Url.rawHost.<set-rawHost>|<set-rawHost>(kotlin.String?){}[0]
-    final var rawPath // com.slothiesmooth.linksdetektor/Url.rawPath|{}rawPath[0]
-        final fun <get-rawPath>(): kotlin/String? // com.slothiesmooth.linksdetektor/Url.rawPath.<get-rawPath>|<get-rawPath>(){}[0]
-        final fun <set-rawPath>(kotlin/String?) // com.slothiesmooth.linksdetektor/Url.rawPath.<set-rawPath>|<set-rawPath>(kotlin.String?){}[0]
-
     final fun normalize(): com.slothiesmooth.linksdetektor/NormalizedUrl // com.slothiesmooth.linksdetektor/Url.normalize|normalize(){}[0]
     open fun toString(): kotlin/String // com.slothiesmooth.linksdetektor/Url.toString|toString(){}[0]
 

@@ -36,10 +36,13 @@ import kotlinx.collections.immutable.persistentSetOf
  * with backtracking capabilities to handle complex cases. Detection behavior can be
  * customized through [LinksDetektorOptions].
  *
+ * An instance is stateful and not thread-safe: it consumes [content] while detecting. [detect] is idempotent,
+ * so calling it again on the same instance returns the same list; create one instance per thread or text.
+ *
  * @constructor Creates a detector for [content] that detects with every option in [options].
- * @property content The text content to search for URLs.
- * @property options The set of options that control detection behavior; any combination is allowed.
- *                    An empty set behaves like [LinksDetektorOptions.Default].
+ * @param content The text content to search for URLs.
+ * @param options The set of options that control detection behavior; any combination is allowed.
+ *                An empty set behaves like [LinksDetektorOptions.Default].
  */
 public class LinksDetektor public constructor(
     private val content: String,
@@ -123,9 +126,14 @@ public class LinksDetektor public constructor(
      * and extract URLs. It handles various URL formats and can detect multiple URLs
      * within a single string.
      *
+     * Calling it again on the same instance returns the same list; the content is not scanned twice.
+     *
      * @return A list of detected Url objects. The list may be empty if no URLs are found.
-     * @throws IllegalStateException If excessive backtracking is detected, indicating a potential endless loop.
+     * @throws IllegalStateException Only if the endless-loop guard trips on excessive backtracking, which is
+     * not expected for any input. No other exception escapes: malformed or garbage text yields an empty list
+     * or fewer URLs.
      */
+    @Throws(IllegalStateException::class)
     public fun detect(): ImmutableList<Url> {
         readDefault()
         return urlList.build()

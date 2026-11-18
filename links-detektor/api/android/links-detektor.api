@@ -41,13 +41,9 @@ public class com/slothiesmooth/linksdetektor/Url {
 	public final fun getPort ()I
 	public final fun getQuery ()Ljava/lang/String;
 	public final fun getRange ()Lkotlin/ranges/IntRange;
-	protected final fun getRawHost ()Ljava/lang/String;
-	protected final fun getRawPath ()Ljava/lang/String;
 	public final fun getScheme ()Ljava/lang/String;
 	public final fun getUsername ()Ljava/lang/String;
 	public final fun normalize ()Lcom/slothiesmooth/linksdetektor/NormalizedUrl;
-	protected final fun setRawHost (Ljava/lang/String;)V
-	protected final fun setRawPath (Ljava/lang/String;)V
 	public fun toString ()Ljava/lang/String;
 }
 

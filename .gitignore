@@ -164,5 +164,7 @@ gradle-app.setting
 /.idea/ktor.xml
 .idea
 
+.DS_Store
+
 # Kotlin Gradle plugin session data
 .kotlin/

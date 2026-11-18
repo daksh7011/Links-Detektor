@@ -6,7 +6,7 @@
 
 **Architecture:** Behaviour is pinned first with golden tests captured from today's JVM implementation, then every JVM-only API is swapped for pure Kotlin while the module is still `kotlin("jvm")`. Only then does the build flip to KMP through a `build-logic` convention plugin (`ld.published.library`), with three tiny platform seams (`nfkc`, `idnToAscii`, `MalformedUrlException`). Publishing, docs and CI are rebuilt last.
 
-**Tech Stack:** Kotlin 2.4.20, Gradle 9.9.0, AGP 9.3.3 (`com.android.kotlin.multiplatform.library`), kotlinx-collections-immutable 0.5.2, `com.doist.x:normalize` 1.2.0 (linux/mingw only), detekt 1.23.8, vanniktech maven-publish 0.37.0, Dokka 2.3.0, kotlin.test.
+**Tech Stack:** Kotlin 2.4.20, Gradle 9.9.0, AGP 9.3.3 (`com.android.kotlin.multiplatform.library`), kotlinx-collections-immutable 0.5.2, generated Unicode 15.0.0 NFKC tables (`TableNfkc`, linux/mingw), detekt 1.23.8, vanniktech maven-publish 0.37.0, Dokka 2.3.0, kotlin.test.
 
 **Spec:** `docs/superpowers/specs/2026-11-18-kmp-migration-design.md` (phases 1–5 only; "Owner decisions" and "House rule" sections win over everything above them).
 
@@ -15,8 +15,8 @@
 - Coordinates stay `com.slothiesmooth:links-detektor`; package stays `com.slothiesmooth.linksdetektor`.
 - Version line: `3.0.0-alpha1`, `-alpha2`, … → `-beta1` … → `-rc1` … → `3.0.0`. No dot before the number.
 - Library JVM bytecode **17** (toolchain 21 is fine). Library Android `minSdk` **23**, `compileSdk` 37.
-- Targets: `jvm`, `android`, `iosArm64`, `iosSimulatorArm64`, `macosArm64`, `wasmJs`, `js(IR)`, `linuxX64`, `linuxArm64`, `mingwX64`. Not `iosX64`, `macosX64`, tvOS, watchOS.
-- Dependencies of the published library: `kotlinx-collections-immutable` as `api` everywhere; `com.doist.x:normalize` as `implementation` **only** in the linux+mingw source set. Nothing else.
+- Targets: `jvm`, `android`, `iosArm64`, `iosSimulatorArm64`, `macosArm64`, `wasmJs`, `js`, `linuxX64`, `linuxArm64`, `mingwX64`. Not `iosX64`, `macosX64`, tvOS, watchOS.
+- Dependencies of the published library: `kotlinx-collections-immutable` as `api` everywhere. Nothing else (doist normalize was dropped 2026-11-19 — see spec).
 - Immutable collections everywhere: no `List`/`Set`/`Map` (or mutable variants) in any signature, property or field; no `mutableListOf`/`arrayListOf`/`mutableSetOf`/`hashSetOf`/`mutableMapOf`/`hashMapOf`/`java.util.*` collections. Use `ImmutableList`/`PersistentList` etc. and `.builder()`→`.build()`. `StringBuilder` is allowed. Tests assert on immutable types too.
 - No `!!` anywhere (repo guideline + detekt `UnsafeCallOnNullableType`); no new `@Suppress`.
 - `explicitApi()` on the library; every public declaration keeps KDoc.
@@ -742,11 +742,11 @@ Still jvm-only, so every step is verifiable with `jvmTest`.
 - Produces: ABI check/update tasks (names recorded in Step 1), used by CI in Task 13.
 
 - [ ] **Step 1: Spike the DSL and task names.** Add `kotlin { @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class) abiValidation { enabled.set(true) } }`, then `./gradlew :links-detektor:tasks --all | grep -i abi`.
-  Expected: a check/update pair — `checkLegacyAbi`/`updateLegacyAbi` in Kotlin 2.2–2.3; 2.4.20 may name them differently. Use whatever is printed in the next steps and in Task 13. Fallback if the built-in DSL is gone or broken: `org.jetbrains.kotlinx.binary-compatibility-validator` with `klib { enabled = true }` (`apiCheck`/`apiDump`).
+  Expected: a check/update pair — `checkKotlinAbi`/`updateKotlinAbi` in Kotlin 2.2–2.3; 2.4.20 may name them differently. Use whatever is printed in the next steps and in Task 13. Fallback if the built-in DSL is gone or broken: `org.jetbrains.kotlinx.binary-compatibility-validator` with `klib { enabled = true }` (`apiCheck`/`apiDump`).
 
-- [ ] **Step 2: Generate and commit the dump.** `./gradlew :links-detektor:updateLegacyAbi`. Inspect it: the public surface must be exactly `LinksDetektor`, `LinksDetektorOptions`, `Url`, `NormalizedUrl`, `MalformedUrlException` — **no** `internal.*` class (in particular no `HostNormalizer`), and `detect` returns `kotlinx/collections/immutable/ImmutableList`.
+- [ ] **Step 2: Generate and commit the dump.** `./gradlew :links-detektor:updateKotlinAbi`. Inspect it: the public surface must be exactly `LinksDetektor`, `LinksDetektorOptions`, `Url`, `NormalizedUrl`, `MalformedUrlException` — **no** `internal.*` class (in particular no `HostNormalizer`), and `detect` returns `kotlinx/collections/immutable/ImmutableList`.
 
-- [ ] **Step 3: Prove the gate.** Temporarily make `LinksDetektor.backtracked` `internal`; `./gradlew :links-detektor:checkLegacyAbi` → FAILED. Revert; rerun → BUILD SUCCESSFUL.
+- [ ] **Step 3: Prove the gate.** Temporarily make `LinksDetektor.backtracked` `internal`; `./gradlew :links-detektor:checkKotlinAbi` → FAILED. Revert; rerun → BUILD SUCCESSFUL.
 
 - [ ] **Step 4: Commit.** `git commit -m "Track the public ABI of the library"`
 
@@ -792,7 +792,7 @@ Still jvm-only, so every step is verifiable with `jvmTest`.
   Leave `gradle.properties` without any `org.jetbrains.dokka.experimental…` flag unless Dokka 2.3.0 asks for one.
 
 - [ ] **Step 3: Verify.** `./gradlew :links-detektor:publishToMavenLocal :links-detektor:dokkaGenerate`
-  Expected under `~/.m2/repository/com/slothiesmooth/`: directories `links-detektor` (root, with `.module` + kotlin-tooling metadata), `links-detektor-jvm`, `links-detektor-android`, `links-detektor-iosarm64`, `links-detektor-iossimulatorarm64`, `links-detektor-macosarm64`, `links-detektor-js`, `links-detektor-wasm-js`, `links-detektor-linuxx64`, `links-detektor-linuxarm64`, `links-detektor-mingwx64`, each at `3.0.0-alpha1` with sources and javadoc jars. `grep -c "kotlinx-collections-immutable" ~/.m2/repository/com/slothiesmooth/links-detektor-jvm/3.0.0-alpha1/*.pom` → `1` with scope `compile`; `grep -c doist …links-detektor-jvm…pom` → `0`; `grep -c doist …links-detektor-linuxx64…pom` → `1`. `links-detektor/build/dokka/html/index.html` exists and contains no `internal` package page.
+  Expected under `~/.m2/repository/com/slothiesmooth/`: directories `links-detektor` (root, with `.module` + kotlin-tooling metadata), `links-detektor-jvm`, `links-detektor-android`, `links-detektor-iosarm64`, `links-detektor-iossimulatorarm64`, `links-detektor-macosarm64`, `links-detektor-js`, `links-detektor-wasm-js`, `links-detektor-linuxx64`, `links-detektor-linuxarm64`, `links-detektor-mingwx64`, each at `3.0.0-alpha1` with sources and javadoc jars. `grep -c "kotlinx-collections-immutable" ~/.m2/repository/com/slothiesmooth/links-detektor-jvm/3.0.0-alpha1/*.pom` → `1` with scope `compile`; `grep -c doist ~/.m2/repository/com/slothiesmooth/links-detektor-*/3.0.0-alpha1/*.pom` → `0` for every target; every pom's only dependency is kotlinx-collections-immutable (plus stdlib). `links-detektor/build/dokka/html/index.html` exists and contains no `internal` package page.
 
 - [ ] **Step 4: Remove committed docs.** `git rm -r docs/images docs/index.html docs/links-detektor docs/navigation.html docs/scripts docs/styles docs/ui-kit`. `git status` must still show `docs/superpowers/` intact.
 
@@ -815,7 +815,7 @@ Still jvm-only, so every step is verifiable with `jvmTest`.
   `./gradlew detektCheck :links-detektor:jvmTest :links-detektor:testAndroidHostTest :links-detektor:jsNodeTest :links-detektor:wasmJsNodeTest :links-detektor:linuxX64Test --continue`
 
 - [ ] **Step 2: `_apple.yml`** (`on: workflow_call`, `runs-on: macos-latest`, same setup + `~/.konan` cache keyed on `hashFiles('gradle/libs.versions.toml')`):
-  `./gradlew :links-detektor:iosSimulatorArm64Test :links-detektor:macosArm64Test :links-detektor:checkLegacyAbi :links-detektor:assemble`
+  `./gradlew :links-detektor:iosSimulatorArm64Test :links-detektor:macosArm64Test :links-detektor:checkKotlinAbi :links-detektor:assemble`
   (ABI check lives here because Apple klib dumps cannot be produced on Linux; `assemble` cross-compiles linuxArm64 and mingwX64.)
 
 - [ ] **Step 3: `ci.yml` and `develop.yml`.** Keep triggers, concurrency and the labeler job; replace the build job with `build: uses: ./.github/workflows/_build.yml` and `apple: uses: ./.github/workflows/_apple.yml`. Remove the "Upload JARs" steps.
@@ -832,7 +832,7 @@ Still jvm-only, so every step is verifiable with `jvmTest`.
      [ "$CODE" = "200" ] && echo "ALREADY_PUBLISHED=true" >> "$GITHUB_ENV" || echo "ALREADY_PUBLISHED=false" >> "$GITHUB_ENV"
      ```
   3. `release-drafter/release-drafter@v6` with `version`, `tag`, `name` = `${{ env.VERSION }}` and `prerelease: ${{ env.PRERELEASE }}`.
-  4. `./gradlew :links-detektor:allTests :links-detektor:checkLegacyAbi`
+  4. `./gradlew :links-detektor:allTests :links-detektor:checkKotlinAbi`
   5. `if: env.ALREADY_PUBLISHED == 'false'` → `./gradlew :links-detektor:publishAllPublicationsToMavenCentralRepository` with the five `ORG_GRADLE_PROJECT_*` secrets exactly as today (`master.yml:49-54`).
   6. `./gradlew :links-detektor:dokkaGenerate`, then `actions/configure-pages`, `actions/upload-pages-artifact` with `path: links-detektor/build/dokka/html`, `actions/deploy-pages`.
   Remove the "Upload JARs" and "Upload Assets to Release" steps (there is no single jar any more).
@@ -861,7 +861,7 @@ Still jvm-only, so every step is verifiable with `jvmTest`.
   - New section "Migrating from 2.x": `detect()` return type; `HostNormalizer` is internal; `commons-math3` no longer on the classpath; Maven users need `-jvm`; host lowercasing is locale-independent; the backtrack guard throws `IllegalStateException`; off-JVM IDN skips Nameprep prohibited/bidi/unassigned checks (emoji hosts encode instead of being rejected).
   - Remove every mention of `:sample`; development setup commands become `./gradlew detektCheck :links-detektor:allTests`.
 
-- [ ] **Step 2: Full dry run.** `./gradlew clean detektCheck :links-detektor:allTests :links-detektor:checkLegacyAbi :links-detektor:publishToMavenLocal :links-detektor:dokkaGenerate`
+- [ ] **Step 2: Full dry run.** `./gradlew clean detektCheck :links-detektor:allTests :links-detektor:checkKotlinAbi :links-detektor:publishToMavenLocal :links-detektor:dokkaGenerate`
   Expected: BUILD SUCCESSFUL.
 
 - [ ] **Step 3: Consume the artifact.** In the scratch directory (not in the repo) create a one-file Gradle JVM project with `repositories { mavenLocal(); mavenCentral() }` and `implementation("com.slothiesmooth:links-detektor:3.0.0-alpha1")` on JDK 17, whose `main` prints `LinksDetektor("see http://example.com ok", LinksDetektorOptions.Default).detect().map { it.range }`.

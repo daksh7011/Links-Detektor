@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -46,7 +47,6 @@ data class LdDimens(
     val space4: Dp = 16.dp,
     val space6: Dp = 24.dp,
     val space8: Dp = 32.dp,
-    val radiusFocus: Dp = 6.dp,
     val radiusField: Dp = 12.dp,
     val radiusPanel: Dp = 20.dp,
     val radiusSheet: Dp = 24.dp,
@@ -106,7 +106,7 @@ val MaterialTheme.ldDimens: LdDimens
     @Composable @ReadOnlyComposable
     get() = LocalLdDimens.current
 
-private fun ldColorScheme(colors: LdColors) = darkColorScheme(
+internal fun ldColorScheme(colors: LdColors) = darkColorScheme(
     primary = colors.amber,
     onPrimary = colors.amberInk,
     primaryContainer = colors.amber,
@@ -136,6 +136,23 @@ private fun ldColorScheme(colors: LdColors) = darkColorScheme(
     outline = colors.line,
     outlineVariant = colors.line,
     scrim = colors.scrim,
+    errorContainer = colors.amber,
+    onErrorContainer = colors.amberInk,
+    inverseSurface = colors.fg,
+    inverseOnSurface = colors.stage,
+    inversePrimary = colors.amber,
+    primaryFixed = colors.amber,
+    primaryFixedDim = colors.amber,
+    onPrimaryFixed = colors.amberInk,
+    onPrimaryFixedVariant = colors.amberInk,
+    secondaryFixed = colors.amber,
+    secondaryFixedDim = colors.amber,
+    onSecondaryFixed = colors.amberInk,
+    onSecondaryFixedVariant = colors.amberInk,
+    tertiaryFixed = colors.amber,
+    tertiaryFixedDim = colors.amber,
+    onTertiaryFixed = colors.amberInk,
+    onTertiaryFixedVariant = colors.amberInk,
     // No red exists in this system: errors read as the amber accent.
     error = colors.amber,
     onError = colors.amberInk,
@@ -167,11 +184,15 @@ private fun ldTypography(sans: FontFamily): Typography {
 fun LdTheme(content: @Composable () -> Unit) {
     val colors = LdColorsDark
     val sans = geistFamily()
+    val mono = geistMonoFamily()
+    val type = remember(sans, mono) { typeFor(sans, mono) }
+    val scheme = remember(colors) { ldColorScheme(colors) }
+    val typography = remember(sans) { ldTypography(sans) }
     CompositionLocalProvider(
         LocalLdColors provides colors,
-        LocalLdType provides typeFor(sans, geistMonoFamily()),
+        LocalLdType provides type,
         LocalLdDimens provides LdDimens(),
     ) {
-        MaterialTheme(colorScheme = ldColorScheme(colors), typography = ldTypography(sans), content = content)
+        MaterialTheme(colorScheme = scheme, typography = typography, content = content)
     }
 }

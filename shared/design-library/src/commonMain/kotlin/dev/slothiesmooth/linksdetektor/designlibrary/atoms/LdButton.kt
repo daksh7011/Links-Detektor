@@ -24,10 +24,14 @@ private val SidePadding = 24.dp
 private val HairlineWidth = 1.dp
 private const val DISABLED_ALPHA = 0.5f
 
-private fun fill(style: LdButtonStyle, hovered: Boolean, colors: LdColors): Color = when {
-    style == LdButtonStyle.Primary -> if (hovered) colors.amberHover else colors.amber
-    hovered -> colors.surface
-    else -> Color.Transparent
+/** The fill of a button; a disabled one fades with its label. */
+internal fun buttonFill(style: LdButtonStyle, hovered: Boolean, enabled: Boolean, colors: LdColors): Color {
+    val base = when {
+        style == LdButtonStyle.Primary -> if (hovered) colors.amberHover else colors.amber
+        hovered -> colors.surface
+        else -> Color.Transparent
+    }
+    return if (enabled) base else base.copy(alpha = base.alpha * DISABLED_ALPHA)
 }
 
 /** A pill button, at least 48 dp high. Primary is amber; Ghost is a hairline outline. No elevation. */
@@ -49,7 +53,7 @@ fun LdButton(
         enabled = enabled,
         interactionSource = interactions,
         shape = RoundedCornerShape(dimens.radiusPill),
-        color = fill(style, hovered, colors),
+        color = buttonFill(style, hovered && enabled, enabled, colors),
         contentColor = label,
         border = if (style == LdButtonStyle.Ghost) BorderStroke(HairlineWidth, colors.line) else null,
         shadowElevation = 0.dp,

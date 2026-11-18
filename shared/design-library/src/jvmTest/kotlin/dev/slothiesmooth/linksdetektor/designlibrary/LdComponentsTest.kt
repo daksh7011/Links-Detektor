@@ -7,21 +7,28 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import dev.slothiesmooth.linksdetektor.designlibrary.atoms.LdChip
 import dev.slothiesmooth.linksdetektor.designlibrary.atoms.LdText
+import dev.slothiesmooth.linksdetektor.designlibrary.atoms.LdTextField
 import dev.slothiesmooth.linksdetektor.designlibrary.molecules.LdErrorState
 import dev.slothiesmooth.linksdetektor.designlibrary.molecules.LdMasterDetail
 import dev.slothiesmooth.linksdetektor.designlibrary.tokens.LdTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class LdComponentsTest {
@@ -31,6 +38,23 @@ class LdComponentsTest {
         setContent { LdTheme { LdChip("HTML", selected = on, onToggle = { on = !on }) } }
         onNodeWithText("HTML").assertIsOff().performClick()
         onNodeWithText("HTML").assertIsOn()
+    }
+
+    @Test
+    fun `a chip claims a 48 dp touch target in layout`() = runComposeUiTest {
+        setContent {
+            LdTheme { Box(Modifier.testTag("slot")) { LdChip("HTML", selected = false, onToggle = {}) } }
+        }
+        val slot = onNodeWithTag("slot").fetchSemanticsNode().boundsInRoot.height
+        assertTrue(slot >= 48f * density.density, "the chip's slot is $slot px high")
+        val touch = onNodeWithText("HTML").fetchSemanticsNode().touchBoundsInRoot.height
+        assertTrue(touch >= 48f * density.density, "touch target is $touch px high")
+    }
+
+    @Test
+    fun `a text field announces its label once`() = runComposeUiTest {
+        setContent { LdTheme { LdTextField("", {}, label = "Link text") } }
+        onAllNodes(hasText("Link text") or hasContentDescription("Link text")).assertCountEquals(1)
     }
 
     @Test

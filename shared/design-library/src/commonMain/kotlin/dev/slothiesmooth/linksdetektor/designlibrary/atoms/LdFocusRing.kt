@@ -22,6 +22,13 @@ private val RingGap = 2.dp
 private const val HALF = 2f
 
 /**
+ * How far the centre line of a ring sits from the edge of the control: [outside] puts it clear of the edge by [gap] (negative is
+ * outside), otherwise the ring sits half its [stroke] inside the edge.
+ */
+fun focusRingInset(outside: Boolean, gap: Float, stroke: Float): Float =
+    if (outside) -(gap + stroke / HALF) else stroke / HALF
+
+/**
  * A 2 dp amber ring, offset 2 dp clear of the control, while the control that owns [interactionSource] has keyboard focus
  * (never for a touch or a click).
  */
@@ -33,7 +40,7 @@ fun Modifier.ldFocusRing(interactionSource: InteractionSource, cornerRadius: Dp)
     if (!focused || !keyboard) return this
     return drawWithContent {
         drawContent()
-        val inset = -(RingGap.toPx() + RingStroke.toPx() / HALF)
+        val inset = focusRingInset(outside = true, gap = RingGap.toPx(), stroke = RingStroke.toPx())
         val radius = (cornerRadius.toPx() - inset).coerceAtLeast(0f)
         drawRoundRect(
             color = color,

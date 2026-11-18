@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -50,7 +51,8 @@ fun LdTextField(
     val focused by interactions.collectIsFocusedAsState()
     val shape = RoundedCornerShape(dimens.radiusField)
     Column(modifier, verticalArrangement = Arrangement.spacedBy(dimens.space2)) {
-        LdText(text = label, style = LdTextStyle.Label)
+        // The field itself carries the label for screen readers; the visible text must not announce it again.
+        LdText(text = label, style = LdTextStyle.Label, modifier = Modifier.clearAndSetSemantics {})
         BasicTextField(
             value = value,
             onValueChange = onValueChange,

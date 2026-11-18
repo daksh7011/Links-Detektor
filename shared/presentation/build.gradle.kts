@@ -5,11 +5,6 @@ plugins {
 
 kotlin {
     sourceSets {
-        all {
-            languageSettings {
-                optIn("androidx.compose.material3.ExperimentalMaterial3Api")
-            }
-        }
         commonMain.dependencies {
             // api: BaseViewModel publicly extends androidx.lifecycle.ViewModel.
             api(libs.jetbrains.lifecycle.viewmodel.compose)

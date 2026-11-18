@@ -7,7 +7,6 @@ kotlin {
     sourceSets {
         all {
             languageSettings {
-                optIn("androidx.compose.material3.ExperimentalMaterial3Api")
                 optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
             }
         }

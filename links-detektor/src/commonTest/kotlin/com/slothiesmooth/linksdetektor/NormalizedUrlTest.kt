@@ -33,6 +33,6 @@ class NormalizedUrlTest {
 
     private companion object {
         // Not a const: a compile-time string constant holding a lone surrogate loses it in klibs.
-        val LONE_SURROGATE: Char = '\uD800'
+        val LONE_SURROGATE: Char = Char(0xD800)
     }
 }

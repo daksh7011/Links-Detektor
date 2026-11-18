@@ -7,8 +7,8 @@ import kotlinx.collections.immutable.persistentListOf
  * Shared IDN inputs. `EQUAL_CORPUS` maps an input host to the output `java.net.IDN.toASCII` produces for it.
  */
 internal object IdnCorpus {
-    private val HIGH_SURROGATE: Char = '\uD800'
-    private val LOW_SURROGATE: Char = '\uDC00'
+    private val HIGH_SURROGATE: Char = Char(0xD800)
+    private val LOW_SURROGATE: Char = Char(0xDC00)
 
     val EQUAL_CORPUS: ImmutableList<Pair<String, String>> = persistentListOf(
         "example.com" to "example.com",

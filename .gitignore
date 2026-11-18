@@ -168,3 +168,6 @@ gradle-app.setting
 
 # Kotlin Gradle plugin session data
 .kotlin/
+
+# Kotlin/JS and wasm yarn lockfiles are regenerated (F17)
+kotlin-js-store/

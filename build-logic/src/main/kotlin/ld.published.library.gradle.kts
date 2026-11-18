@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
@@ -15,7 +18,15 @@ kotlin {
         }
     }
 
-    applyDefaultHierarchyTemplate()
+    applyDefaultHierarchyTemplate {
+        common {
+            group("jvmAndAndroid") { withJvm(); withAndroidTarget() }
+            group("nonJvm") { group("native"); group("web") }
+            group("native") { group("nativeNonApple") { withLinux(); withMingw() } }
+        }
+    }
+
+    explicitApi()
 
     jvmToolchain(21)
 
@@ -39,6 +50,7 @@ tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
         freeCompilerArgs.add("-Xjdk-release=17")
+        freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 }
 

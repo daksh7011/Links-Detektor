@@ -1,7 +1,6 @@
 package com.slothiesmooth.linksdetektor
 
 import kotlinx.collections.immutable.persistentListOf
-import java.net.MalformedURLException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -14,7 +13,7 @@ class UrlCreateTest {
     @Test
     fun noUrlThrows() {
         persistentListOf("", "   ", "localhost", "hello", "http://", "://").forEach { input ->
-            val error = assertFailsWith<MalformedURLException>("case: $input") { Url.create(input) }
+            val error = assertFailsWith<MalformedUrlException>("case: $input") { Url.create(input) }
             assertEquals("We couldn't find any urls in string: $input", error.message, "case: $input")
         }
     }
@@ -22,7 +21,7 @@ class UrlCreateTest {
     @Test
     fun moreThanOneUrlThrows() {
         val input = "www.a.com,www.b.com"
-        val error = assertFailsWith<MalformedURLException> { Url.create(input) }
+        val error = assertFailsWith<MalformedUrlException> { Url.create(input) }
         assertEquals("We found more than one url in string: www.a.com,www.b.com", error.message)
     }
 

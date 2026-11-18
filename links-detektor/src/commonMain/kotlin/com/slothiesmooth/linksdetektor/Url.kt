@@ -7,7 +7,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
-import java.net.MalformedURLException
 
 /**
  * Creating own Uri class since java.net.Uri would throw parsing exceptions
@@ -22,7 +21,7 @@ import java.net.MalformedURLException
  * - Strips fragments (anything after #)
  *
  */
-open class Url internal constructor(urlMarker: UrlMarker) {
+public open class Url internal constructor(urlMarker: UrlMarker) {
     private val _urlMarker: UrlMarker = urlMarker
     private var _scheme: String? = null
     private var _username: String? = null
@@ -37,7 +36,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      * The original, unmodified URL string that was used to create this Url object.
      * This is useful for debugging or when the original form needs to be preserved.
      */
-    val originalUrl: String? = urlMarker.originalUrl
+    public val originalUrl: String? = urlMarker.originalUrl
 
     /**
      * Where this URL was read from in the scanned string, as an index range.
@@ -53,7 +52,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      * (not expected for a URL produced by this library), the range is [IntRange.EMPTY].
      * A [NormalizedUrl] has the range of the [Url] it came from.
      */
-    val range: IntRange = urlMarker.range
+    public val range: IntRange = urlMarker.range
 
     internal val urlMarker: UrlMarker
         get() = _urlMarker
@@ -66,7 +65,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return A string in the format: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]#[fragment]
      */
-    val fullUrl: String
+    public val fullUrl: String
         get() = fullUrlWithoutFragment + fragment.orEmpty()
 
     /**
@@ -77,7 +76,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return A string in the format: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]
      */
-    val fullUrlWithoutFragment: String
+    public val fullUrlWithoutFragment: String
         get() {
             val url = StringBuilder()
             if (scheme.isNotEmpty()) {
@@ -111,7 +110,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return The scheme of the URL, or an empty string if not present.
      */
-    val scheme: String
+    public val scheme: String
         get() {
             if (_scheme == null) {
                 if (exists(UrlPart.SCHEME)) {
@@ -133,7 +132,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return The username from the URL, or an empty string if not present.
      */
-    val username: String
+    public val username: String
         get() {
             if (_username == null) {
                 populateUsernamePassword()
@@ -149,7 +148,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return The password from the URL, or an empty string if not present.
      */
-    val password: String
+    public val password: String
         get() {
             if (_password == null) {
                 populateUsernamePassword()
@@ -165,7 +164,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return The host from the URL, or null if not present.
      */
-    open val host: String?
+    public open val host: String?
         get() {
             if (rawHost == null) {
                 val hostPart = getPart(UrlPart.HOST)
@@ -181,7 +180,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
     /**
      * port = 0 means it hasn't been set yet. port = -1 means there is no port
      */
-    val port: Int
+    public val port: Int
         get() {
             if (_port == 0) {
                 val portString = getPart(UrlPart.PORT)
@@ -206,7 +205,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return The path from the URL, or "/" if not present.
      */
-    open val path: String?
+    public open val path: String?
         get() {
             if (rawPath == null) {
                 rawPath = if (exists(UrlPart.PATH)) getPart(UrlPart.PATH) else "/"
@@ -221,7 +220,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return The query string from the URL, or an empty string if not present.
      */
-    val query: String
+    public val query: String
         get() {
             if (_query == null) {
                 _query = getPart(UrlPart.QUERY)
@@ -236,7 +235,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return The fragment string from the URL, or an empty string if not present.
      */
-    val fragment: String
+    public val fragment: String
         get() {
             if (_fragment == null) {
                 _fragment = getPart(UrlPart.FRAGMENT)
@@ -250,7 +249,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return The byte representation of the host if it's an IP address, or null for non-normalized URLs.
      */
-    open val hostBytes: ByteArray?
+    public open val hostBytes: ByteArray?
         get() = null
 
     /**
@@ -330,7 +329,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      *
      * @return A new NormalizedUrl instance representing the normalized version of this URL.
      */
-    fun normalize(): NormalizedUrl = NormalizedUrl(_urlMarker)
+    public fun normalize(): NormalizedUrl = NormalizedUrl(_urlMarker)
 
     /**
      * Returns a string representation of this URL.
@@ -345,7 +344,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
     /**
      * Companion object providing factory methods
      */
-    companion object {
+    public companion object {
         private const val DEFAULT_SCHEME = "http"
         private val SCHEME_PORT_MAP: ImmutableMap<String, Int> =
             persistentMapOf("http" to 80, "https" to 443, "ftp" to 21)
@@ -358,17 +357,17 @@ open class Url internal constructor(urlMarker: UrlMarker) {
          *
          * @param url The URL string to parse.
          * @return A new Url instance representing the parsed URL.
-         * @throws MalformedURLException If the input string is not a valid URL, contains no URLs,
+         * @throws MalformedUrlException If the input string is not a valid URL, contains no URLs,
          *                               or contains multiple URLs.
          */
-        @Throws(MalformedURLException::class)
-        fun create(url: String): Url {
+        @Throws(MalformedUrlException::class)
+        public fun create(url: String): Url {
             val formattedString: String = UrlUtil.removeSpecialSpaces(url.trim { it <= ' ' }.replace(" ", "%20"))
             val urls: ImmutableList<Url> = LinksDetektor(formattedString, LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).detect()
             return when (urls.size) {
                 1 -> urls[0]
-                0 -> throw MalformedURLException("We couldn't find any urls in string: $url")
-                else -> throw MalformedURLException("We found more than one url in string: $url")
+                0 -> throw MalformedUrlException("We couldn't find any urls in string: $url")
+                else -> throw MalformedUrlException("We found more than one url in string: $url")
             }
         }
     }

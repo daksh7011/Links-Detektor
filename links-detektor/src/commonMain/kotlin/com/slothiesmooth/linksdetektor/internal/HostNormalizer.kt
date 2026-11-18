@@ -19,7 +19,7 @@ import kotlin.text.iterator
  *
  * @property host The original host string to normalize.
  */
-class HostNormalizer(private val host: String?) {
+internal class HostNormalizer(private val host: String?) {
     /**
      * The byte representation of the host if it's an IP address.
      * Will be null if the host is not an IP address or if normalization failed.

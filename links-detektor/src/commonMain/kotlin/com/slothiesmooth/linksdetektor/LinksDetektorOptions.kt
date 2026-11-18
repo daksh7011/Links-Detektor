@@ -11,11 +11,11 @@ import com.slothiesmooth.linksdetektor.internal.OptionMask
  *
  * @property value The numeric bit value of the option, used in bitwise operations.
  */
-enum class LinksDetektorOptions(
+public enum class LinksDetektorOptions(
     /**
      * The numeric bit value of this option.
      */
-    val value: Int
+    public val value: Int
 ) {
     /**
      * Default options with no special checks.
@@ -115,5 +115,5 @@ enum class LinksDetektorOptions(
      * @param flag The option flag to check for.
      * @return `true` if the specified flag is enabled in this options instance, `false` otherwise.
      */
-    fun hasFlag(flag: LinksDetektorOptions): Boolean = OptionMask(value).has(flag)
+    public fun hasFlag(flag: LinksDetektorOptions): Boolean = OptionMask(value).has(flag)
 }

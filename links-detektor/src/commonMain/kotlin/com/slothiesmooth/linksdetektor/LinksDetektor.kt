@@ -36,11 +36,15 @@ import kotlinx.collections.immutable.persistentSetOf
  * with backtracking capabilities to handle complex cases. Detection behavior can be
  * customized through [LinksDetektorOptions].
  *
+ * @constructor Creates a detector for [content] that detects with every option in [options].
  * @property content The text content to search for URLs.
  * @property options The set of options that control detection behavior; any combination is allowed.
  *                    An empty set behaves like [LinksDetektorOptions.Default].
  */
-class LinksDetektor(private val content: String, options: ImmutableSet<LinksDetektorOptions>) {
+public class LinksDetektor public constructor(
+    private val content: String,
+    options: ImmutableSet<LinksDetektorOptions>
+) {
 
     /**
      * The combined bit mask of the options for detection.
@@ -101,7 +105,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
      *
      * @return The count of characters that were backtracked while reading the input.
      */
-    val backtracked: Int
+    public val backtracked: Int
         get() = inputTextReader.backtrackedCount
 
     /**
@@ -110,7 +114,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
      * @param content The text content to search for URLs.
      * @param options The option to detect with.
      */
-    constructor(content: String, options: LinksDetektorOptions) : this(content, persistentSetOf(options))
+    public constructor(content: String, options: LinksDetektorOptions) : this(content, persistentSetOf(options))
 
     /**
      * Detects URLs in the content string and returns them as a list of Url objects.
@@ -122,7 +126,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
      * @return A list of detected Url objects. The list may be empty if no URLs are found.
      * @throws IllegalStateException If excessive backtracking is detected, indicating a potential endless loop.
      */
-    fun detect(): ImmutableList<Url> {
+    public fun detect(): ImmutableList<Url> {
         readDefault()
         return urlList.build()
     }

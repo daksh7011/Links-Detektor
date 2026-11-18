@@ -3,7 +3,6 @@ package com.slothiesmooth.linksdetektor
 import com.slothiesmooth.linksdetektor.internal.HostNormalizer
 import com.slothiesmooth.linksdetektor.internal.PathNormalizer
 import com.slothiesmooth.linksdetektor.internal.UrlMarker
-import java.net.MalformedURLException
 
 /**
  * Represents a normalized version of a URL.
@@ -15,7 +14,7 @@ import java.net.MalformedURLException
  *
  * Normalization helps with URL comparison and ensures consistent representation.
  */
-class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlMarker) {
+public class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlMarker) {
     private var _isPopulated = false
     private var _hostBytes: ByteArray? = null
 
@@ -91,9 +90,9 @@ class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlMarker) 
          *
          * @param url The URL string to normalize.
          * @return A new NormalizedUrl instance.
-         * @throws MalformedURLException If the input string is not a valid URL or contains multiple URLs.
+         * @throws MalformedUrlException If the input string is not a valid URL or contains multiple URLs.
          */
-        @Throws(MalformedURLException::class)
+        @Throws(MalformedUrlException::class)
         fun create(url: String): NormalizedUrl = Url.Companion.create(url).normalize()
     }
 }

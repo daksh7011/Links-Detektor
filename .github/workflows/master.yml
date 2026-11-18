@@ -61,7 +61,7 @@ jobs:
 
       # The version is the `lib` entry of the catalog: 3.0.0-alphaN, -betaN, -rcN, then 3.0.0. Release Drafter's own
       # resolver cannot produce that format, so it is only given the result. Releases on Maven Central are immutable,
-      # so publishing is skipped when the version already exists there.
+      # so publishing and the GitHub release are skipped when the version already exists there.
       - name: Resolve version
         run: |
           VERSION=$(grep -m1 '^lib = ' gradle/libs.versions.toml | cut -d'"' -f2)
@@ -70,17 +70,6 @@ jobs:
           case "$VERSION" in *-*) echo "PRERELEASE=true" ;; *) echo "PRERELEASE=false" ;; esac >> "$GITHUB_ENV"
           CODE=$(curl -s -o /dev/null -w '%{http_code}' "https://repo1.maven.org/maven2/com/slothiesmooth/links-detektor/$VERSION/")
           [ "$CODE" = "200" ] && echo "ALREADY_PUBLISHED=true" >> "$GITHUB_ENV" || echo "ALREADY_PUBLISHED=false" >> "$GITHUB_ENV"
-
-      - name: Release Drafter
-        id: release_drafter
-        uses: release-drafter/release-drafter@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
-        with:
-          version: ${{ env.VERSION }}
-          tag: ${{ env.VERSION }}
-          name: ${{ env.VERSION }}
-          prerelease: ${{ env.PRERELEASE }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test and check ABI
         run: ./gradlew :links-detektor:allTests :links-detektor:checkKotlinAbi
@@ -94,6 +83,21 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+
+      # A tag and a published release exist for every version that reaches Maven Central. alpha, beta and rc
+      # versions are marked as pre-releases.
+      - name: Release Drafter
+        id: release_drafter
+        if: env.ALREADY_PUBLISHED == 'false'
+        uses: release-drafter/release-drafter@d1a19e60e81a7e650d00a7de9277f87e439117ea # v7.11.0
+        with:
+          version: ${{ env.VERSION }}
+          tag: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          prerelease: ${{ env.PRERELEASE }}
+          publish: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate API docs
         run: ./gradlew :links-detektor:dokkaGenerate

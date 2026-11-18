@@ -120,6 +120,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
      * within a single string.
      *
      * @return A list of detected Url objects. The list may be empty if no URLs are found.
+     * @throws IllegalStateException If excessive backtracking is detected, indicating a potential endless loop.
      */
     fun detect(): ImmutableList<Url> {
         readDefault()

@@ -4,7 +4,6 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import java.net.IDN
 import kotlin.text.iterator
 
 /**
@@ -46,7 +45,7 @@ class HostNormalizer(private val host: String?) {
         var host: String
         host = try {
             // replace high unicode characters
-            IDN.toASCII(this@HostNormalizer.host)
+            idnToAscii(this@HostNormalizer.host)
         } catch (ex: IllegalArgumentException) {
             // occurs when the url is invalid. Just return
             return

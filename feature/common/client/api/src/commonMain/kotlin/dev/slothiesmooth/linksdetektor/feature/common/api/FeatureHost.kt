@@ -136,7 +136,7 @@ class FeatureHostContext(
 
     override fun pushDestination(route: Any) = navController.navigate(route)
 
-    // Clears back to the current root, not the graph's declared start: the splash is declared first yet popped.
+    // Clears back to the current root, not the graph's declared start, which may already be gone from the stack.
     override fun setDestination(route: Any) {
         val rootRoute = navController.currentBackStack.value
             .firstOrNull { entry -> entry.destination.route != null }

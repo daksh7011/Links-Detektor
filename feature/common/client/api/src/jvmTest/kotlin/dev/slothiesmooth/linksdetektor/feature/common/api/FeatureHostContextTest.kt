@@ -29,7 +29,7 @@ internal data object ScreenC
 @OptIn(ExperimentalTestApi::class)
 class FeatureHostContextTest {
     private fun NavHostController.stack(): ImmutableList<String?> =
-        currentBackStack.value.mapNotNull { entry -> entry.destination.route }.map(::routeNameOfPattern).toImmutableList()
+        currentBackStack.value.mapNotNull { entry -> entry.destination.route }.toImmutableList().map(::routeNameOfPattern).toImmutableList()
 
     private fun routeNameOfPattern(pattern: String): String? = pattern.substringBefore('/').substringBefore('?')
 

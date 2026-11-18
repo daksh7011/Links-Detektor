@@ -31,6 +31,7 @@ fun sortFeatures(
     }.toImmutableList()
     return ranked
         .sortedBy { (rank, _) -> rank }
+        .toImmutableList()
         .map { (_, provider) -> provider }
         .toImmutableList()
 }

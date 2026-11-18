@@ -23,8 +23,10 @@ fun App(graph: BaseAppGraph) {
     CompositionLocalProvider(LocalMetroViewModelFactory provides graph.metroViewModelFactory) {
         LdTheme {
             val navController = rememberNavController()
+            // Metro's plain Set is read once, here, and converted at once.
+            val features = remember(graph) { graph.features.toImmutableSet() }
             val context = remember(graph, navController) {
-                FeatureHostContext(sortFeatures(graph.features.toImmutableSet(), graph.featureOrder), navController)
+                FeatureHostContext(sortFeatures(features, graph.featureOrder), navController)
             }
             Box(
                 modifier = Modifier
@@ -32,7 +34,7 @@ fun App(graph: BaseAppGraph) {
                     .background(MaterialTheme.colorScheme.background)
                     .semantics { contentDescription = APP_TITLE },
             ) {
-                FeatureHost(context) { graph.appStartRoute.route.takeIf { graph.features.isNotEmpty() } }
+                FeatureHost(context) { graph.appStartRoute.route.takeIf { features.isNotEmpty() } }
             }
         }
     }

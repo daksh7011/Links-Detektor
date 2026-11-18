@@ -21,9 +21,14 @@
                     "Chrome or Edge 119, Firefox 120, Safari 18.2, or newer.";
                 return;
             }
+            var failed = "Links Detektor could not load. Reload the page to try again.";
+            // composeApp.js fetches and instantiates the wasm itself: a failure there is a rejection or an error, not a script error.
+            function loadFailed() { if (document.getElementById("boot")) boot.textContent = failed; }
+            window.addEventListener("unhandledrejection", loadFailed);
+            window.addEventListener("error", loadFailed);
             var app = document.createElement("script");
             app.src = "composeApp.js";
-            app.onerror = function () { boot.textContent = "Links Detektor could not load. Reload the page to try again."; };
+            app.onerror = loadFailed;
             document.body.appendChild(app);
         })();
     </script>

@@ -14,7 +14,7 @@ interface FeatureContext {
     /** Emits the current destination's serialized route name on every back-stack change. */
     fun getCurrentDestinationChanges(): Flow<String?>
 
-    /** Emits the id of the shown back-stack entry on every change, even when the route name stays the same (a profile over a profile). */
+    /** Emits the id of the shown back-stack entry on every change, even when the route name stays the same (the same screen pushed twice). */
     fun getCurrentEntryChanges(): Flow<String>
 
     /**
@@ -45,7 +45,7 @@ interface FeatureContext {
     /** Navigates to [route] and removes the current destination from the back stack. */
     fun replaceDestination(route: Any)
 
-    /** Navigates to [route] and drops the whole back stack under it (sign-in and sign-out change the world). */
+    /** Navigates to [route] and drops the whole back stack under it (a reset to a fresh start). */
     fun resetStack(route: Any)
 
     /** Pops the back stack if there is a previous entry. */

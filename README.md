@@ -202,8 +202,8 @@ println("Found domains: $links")
   rejected on the JVM (`NormalizedUrl.host` was `null`), such as emoji domains, are now encoded (`xn--e28h.com`).
 - A port above 65535 now means no port: `Url.port` is `-1` and `fullUrl` omits it.
 - A scheme written as `http%3a//` is now parsed.
-- A `#`, `?`, `/` or `\` before an `@` means the text before it is not userinfo, so `http://evil#@good.com` has host
-  `evil`, never `good.com`.
+- Text before a `#`, `?`, `/` or `\` that precedes an `@` is never userinfo. With `ALLOW_SINGLE_LEVEL_DOMAIN`,
+  `http://evil#@good.com` has host `evil`; otherwise at most a bare `good.com` is found, never with `evil` as userinfo.
 - Normalized hosts keep delimiter characters percent-encoded instead of decoding them.
 - `LinksDetektor` is stateful and not thread-safe; `detect()` is idempotent. `Url.rawHost`/`rawPath` are no longer
   `protected`.

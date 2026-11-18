@@ -118,7 +118,7 @@ class LinksDetektorOptionSetTest {
         val corpus = persistentListOf(
             "[1:2]", "(a)", "[a.b]", "\"x\"", "'y'", "<z>", "{q}", "a.", ".a", "[::1]",
             "http://[1:2]", "(http://localhost)", "[localhost]",
-            "a:b c", "1:2 x", "[", "[]", "a [ b", "x:@[]", "http://a:@[]",
+            "a:b c", "1:2 x", "[", "[]", "a [ b", "x:@[]", "http://a:@[]", "[::%2",
         )
         val entries = LinksDetektorOptions.entries.toImmutableList()
         for (bits in 0 until (1 shl entries.size)) {

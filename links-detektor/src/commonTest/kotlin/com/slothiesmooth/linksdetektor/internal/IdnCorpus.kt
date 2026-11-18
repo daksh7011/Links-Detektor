@@ -7,8 +7,8 @@ import kotlinx.collections.immutable.persistentListOf
  * Shared IDN inputs. `EQUAL_CORPUS` maps an input host to the output `java.net.IDN.toASCII` produces for it.
  */
 internal object IdnCorpus {
-    private const val HIGH_SURROGATE: Char = '\uD800'
-    private const val LOW_SURROGATE: Char = '\uDC00'
+    private val HIGH_SURROGATE: Char = '\uD800'
+    private val LOW_SURROGATE: Char = '\uDC00'
 
     val EQUAL_CORPUS: ImmutableList<Pair<String, String>> = persistentListOf(
         "example.com" to "example.com",
@@ -60,7 +60,7 @@ internal object IdnCorpus {
         ".a",
         "a".repeat(64) + ".com",
         "\u00FC".repeat(60) + ".com",
-        // Lone surrogates are built from chars: a string literal holding one is rewritten to U+FFFD in klibs.
+        // Lone surrogates are appended at run time: a compile-time string constant holding one loses it in klibs.
         "${HIGH_SURROGATE}.com",
         "a${LOW_SURROGATE}b.com",
         "\u00E9$HIGH_SURROGATE",

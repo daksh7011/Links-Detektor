@@ -32,7 +32,7 @@ class NormalizedUrlTest {
     }
 
     private companion object {
-        // Built from a char: a string literal holding a lone surrogate is rewritten to U+FFFD in klibs.
-        const val LONE_SURROGATE: Char = '\uD800'
+        // Not a const: a compile-time string constant holding a lone surrogate loses it in klibs.
+        val LONE_SURROGATE: Char = '\uD800'
     }
 }

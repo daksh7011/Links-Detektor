@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("ld.published.library")
     // Versionless: build-logic already puts both plugins on the classpath.
     id("org.jetbrains.dokka")
     id("com.vanniktech.maven.publish")
@@ -9,33 +9,6 @@ val projectVersion: String = System.getenv("VERSION") ?: libs.versions.lib.get()
 
 group = "com.slothiesmooth"
 version = projectVersion
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-kotlin {
-    jvmToolchain(21)
-}
-
-dependencies {
-    api(libs.kotlinx.collections.immutable)
-
-    testImplementation(kotlin("test"))
-}
-
-// Configure all JAR names
-tasks.withType<Jar> {
-    archiveBaseName.set("links-detektor")
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
-    }
-}
 
 dokka {
     moduleName.set("Links Detektor")

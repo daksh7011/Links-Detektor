@@ -32,7 +32,7 @@ jobs:
         run: "chmod +x ./gradlew"
 
       - name: Build and test
-        run: "./gradlew detektCheck :links-detektor:build"
+        run: "./gradlew detektCheck :links-detektor:jvmTest"
 
       - name: Upload JARs
         uses: actions/upload-artifact@v4

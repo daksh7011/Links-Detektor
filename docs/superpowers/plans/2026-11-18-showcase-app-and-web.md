@@ -16,7 +16,7 @@
 - `/Users/slothie/Desktop/technowolf-website` — hosting site, `DESIGN.md`, `PRODUCT.md`.
 
 **Precondition: the library plan has landed.** This plan consumes, and does not create:
-- `LinksDetektor(content: String, options: LinksDetektorOptions).detect(): ImmutableList<Url>`
+- `LinksDetektor(content: String, options: ImmutableSet<LinksDetektorOptions>).detect(): ImmutableList<Url>` (primary constructor: any combination of options works, and the empty set is treated as `Default`), plus the older `LinksDetektor(content: String, options: LinksDetektorOptions)`
 - `enum class LinksDetektorOptions(val value: Int)`: `Default(0)`, `QUOTE_MATCH(1)`, `SINGLE_QUOTE_MATCH(2)`, `BRACKET_MATCH(4)`, `JSON(5)`, `JAVASCRIPT(7)`, `XML(9)`, `HTML(27)`, `ALLOW_SINGLE_LEVEL_DOMAIN(32)`; `fun hasFlag(flag): Boolean`
 - `Url`: `scheme`, `username`, `password`, `host`, `port: Int`, `path`, `query`, `fragment`, `originalUrl`, `fullUrl`, `normalize(): NormalizedUrl`, `range: IntRange`; `Url.create(String)` throws `MalformedUrlException`
 - `build-logic` with `ld.detekt` (includes the mutable-collection `ForbiddenMethodCall`/`ForbiddenImport` rules) and `ld.published.library`
@@ -46,7 +46,7 @@ Before Task 1, run `./gradlew detektCheck :links-detektor:jvmTest` and confirm i
 
 1. **Text edited while a detection is in flight.** Highlight ranges must never be applied to text they were not computed from; an out-of-bounds or overlapping range must be skipped, not crash. Pinned in Task 10 (`a newer input discards the older result`) and Task 11 (`ranges outside the text are skipped`).
 2. **A huge paste.** Input beyond 20,000 characters is cut at a code-point boundary, the user is told, and the UI thread on wasm is never handed more than the cap. Pinned in Task 10 (`input over the cap is cut and flagged`, `the cut never splits a surrogate pair`).
-3. **An option combination the library has no constant for** (for example `QUOTE_MATCH` + `SINGLE_QUOTE_MATCH` = 3, or anything with `ALLOW_SINGLE_LEVEL_DOMAIN`). The library constructor takes one enum constant, so the app must resolve a set to a constant deterministically and show what it ran. Pinned in Task 9 (`resolveOptions` table).
+3. **Any option combination, including the empty set (the library treats it as Default).** Pinned in Task 10 (`toggling options flips the set and any combination detects`).
 4. **The library throws** (from `detect()` or from `normalize()` on one odd link). The screen shows the error state with Retry, or the one link without a normalized column; the app keeps running. Pinned in Task 9 (`a throwing engine becomes Failure`, `a link that cannot be normalized keeps its original parts`).
 5. **Opening `/links-detektor` without the trailing slash, or in a browser without WasmGC.** Relative assets must still resolve (redirect to the slash form) and an unsupported browser sees a readable message on the dark background, not a blank page. Pinned in Task 8 (fallback check) and Task 14 (curl checks).
 
@@ -68,7 +68,7 @@ feature/common/client/metro/ MetroFeatureProvider, metroFeatureViewModel
 feature/detektor/client/api/ DetektorFeature, DetektorRoute
 feature/detektor/client/basic/
   domain/model/   DetectedLink.kt
-  domain/usecase/ LinkEngine.kt, OptionResolver.kt, DetectLinksUseCase.kt
+  domain/usecase/ LinkEngine.kt, DetectLinksUseCase.kt
   presentation/   DetektorUiState.kt, DetektorViewModel.kt, Highlight.kt, DetailRows.kt,
                   DetektorScreen.kt, DetektorPanes.kt, BasicDetektorProvider.kt
 client/                     BaseAppGraph, App, FeatureOrder, LdViewModelFactory, DetektorStartRoute
@@ -620,16 +620,16 @@ git commit -m "Add web host and wasm size script"
 
 ---
 
-### Task 9: Detektor domain: model, option resolver, use case
+### Task 9: Detektor domain: model, use case
 
 **Files:**
 - Create: `feature/detektor/client/basic/build.gradle.kts`
-- Create under `feature/detektor/client/basic/src/commonMain/kotlin/dev/slothiesmooth/linksdetektor/feature/detektor/basic/`: `domain/model/DetectedLink.kt`, `domain/usecase/LinkEngine.kt`, `domain/usecase/OptionResolver.kt`, `domain/usecase/DetectLinksUseCase.kt`
-- Test under `feature/detektor/client/basic/src/commonTest/kotlin/dev/slothiesmooth/linksdetektor/feature/detektor/basic/domain/`: `OptionResolverTest.kt`, `DetectLinksUseCaseTest.kt`
+- Create under `feature/detektor/client/basic/src/commonMain/kotlin/dev/slothiesmooth/linksdetektor/feature/detektor/basic/`: `domain/model/DetectedLink.kt`, `domain/usecase/LinkEngine.kt`, `domain/usecase/DetectLinksUseCase.kt`
+- Test under `feature/detektor/client/basic/src/commonTest/kotlin/dev/slothiesmooth/linksdetektor/feature/detektor/basic/domain/`: `DetectLinksUseCaseTest.kt`
 - Modify: `settings.gradle.kts` (add `:feature:detektor:client:basic`)
 
 **Interfaces:**
-- Consumes: the library API listed in the header (from the library plan, not created here); `ld.feature.basic`.
+- Consumes: the library API listed in the header, including the `LinksDetektor(content, options: ImmutableSet<LinksDetektorOptions>)` constructor (from the library plan, not created here); `ld.feature.basic`.
 - Produces:
 
 ```kotlin
@@ -640,55 +640,32 @@ git commit -m "Add web host and wasm size script"
 @Immutable data class DetectedLink(val id: Int, val start: Int, val endExclusive: Int,
     val original: LinkParts, val normalized: LinkParts?)
 
-fun interface LinkEngine { fun detect(content: String, option: LinksDetektorOptions): ImmutableList<Url> }
-class LibraryLinkEngine : LinkEngine          // @Inject @ContributesBinding(AppScope::class); calls LinksDetektor(content, option).detect()
+fun interface LinkEngine { fun detect(content: String, options: ImmutableSet<LinksDetektorOptions>): ImmutableList<Url> }
+class LibraryLinkEngine : LinkEngine          // @Inject @ContributesBinding(AppScope::class); calls LinksDetektor(content, options).detect()
 
 @Qualifier annotation class DetectionDispatcher
 @ContributesTo(AppScope::class) interface DetektorBindings {
     @Provides @DetectionDispatcher fun provideDetectionDispatcher(): CoroutineDispatcher = Dispatchers.Default
 }
 
-/** The single library constant a set of toggles runs as, or null when no constant covers the set. */
-fun resolveOptions(selected: ImmutableSet<LinksDetektorOptions>): LinksDetektorOptions?
-
 sealed interface DetectionResult {
-    data class Success(val text: String, val option: LinksDetektorOptions, val links: ImmutableList<DetectedLink>) : DetectionResult
+    data class Success(val text: String, val options: ImmutableSet<LinksDetektorOptions>, val links: ImmutableList<DetectedLink>) : DetectionResult
     data class Failure(val message: String) : DetectionResult
 }
 
 @Inject class DetectLinksUseCase(private val engine: LinkEngine, @DetectionDispatcher private val dispatcher: CoroutineDispatcher) {
-    suspend operator fun invoke(text: String, option: LinksDetektorOptions): DetectionResult
+    suspend operator fun invoke(text: String, options: ImmutableSet<LinksDetektorOptions>): DetectionResult
 }
 ```
 
 Decisions:
-- `resolveOptions`: `mask` = bitwise OR of the selected values (empty set gives 0). Return the constant whose `value == mask`; else the constant with the fewest set bits among those where `value and mask == mask`; else `null`. Ties cannot occur with the current constants.
 - Mapping a `Url` to a `DetectedLink`: `start = url.range.first`, `endExclusive = url.range.last + 1`. The library plan (Task 3) defines `Url.range` as a standard `IntRange` (`start until endExclusive`) covering the whole source span — including a stray `%` the detector drops from `originalUrl` — so deriving the end from `originalUrl.length` would under-highlight that case. Add a test row `"see http://exa%mple.com/x ok"` → highlighted span `4..<25`. Null string parts become `""`.
 - `normalized` is built inside `runCatching`; a failure yields `null` (rethrow `CancellationException`).
-- `invoke` runs `engine.detect` and the mapping inside `withContext(dispatcher)`; any `Exception` other than `CancellationException` becomes `Failure("That text could not be checked.")`. Blank text returns `Success(text, option, persistentListOf())` without calling the engine.
+- `invoke` runs `engine.detect` and the mapping inside `withContext(dispatcher)`; any `Exception` other than `CancellationException` becomes `Failure("That text could not be checked.")`. Blank text returns `Success(text, options, persistentListOf())` without calling the engine.
 
 - [ ] **Step 1: Module file.** `id("ld.feature.basic")`; `commonMain { api(projects.feature.detektor.client.api); api(projects.feature.common.client.api); api(projects.feature.common.client.metro); api(projects.shared.presentation); api(projects.shared.designLibrary); implementation(projects.linksDetektor) }`.
 
 - [ ] **Step 2: Write the failing tests.**
-
-```kotlin
-class OptionResolverTest {
-    private fun resolve(vararg o: LinksDetektorOptions) = resolveOptions(persistentSetOf(*o))
-
-    @Test fun `resolveOptions table`() {
-        assertEquals(Default, resolve())
-        assertEquals(QUOTE_MATCH, resolve(QUOTE_MATCH))
-        assertEquals(JSON, resolve(QUOTE_MATCH, BRACKET_MATCH))                       // 5, exact
-        assertEquals(JAVASCRIPT, resolve(QUOTE_MATCH, SINGLE_QUOTE_MATCH))            // 3 -> 7, smallest superset
-        assertEquals(JAVASCRIPT, resolve(SINGLE_QUOTE_MATCH, BRACKET_MATCH))          // 6 -> 7
-        assertEquals(HTML, resolve(XML, SINGLE_QUOTE_MATCH))                          // 11 -> 27
-        assertEquals(HTML, resolve(HTML, QUOTE_MATCH))                                // 27, exact
-        assertEquals(ALLOW_SINGLE_LEVEL_DOMAIN, resolve(ALLOW_SINGLE_LEVEL_DOMAIN))
-        assertNull(resolve(ALLOW_SINGLE_LEVEL_DOMAIN, QUOTE_MATCH))                   // 33, nothing covers it
-        assertNull(resolve(HTML, BRACKET_MATCH))                                      // 31, nothing covers it
-    }
-}
-```
 
 ```kotlin
 class DetectLinksUseCaseTest {
@@ -696,7 +673,7 @@ class DetectLinksUseCaseTest {
 
     @Test fun `links come back in order with ranges that cut the original out of the text`() = runTest {
         val useCase = DetectLinksUseCase(LibraryLinkEngine(), StandardTestDispatcher(testScheduler))
-        val result = assertIs<DetectionResult.Success>(useCase(text, LinksDetektorOptions.Default))
+        val result = assertIs<DetectionResult.Success>(useCase(text, persistentSetOf()))
         assertEquals(2, result.links.size)
         assertEquals(persistentListOf(0, 1), result.links.map { it.id }.toImmutableList())
         result.links.forEach { link ->
@@ -714,23 +691,23 @@ class DetectLinksUseCaseTest {
     @Test fun `blank text succeeds with no links and never calls the engine`() = runTest {
         var calls = 0
         val useCase = DetectLinksUseCase({ _, _ -> calls++; persistentListOf() }, StandardTestDispatcher(testScheduler))
-        assertEquals(DetectionResult.Success("  \n", LinksDetektorOptions.Default, persistentListOf()), useCase("  \n", LinksDetektorOptions.Default))
+        assertEquals(DetectionResult.Success("  \n", persistentSetOf(), persistentListOf()), useCase("  \n", persistentSetOf()))
         assertEquals(0, calls)
     }
 
     @Test fun `a throwing engine becomes Failure`() = runTest {
         val useCase = DetectLinksUseCase({ _, _ -> error("boom") }, StandardTestDispatcher(testScheduler))
-        assertEquals(DetectionResult.Failure("That text could not be checked."), useCase("x.com", LinksDetektorOptions.Default))
+        assertEquals(DetectionResult.Failure("That text could not be checked."), useCase("x.com", persistentSetOf()))
     }
 
     @Test fun `cancellation is not swallowed`() = runTest {
         val useCase = DetectLinksUseCase({ _, _ -> throw CancellationException("stop") }, StandardTestDispatcher(testScheduler))
-        assertFailsWith<CancellationException> { useCase("x.com", LinksDetektorOptions.Default) }
+        assertFailsWith<CancellationException> { useCase("x.com", persistentSetOf()) }
     }
 
     @Test fun `a link that cannot be normalized keeps its original parts`() = runTest {
         // toDetectedLink takes the normalizer as a parameter so this path is testable without a broken Url.
-        val url = LibraryLinkEngine().detect("https://example.com", LinksDetektorOptions.Default).first()
+        val url = LibraryLinkEngine().detect("https://example.com", persistentSetOf()).first()
         val link = url.toDetectedLink(id = 0) { error("cannot normalize") }
         assertNull(link.normalized)
         assertEquals("example.com", link.original.host)
@@ -745,14 +722,14 @@ If the first test's `substring` assertion fails, the library's `originalUrl` is 
 - [ ] **Step 3: Run them to see them fail**
 
 Run: `./gradlew :feature:detektor:client:basic:jvmTest`
-Expected: FAIL, unresolved `resolveOptions`.
+Expected: FAIL, unresolved `LibraryLinkEngine`.
 
-- [ ] **Step 4: Implement the four files** to the signatures and decisions above.
+- [ ] **Step 4: Implement the three files** to the signatures and decisions above.
 
 - [ ] **Step 5: Verify**
 
 Run: `./gradlew :feature:detektor:client:basic:jvmTest :feature:detektor:client:basic:compileKotlinWasmJs :feature:detektor:client:basic:compileKotlinIosSimulatorArm64 :feature:detektor:client:basic:compileAndroidMain detektCheck`
-Expected: `BUILD SUCCESSFUL`, 6 tests passed.
+Expected: `BUILD SUCCESSFUL`, 5 tests passed.
 
 - [ ] **Step 6: Commit**
 
@@ -770,7 +747,7 @@ git commit -m "Add detektor domain model and detect use case"
 - Test: `feature/detektor/client/basic/src/commonTest/kotlin/dev/slothiesmooth/linksdetektor/feature/detektor/basic/presentation/DetektorViewModelTest.kt`, `DetektorScreenStateTest.kt`
 
 **Interfaces:**
-- Consumes: `DetectLinksUseCase`, `DetectionResult`, `DetectedLink`, `resolveOptions` (Task 9); `BaseViewModel`, `UiState` (Task 2).
+- Consumes: `DetectLinksUseCase`, `DetectionResult`, `DetectedLink` (Task 9); the library's `LinksDetektor(content, ImmutableSet<LinksDetektorOptions>)` constructor, reached through `LibraryLinkEngine`; `BaseViewModel`, `UiState` (Task 2).
 - Produces:
 
 ```kotlin
@@ -785,7 +762,6 @@ const val INPUT_DEBOUNCE_MS = 250L
     val input: String = "",
     val truncated: Boolean = false,
     val options: ImmutableSet<LinksDetektorOptions> = persistentSetOf(),
-    val effectiveOption: LinksDetektorOptions = LinksDetektorOptions.Default,
     val detecting: Boolean = false,
     val result: UiState<DetectionUi> = UiState.Ready(DetectionUi.Empty),
     val selectedId: Int? = null,
@@ -812,8 +788,8 @@ Annotated `@Inject @ViewModelKey @ContributesIntoMap(AppScope::class, binding = 
 
 Behaviour:
 - `onInputChange`: keep at most `MAX_INPUT_CHARS` chars; if the last kept char is a high surrogate, drop it too; `truncated` = whether anything was cut. Sets `input`, `detecting = true`, clears `selectedId`.
-- `onToggleOption`: candidate = set with the option flipped. If `resolveOptions(candidate)` is null the new set is `persistentSetOf(option)` (the option just pressed wins alone). `effectiveOption = resolveOptions(newSet) ?: Default`. Sets `detecting = true`, clears `selectedId`.
-- A private `MutableStateFlow<Request(text, option, attempt: Int)>` feeds `debounce { if (it.text.isEmpty()) 0L else INPUT_DEBOUNCE_MS }.collectLatest { ... }`, launched from `init` in `viewModelScope` (`@OptIn(FlowPreview::class)`). Inside: if the current result is `Failed`, set `Loading`; call the use case; `Success` becomes `UiState.Ready(DetectionUi(result.text, result.links))`, `Failure` becomes `UiState.Failed(message)`; then `detecting = false`. `collectLatest` cancels a superseded detection, so its result is never published.
+- `onToggleOption`: flips the option in `options` (added if absent, removed if present); any combination is allowed, including the empty set. Sets `detecting = true`, clears `selectedId`.
+- A private `MutableStateFlow<Request(text, options, attempt: Int)>` feeds `debounce { if (it.text.isEmpty()) 0L else INPUT_DEBOUNCE_MS }.collectLatest { ... }`, launched from `init` in `viewModelScope` (`@OptIn(FlowPreview::class)`). Inside: if the current result is `Failed`, set `Loading`; call the use case; `Success` becomes `UiState.Ready(DetectionUi(result.text, result.links))`, `Failure` becomes `UiState.Failed(message)`; then `detecting = false`. `collectLatest` cancels a superseded detection, so its result is never published.
 - `onRetry`: re-emit the current request with `attempt + 1`.
 - `onSelectLink(id)`: sets `selectedId` only if a Ready link has that id, or `id == null`.
 - `screenStateOf`: `Failed` gives `Error`; `Loading` gives `Loading`; `Ready` with blank `analyzedText` gives `Loading` when `detecting && input.isNotBlank()`, else `Empty`; `Ready` with no links gives `NoLinks`; otherwise `Content`.
@@ -836,7 +812,7 @@ Behaviour:
 
 @Test fun `a newer input discards the older result`() = runTest {
     var calls = 0
-    val vm = vm { content, option -> calls++; LibraryLinkEngine().detect(content, option) }
+    val vm = vm { content, options -> calls++; LibraryLinkEngine().detect(content, options) }
     vm.onInputChange("a.com")
     advanceTimeBy(100)
     vm.onInputChange("b.com and c.com")
@@ -864,27 +840,24 @@ Behaviour:
     assertTrue(vm.state.value.truncated)
 }
 
-@Test fun `toggling options resolves the constant that runs and re-detects`() = runTest {
-    val seen = persistentListOf<LinksDetektorOptions>().builder()
-    val vm = vm { _, option -> seen.add(option); persistentListOf() }
-    vm.onInputChange("x")
+@Test fun `toggling options flips the set and any combination detects`() = runTest {
+    val seen = mutableListOf<ImmutableSet<LinksDetektorOptions>>()
+    val vm = vm { content, options -> seen.add(options); LibraryLinkEngine().detect(content, options) }
+    vm.onInputChange("\"http://a.com\" 'http://b.com'")
     advanceUntilIdle()
     vm.onToggleOption(QUOTE_MATCH); vm.onToggleOption(SINGLE_QUOTE_MATCH)
     advanceUntilIdle()
     assertEquals(persistentSetOf(QUOTE_MATCH, SINGLE_QUOTE_MATCH), vm.state.value.options)
-    assertEquals(JAVASCRIPT, vm.state.value.effectiveOption)
-    assertEquals(JAVASCRIPT, seen.build().last())
-    vm.onToggleOption(ALLOW_SINGLE_LEVEL_DOMAIN)          // 35 has no constant: the pressed option wins alone
-    assertEquals(persistentSetOf(ALLOW_SINGLE_LEVEL_DOMAIN), vm.state.value.options)
-    assertEquals(ALLOW_SINGLE_LEVEL_DOMAIN, vm.state.value.effectiveOption)
-    vm.onToggleOption(ALLOW_SINGLE_LEVEL_DOMAIN)
-    assertEquals(persistentSetOf(), vm.state.value.options)
-    assertEquals(Default, vm.state.value.effectiveOption)
+    assertEquals(persistentSetOf(QUOTE_MATCH, SINGLE_QUOTE_MATCH), seen.last())
+    val ready = (vm.state.value.result as UiState.Ready).value
+    assertEquals(listOf("http://a.com", "http://b.com"), ready.links.map { it.original.full })   // both quoted URLs detected
+    vm.onToggleOption(QUOTE_MATCH); vm.onToggleOption(SINGLE_QUOTE_MATCH)
+    assertEquals(persistentSetOf(), vm.state.value.options)                                      // empty set is Default in the library
 }
 
 @Test fun `a failure shows the error and retry recovers`() = runTest {
     var fail = true
-    val vm = vm { content, option -> if (fail) error("boom") else LibraryLinkEngine().detect(content, option) }
+    val vm = vm { content, options -> if (fail) error("boom") else LibraryLinkEngine().detect(content, options) }
     vm.state.test {
         skipItems(1)
         vm.onInputChange("example.com")
@@ -1063,7 +1036,7 @@ Layout and copy (exact strings):
 - Screen column, max width 1360dp, 16dp gutter (24dp from 720dp wide), vertical scroll owned by the result list, not the page.
 - Heading `LdText("Links Detektor", style = Title)`; below it `LdText("Paste any text. Every link in it is found and taken apart.", style = BodySm, color = dim)`.
 - `InputPane`: `LdTextField(label = "Your text", placeholder = "Paste or type text with links in it", minLines = 4, maxLines = 10)` tagged `detektor-input`. When `state.truncated`: `LdText("Only the first 20,000 characters are checked.", style = Caption, color = amber)`.
-- `OptionChips`: a `FlowRow` of `LdChip` per `ToggleableOptions` entry, tagged `option-<NAME>`. Labels: `QUOTE_MATCH` "Double quotes", `SINGLE_QUOTE_MATCH` "Single quotes", `BRACKET_MATCH` "Brackets", `JSON` "JSON", `JAVASCRIPT` "JavaScript", `XML` "XML", `HTML` "HTML", `ALLOW_SINGLE_LEVEL_DOMAIN` "Single-word hosts". When `resolveOptions(state.options) != state.effectiveOption` or the set's OR differs from `effectiveOption.value`, show `LdText("Checked as ${label(effectiveOption)}.", style = Caption, color = dim)`.
+- `OptionChips`: a `FlowRow` of `LdChip` per `ToggleableOptions` entry, tagged `option-<NAME>`. Labels: `QUOTE_MATCH` "Double quotes", `SINGLE_QUOTE_MATCH` "Single quotes", `BRACKET_MATCH` "Brackets", `JSON` "JSON", `JAVASCRIPT` "JavaScript", `XML` "XML", `HTML` "HTML", `ALLOW_SINGLE_LEVEL_DOMAIN` "Single-word hosts".
 - Body by `screenStateOf(state)`:
   - `Empty`: `LdEmptyState("Nothing to check yet", "Paste some text above and the links in it show up here.")`
   - `Loading`: `LdLoadingState("Checking…")`
@@ -1123,11 +1096,10 @@ private val sample = "docs at https://example.com/a and HTTP://Sub.Example.ORG/x
 
 @Test fun `option chips reflect the set and report toggles`() = runComposeUiTest {
     var toggled: LinksDetektorOptions? = null
-    setContent { host(DetektorUiState(options = persistentSetOf(QUOTE_MATCH, SINGLE_QUOTE_MATCH), effectiveOption = JAVASCRIPT), onToggleOption = { toggled = it }) }
+    setContent { host(DetektorUiState(options = persistentSetOf(QUOTE_MATCH, SINGLE_QUOTE_MATCH)), onToggleOption = { toggled = it }) }
     onNodeWithTag("option-QUOTE_MATCH").assertIsOn()
     onNodeWithTag("option-HTML").assertIsOff().performClick()
     assertEquals(HTML, toggled)
-    onNodeWithText("Checked as JavaScript.").assertIsDisplayed()
 }
 
 @Test fun `loading, no links, error and the cap notice each show their copy`() = runComposeUiTest {

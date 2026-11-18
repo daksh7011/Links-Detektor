@@ -12,7 +12,10 @@ import com.slothiesmooth.linksdetektor.internal.UrlPart
 import com.slothiesmooth.linksdetektor.internal.model.CharacterMatch
 import com.slothiesmooth.linksdetektor.internal.model.ReadEndState
 import com.slothiesmooth.linksdetektor.internal.model.ReaderNextState
-import java.util.Collections
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.persistentSetOf
 import java.util.Locale
 
 /**
@@ -75,12 +78,12 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
     /**
      * Stores the found urls.
      */
-    private val urlList = mutableListOf<Url>()
+    private val urlList = persistentListOf<Url>().builder()
 
     /**
      * Keeps the count of special characters used to match quotes and different types of brackets.
      */
-    private val characterMatchHashMap = HashMap<Char, Int>()
+    private val characterMatchCounts = persistentMapOf<Char, Int>().builder()
 
     /**
      * Keeps track of certain indices to create an Url object.
@@ -108,9 +111,9 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
      *
      * @return A list of detected Url objects. The list may be empty if no URLs are found.
      */
-    fun detect(): List<Url> {
+    fun detect(): ImmutableList<Url> {
         readDefault()
-        return urlList.toList()
+        return urlList.build()
     }
 
     /**
@@ -281,7 +284,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
      * @return The number of times that character was seen
      */
     private fun getCharacterCount(curr: Char): Int {
-        val count = characterMatchHashMap[curr]
+        val count = characterMatchCounts[curr]
         return count ?: 0
     }
 
@@ -312,17 +315,17 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
 
             // increment the number of quotes found.
             val currVal = getCharacterCount(curr) + 1
-            characterMatchHashMap[curr] = currVal
+            characterMatchCounts[curr] = currVal
 
             // if there was already a quote found, or the number of quotes is even, return that we have to stop, else its a start.
             return if (quoteStart || currVal % 2 == 0) CharacterMatch.CharacterMatchStop else CharacterMatch.CharacterMatchStart
         } else if (linksDetektorOptions.hasFlag(LinksDetektorOptions.BRACKET_MATCH) && (curr == '[' || curr == '{' || curr == '(')) {
             // Look for start of bracket
-            characterMatchHashMap[curr] = getCharacterCount(curr) + 1
+            characterMatchCounts[curr] = getCharacterCount(curr) + 1
             return CharacterMatch.CharacterMatchStart
         } else if (linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && curr == '<') {
             // If its html, look for "<"
-            characterMatchHashMap[curr] = getCharacterCount(curr) + 1
+            characterMatchCounts[curr] = getCharacterCount(curr) + 1
             return CharacterMatch.CharacterMatchStart
         } else if (
             linksDetektorOptions.hasFlag(LinksDetektorOptions.BRACKET_MATCH) &&
@@ -331,7 +334,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
         ) {
             // If we catch an end bracket increment its count and get rid of not ipv6 flag
             val currVal = getCharacterCount(curr) + 1
-            characterMatchHashMap[curr] = currVal
+            characterMatchCounts[curr] = currVal
 
             // now figure out what the start bracket was associated with the closed bracket.
             var match = '\u0000'
@@ -703,19 +706,15 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
          * Valid protocol schemes.
          */
         @Suppress("HttpUrlsUsage")
-        private val VALID_SCHEMES = Collections.unmodifiableSet(
-            HashSet(
-                listOf(
-                    "http://",
-                    "https://",
-                    "ftp://",
-                    "ftps://",
-                    "http%3a//",
-                    "https%3a//",
-                    "ftp%3a//",
-                    "ftps%3a//",
-                )
-            )
+        private val VALID_SCHEMES = persistentSetOf(
+            "http://",
+            "https://",
+            "ftp://",
+            "ftps://",
+            "http%3a//",
+            "https%3a//",
+            "ftp%3a//",
+            "ftps%3a//",
         )
     }
 }

@@ -8,6 +8,7 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isUnreserved
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -226,6 +227,12 @@ class CharExtensionsTest {
     //endregion
 
     //region splitByDot tests
+    @Test
+    fun `splitByDot returns an immutable list`() {
+        val parts: ImmutableList<String> = "a.b".splitByDot()
+        assertEquals(persistentListOf("a", "b"), parts)
+    }
+
     @Test
     fun `splitByDot handles empty string`() {
         val result = "".splitByDot()

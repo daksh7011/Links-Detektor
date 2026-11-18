@@ -9,6 +9,7 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isUnreserved
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
 import com.slothiesmooth.linksdetektor.internal.model.ReaderNextState
+import kotlinx.collections.immutable.ImmutableList
 import java.util.*
 
 /**
@@ -487,7 +488,7 @@ internal class DomainNameReader(
                 }
             } else if (_dots == 3) {
                 // Dotted decimal/hex/octal format
-                val parts: List<String> = testDomain.splitByDot()
+                val parts: ImmutableList<String> = testDomain.splitByDot()
                 valid = true
 
                 // check each part of the ip and make sure its valid.

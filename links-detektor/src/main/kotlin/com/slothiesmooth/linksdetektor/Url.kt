@@ -3,6 +3,10 @@ package com.slothiesmooth.linksdetektor
 import com.slothiesmooth.linksdetektor.internal.UrlMarker
 import com.slothiesmooth.linksdetektor.internal.UrlPart
 import com.slothiesmooth.linksdetektor.internal.UrlUtil
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
 import org.apache.commons.lang3.StringUtils
 import java.net.MalformedURLException
 
@@ -188,10 +192,8 @@ open class Url internal constructor(urlMarker: UrlMarker) {
                     } catch (e: NumberFormatException) {
                         -1
                     }
-                } else if (SCHEME_PORT_MAP.containsKey(scheme)) {
-                    SCHEME_PORT_MAP[scheme]!!
                 } else {
-                    -1
+                    SCHEME_PORT_MAP[scheme] ?: -1
                 }
             }
             return _port
@@ -263,9 +265,9 @@ open class Url internal constructor(urlMarker: UrlMarker) {
         if (exists(UrlPart.USERNAME_PASSWORD)) {
             val usernamePassword = getPart(UrlPart.USERNAME_PASSWORD)
             val usernamePasswordParts =
-                usernamePassword!!.substring(0, usernamePassword.length - 1).split(":".toRegex())
+                usernamePassword!!.substring(0, usernamePassword.length - 1).split(':')
                     .dropLastWhile { it.isEmpty() }
-                    .toTypedArray()
+                    .toImmutableList()
             if (usernamePasswordParts.size == 1) {
                 _username = usernamePasswordParts[0]
             } else if (usernamePasswordParts.size == 2) {
@@ -347,13 +349,8 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      */
     companion object {
         private const val DEFAULT_SCHEME = "http"
-        private var SCHEME_PORT_MAP: HashMap<String, Int> = HashMap()
-
-        init {
-            SCHEME_PORT_MAP["http"] = 80
-            SCHEME_PORT_MAP["https"] = 443
-            SCHEME_PORT_MAP["ftp"] = 21
-        }
+        private val SCHEME_PORT_MAP: ImmutableMap<String, Int> =
+            persistentMapOf("http" to 80, "https" to 443, "ftp" to 21)
 
         /**
          * Creates a Url object from a string representation.
@@ -369,7 +366,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
         @Throws(MalformedURLException::class)
         fun create(url: String): Url {
             val formattedString: String = UrlUtil.removeSpecialSpaces(url.trim { it <= ' ' }.replace(" ", "%20"))
-            val urls: List<Url> = LinksDetektor(formattedString, LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).detect()
+            val urls: ImmutableList<Url> = LinksDetektor(formattedString, LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).detect()
             return when (urls.size) {
                 1 -> urls[0]
                 0 -> throw MalformedURLException("We couldn't find any urls in string: $url")

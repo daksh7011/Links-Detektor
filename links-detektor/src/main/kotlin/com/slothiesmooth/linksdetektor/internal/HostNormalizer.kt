@@ -2,6 +2,8 @@ package com.slothiesmooth.linksdetektor.internal
 
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import org.apache.commons.lang3.StringUtils
 import java.net.IDN
 import java.net.Inet6Address
@@ -109,7 +111,7 @@ class HostNormalizer(private val host: String?) {
      *         or null if the host is not a valid IPv4 address.
      */
     private fun tryDecodeHostToIPv4(host: String): ByteArray? {
-        val parts: List<String> = host.splitByDot()
+        val parts: ImmutableList<String> = host.splitByDot()
         val numParts = parts.size
         if (numParts != 4 && numParts != 1) {
             return null
@@ -175,7 +177,7 @@ class HostNormalizer(private val host: String?) {
      */
     private fun tryDecodeHostToIPv6(host: String): ByteArray? {
         val ip = host.substring(1, host.length - 1)
-        val parts: List<String> = ip.split(":".toRegex())
+        val parts: ImmutableList<String> = ip.split(":".toRegex()).toImmutableList()
         if (parts.size < 3) {
             return null
         }

@@ -41,12 +41,12 @@ dependencies {
     implementation(libs.logging)
 
     api(libs.commonsMath3)
+    api(libs.kotlinx.collections.immutable)
 
     implementation(libs.commonsLang3)
 
     // Testing dependencies
     testImplementation(kotlin("test"))
-    testImplementation(libs.kotlinx.collections.immutable)
 }
 
 detekt {

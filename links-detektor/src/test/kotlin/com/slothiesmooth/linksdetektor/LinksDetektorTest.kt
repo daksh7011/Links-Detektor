@@ -40,6 +40,12 @@ class LinksDetektorTest {
 
     //region Constructor tests
     @Test
+    fun `detect returns an immutable list`() {
+        val urls: ImmutableList<Url> = LinksDetektor("http://a.com b.org", LinksDetektorOptions.Default).detect()
+        assertEquals(2, urls.size)
+    }
+
+    @Test
     fun `constructor initializes with content and options`() {
         val content = "http://example.com"
         val options = LinksDetektorOptions.Default

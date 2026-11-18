@@ -533,12 +533,42 @@ style:
     values: [ 'TODO:', 'FIXME:', 'STOPSHIP:' ]
     allowedPatterns: ''
   ForbiddenImport:
-    active: false
-    imports: [ ]
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      # Temporary (Task 4): these still import java.util.*; Task 5 removes the entries.
+      - '**/internal/UrlUtil.kt'
+      - '**/internal/DomainNameReader.kt'
+      - '**/internal/PathNormalizer.kt'
+      - '**/linksdetektor/LinksDetektor.kt'
+      - '**/internal/HostNormalizer.kt'
+    imports:
+      - value: 'java.util.*'
+        reason: 'Use kotlinx.collections.immutable; the library is multiplatform.'
     forbiddenPatterns: ''
+  # NOTE: ForbiddenMethodCall only fires with type resolution (detektMain with a compiled classpath). The plain
+  # `detekt` task has none, so this rule is documentation of intent; the regex guard `bannedCollections` added
+  # in Task 7 is the enforcing gate. See Task 4 Step 5 spike notes in the batch report.
   ForbiddenMethodCall:
-    active: false
-    methods: [ ]
+    active: true
+    methods:
+      - value: 'kotlin.collections.mutableListOf'
+        reason: 'Immutable collections only (house rule).'
+      - value: 'kotlin.collections.arrayListOf'
+        reason: 'Immutable collections only (house rule).'
+      - value: 'kotlin.collections.mutableSetOf'
+        reason: 'Immutable collections only (house rule).'
+      - value: 'kotlin.collections.hashSetOf'
+        reason: 'Immutable collections only (house rule).'
+      - value: 'kotlin.collections.linkedSetOf'
+        reason: 'Immutable collections only (house rule).'
+      - value: 'kotlin.collections.mutableMapOf'
+        reason: 'Immutable collections only (house rule).'
+      - value: 'kotlin.collections.hashMapOf'
+        reason: 'Immutable collections only (house rule).'
+      - value: 'kotlin.collections.linkedMapOf'
+        reason: 'Immutable collections only (house rule).'
   ForbiddenPublicDataClass:
     active: false
     ignorePackages: [ '*.internal', '*.internal.*' ]

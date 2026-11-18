@@ -1,5 +1,7 @@
 package com.slothiesmooth.linksdetektor.internal
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.apache.commons.lang3.StringUtils
 
 /**
@@ -101,11 +103,11 @@ internal object CharExtensions {
      * @return An array of strings resulting from splitting the original string at all dot characters.
      *         Returns an array containing an empty string if the input is empty.
      */
-    internal fun String.splitByDot(): List<String> {
+    internal fun String.splitByDot(): ImmutableList<String> {
         if (StringUtils.isEmpty(this)) {
-            return emptyList()
+            return persistentListOf()
         }
-        val splitList = mutableListOf<String>()
+        val splitList = persistentListOf<String>().builder()
         val section = StringBuilder()
         val inputTextReader = InputTextReader(this)
 
@@ -130,6 +132,6 @@ internal object CharExtensions {
         }
 
         splitList.add(section.toString())
-        return splitList
+        return splitList.build()
     }
 }

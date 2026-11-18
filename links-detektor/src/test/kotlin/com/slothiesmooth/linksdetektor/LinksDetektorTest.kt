@@ -1,19 +1,14 @@
 package com.slothiesmooth.linksdetektor
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
-import org.junit.jupiter.params.provider.ValueSource
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import java.net.MalformedURLException
-import java.util.stream.Stream
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.time.TimeSource
 
 /**
  * Tests for [LinksDetektor] class.
@@ -85,21 +80,20 @@ class LinksDetektorTest {
         assertEquals("https://example.org", urls[1].originalUrl)
     }
 
-    @ParameterizedTest
-    @ValueSource(
-        strings = [
+    @Test
+    fun `detect finds URLs with different schemes`() {
+        persistentListOf(
             "http://example.com",
             "https://example.com",
             "ftp://example.com",
             "ftps://example.com"
-        ]
-    )
-    fun `detect finds URLs with different schemes`(url: String) {
-        val detector = LinksDetektor(url, LinksDetektorOptions.Default)
+        ).forEach { url ->
+            val detector = LinksDetektor(url, LinksDetektorOptions.Default)
 
-        val urls = detector.detect()
-        assertEquals(1, urls.size)
-        assertEquals(url, urls[0].originalUrl)
+            val urls = detector.detect()
+            assertEquals(1, urls.size, "case: $url")
+            assertEquals(url, urls[0].originalUrl, "case: $url")
+        }
     }
 
     @Test
@@ -594,19 +588,16 @@ class LinksDetektorTest {
         assertEquals("http://localhost", singleLevelUrls[0].originalUrl)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideOptionCombinations")
-    fun `detect works with various option combinations`(
-        options: LinksDetektorOptions,
-        content: String,
-        expectedUrls: List<String>
-    ) {
-        val detector = LinksDetektor(content, options)
-        val urls = detector.detect()
+    @Test
+    fun `detect works with various option combinations`() {
+        for ((options, content, expectedUrls) in optionCombinations) {
+            val detector = LinksDetektor(content, options)
+            val urls = detector.detect()
 
-        assertEquals(expectedUrls.size, urls.size, "Expected ${expectedUrls.size} URLs but found ${urls.size}")
-        for (expectedUrl in expectedUrls) {
-            assertTrue(urls.any { it.originalUrl == expectedUrl }, "Expected URL $expectedUrl not found")
+            assertEquals(expectedUrls.size, urls.size, "Expected ${expectedUrls.size} URLs but found ${urls.size}")
+            for (expectedUrl in expectedUrls) {
+                assertTrue(urls.any { it.originalUrl == expectedUrl }, "Expected URL $expectedUrl not found")
+            }
         }
     }
     //endregion
@@ -872,29 +863,6 @@ class LinksDetektorTest {
     }
     //endregion
 
-    //region Mock tests
-    @Test
-    fun `detect calls appropriate internal methods`() {
-        // This test verifies that the detect method calls the necessary internal methods
-        // by using a mock to track the calls
-
-        // Create a mock of LinksDetektor
-        val mockDetector = mockk<LinksDetektor>(relaxed = true)
-
-        // Set up the mock to return an empty list when detect is called
-        every { mockDetector.detect() } returns emptyList()
-
-        // Call the detect method
-        val urls = mockDetector.detect()
-
-        // Verify that the detect method was called
-        verify(exactly = 1) { mockDetector.detect() }
-
-        // Verify the result
-        assertTrue(urls.isEmpty())
-    }
-    //endregion
-
     //region backtracked property tests
     @Test
     fun `backtracked returns non-zero for complex URLs with backtracking`() {
@@ -1099,12 +1067,12 @@ class LinksDetektorTest {
         val options = LinksDetektorOptions.Default
         val detector = LinksDetektor(content, options)
 
-        val startTime = System.currentTimeMillis()
+        val startMark = TimeSource.Monotonic.markNow()
         val urls = detector.detect()
-        val endTime = System.currentTimeMillis()
+        val elapsed = startMark.elapsedNow()
 
         assertEquals(1000, urls.size)
-        assertTrue(endTime - startTime < 5000, "Detection should complete in a reasonable time")
+        assertTrue(elapsed.inWholeMilliseconds < 5000, "Detection should complete in a reasonable time")
     }
     //endregion
 
@@ -1165,31 +1133,27 @@ class LinksDetektorTest {
     }
     //endregion
 
-    companion object {
-        @JvmStatic
-        fun provideOptionCombinations(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(
-                    LinksDetektorOptions.JSON,
-                    """{"url": "http://example.com", "otherUrl": "https://example.org"}""",
-                    listOf("http://example.com", "https://example.org")
-                ),
-                Arguments.of(
-                    LinksDetektorOptions.JAVASCRIPT,
-                    """var url1 = "http://example.com"; var url2 = 'https://example.org';""",
-                    listOf("http://example.com", "https://example.org")
-                ),
-                Arguments.of(
-                    LinksDetektorOptions.XML,
-                    """<url>http://example.com</url><otherUrl>https://example.org</otherUrl>""",
-                    listOf("http://example.com", "https://example.org")
-                ),
-                Arguments.of(
-                    LinksDetektorOptions.HTML,
-                    """<a href="http://example.com">Link</a><script>var url = 'https://example.org';</script>""",
-                    listOf("http://example.com", "https://example.org")
-                )
+    private val optionCombinations: ImmutableList<Triple<LinksDetektorOptions, String, ImmutableList<String>>> =
+        persistentListOf(
+            Triple(
+                LinksDetektorOptions.JSON,
+                """{"url": "http://example.com", "otherUrl": "https://example.org"}""",
+                persistentListOf("http://example.com", "https://example.org")
+            ),
+            Triple(
+                LinksDetektorOptions.JAVASCRIPT,
+                """var url1 = "http://example.com"; var url2 = 'https://example.org';""",
+                persistentListOf("http://example.com", "https://example.org")
+            ),
+            Triple(
+                LinksDetektorOptions.XML,
+                """<url>http://example.com</url><otherUrl>https://example.org</otherUrl>""",
+                persistentListOf("http://example.com", "https://example.org")
+            ),
+            Triple(
+                LinksDetektorOptions.HTML,
+                """<a href="http://example.com">Link</a><script>var url = 'https://example.org';</script>""",
+                persistentListOf("http://example.com", "https://example.org")
             )
-        }
-    }
+        )
 }

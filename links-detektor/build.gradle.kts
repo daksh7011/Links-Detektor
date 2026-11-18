@@ -45,10 +45,8 @@ dependencies {
     implementation(libs.commonsLang3)
 
     // Testing dependencies
-    testImplementation(libs.junit.api)
-    testImplementation(libs.junit.params)
-    testImplementation(libs.mockk)
-    testRuntimeOnly(libs.junit.engine)
+    testImplementation(kotlin("test"))
+    testImplementation(libs.kotlinx.collections.immutable)
 }
 
 detekt {

@@ -14,8 +14,7 @@ commonsMath3 = "3.6.1"
 commonsLang3 = "3.17.0"
 
 # Testing dependencies
-junit = "5.13.2"
-mockk = "1.14.4"
+kotlinx-collections-immutable = "0.5.2"
 
 [libraries]
 detekt = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
@@ -29,10 +28,7 @@ commonsMath3 = { module = "org.apache.commons:commons-math3", version.ref = "com
 commonsLang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }
 
 # Testing libraries
-junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
-junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-junit-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 
 # Documentation
 dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }

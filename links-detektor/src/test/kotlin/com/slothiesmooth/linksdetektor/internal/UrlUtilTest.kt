@@ -4,12 +4,9 @@ import com.slothiesmooth.linksdetektor.internal.UrlUtil.decode
 import com.slothiesmooth.linksdetektor.internal.UrlUtil.encode
 import com.slothiesmooth.linksdetektor.internal.UrlUtil.removeExtraDots
 import com.slothiesmooth.linksdetektor.internal.UrlUtil.removeSpecialSpaces
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
-import org.junit.jupiter.params.provider.NullAndEmptySource
-import org.junit.jupiter.params.provider.ValueSource
+import kotlinx.collections.immutable.persistentListOf
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /**
  * Tests for [UrlUtil] utility functions.
@@ -36,32 +33,32 @@ class UrlUtilTest {
         assertEquals(input, result)
     }
 
-    @ParameterizedTest
-    @CsvSource(
-        "%20, ' '", // space
-        "%2F, /", // forward slash
-        "%3A, :", // colon
-        "%3F, ?", // question mark
-        "%3D, =", // equals
-        "%26, &", // ampersand
-        "%25, %", // percent sign
-        "%2B, +", // plus
-        "%23, #", // hash
-        "%40, @", // at sign
-        "%21, !", // exclamation mark
-        "%24, $", // dollar sign
-        "%28, (", // opening parenthesis
-        "%29, )", // closing parenthesis
-        "%2C, ','", // comma (escaped)
-        "%3B, ;", // semicolon
-        "%5B, [", // opening square bracket
-        "%5D, ]", // closing square bracket
-        "%7B, {", // opening curly brace
-        "%7D, }", // closing curly brace
-    )
-    fun `decode handles common percent-encoded characters`(input: String, expected: String) {
-        val result = decode(input)
-        assertEquals(expected, result)
+    @Test
+    fun `decode handles common percent-encoded characters`() {
+        persistentListOf(
+            "%20" to " ",
+            "%2F" to "/",
+            "%3A" to ":",
+            "%3F" to "?",
+            "%3D" to "=",
+            "%26" to "&",
+            "%25" to "%",
+            "%2B" to "+",
+            "%23" to "#",
+            "%40" to "@",
+            "%21" to "!",
+            "%24" to "\$",
+            "%28" to "(",
+            "%29" to ")",
+            "%2C" to ",",
+            "%3B" to ";",
+            "%5B" to "[",
+            "%5D" to "]",
+            "%7B" to "{",
+            "%7D" to "}"
+        ).forEach { (input, expected) ->
+            assertEquals(expected, decode(input), "case: $input")
+        }
     }
 
     @Test
@@ -171,12 +168,11 @@ class UrlUtilTest {
         assertEquals("", result)
     }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = [" ", "\t", "\r", "\n", " \t\r\n"])
-    fun `removeSpecialSpaces handles empty and whitespace-only strings`(input: String?) {
-        val result = removeSpecialSpaces(input)
-        assertEquals("", result)
+    @Test
+    fun `removeSpecialSpaces handles empty and whitespace-only strings`() {
+        persistentListOf(null, "", " ", "\t", "\r", "\n", " \t\r\n").forEach { input ->
+            assertEquals("", removeSpecialSpaces(input), "case: $input")
+        }
     }
 
     @Test
@@ -250,18 +246,18 @@ class UrlUtilTest {
         assertEquals("", result)
     }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    fun `encode handles empty string`(input: String?) {
-        val result = encode(input)
-        assertEquals("", result)
+    @Test
+    fun `encode handles empty string`() {
+        persistentListOf(null, "").forEach { input ->
+            assertEquals("", encode(input), "case: $input")
+        }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["example", "com", "domain", "path", "query", "fragment"])
-    fun `encode preserves alphanumeric and unreserved characters`(input: String) {
-        val result = encode(input)
-        assertEquals(input, result)
+    @Test
+    fun `encode preserves alphanumeric and unreserved characters`() {
+        persistentListOf("example", "com", "domain", "path", "query", "fragment").forEach { input ->
+            assertEquals(input, encode(input), "case: $input")
+        }
     }
 
     @Test
@@ -329,7 +325,7 @@ class UrlUtilTest {
         val result = encode(controlChars.toString())
         val expected = StringBuilder()
         for (i in 0..31) {
-            expected.append(String.format("%%%02X", i))
+            expected.append("%" + i.toString(16).uppercase().padStart(2, '0'))
         }
         assertEquals(expected.toString(), result)
     }
@@ -350,12 +346,11 @@ class UrlUtilTest {
         assertEquals("", result)
     }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = ["...", "..", ".", "....", "....."])
-    fun `removeExtraDots handles empty and dot-only strings`(input: String?) {
-        val result = removeExtraDots(input)
-        assertEquals("", result)
+    @Test
+    fun `removeExtraDots handles empty and dot-only strings`() {
+        persistentListOf(null, "", "...", "..", ".", "....", ".....").forEach { input ->
+            assertEquals("", removeExtraDots(input), "case: $input")
+        }
     }
 
     @Test
@@ -365,21 +360,21 @@ class UrlUtilTest {
         assertEquals(input, result)
     }
 
-    @ParameterizedTest
-    @CsvSource(
-        ".example.com, example.com",
-        "example.com., example.com",
-        ".example.com., example.com",
-        "example..com, example.com",
-        "example.....com, example.com",
-        ".local.....com., local.com",
-        "..example...domain....com..., example.domain.com",
-        ".a.b.c.d.e., a.b.c.d.e",
-        "...sub...example....co....uk..., sub.example.co.uk"
-    )
-    fun `removeExtraDots handles various dot patterns`(input: String, expected: String) {
-        val result = removeExtraDots(input)
-        assertEquals(expected, result)
+    @Test
+    fun `removeExtraDots handles various dot patterns`() {
+        persistentListOf(
+            ".example.com" to "example.com",
+            "example.com." to "example.com",
+            ".example.com." to "example.com",
+            "example..com" to "example.com",
+            "example.....com" to "example.com",
+            ".local.....com." to "local.com",
+            "..example...domain....com..." to "example.domain.com",
+            ".a.b.c.d.e." to "a.b.c.d.e",
+            "...sub...example....co....uk..." to "sub.example.co.uk"
+        ).forEach { (input, expected) ->
+            assertEquals(expected, removeExtraDots(input), "case: $input")
+        }
     }
 
     @Test

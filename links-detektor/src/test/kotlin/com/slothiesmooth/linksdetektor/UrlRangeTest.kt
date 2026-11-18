@@ -16,12 +16,12 @@ class UrlRangeTest {
         val input: String,
         val options: LinksDetektorOptions,
         val expected: ImmutableList<IntRange>,
-        /** True when the detector drops a stray `%`, so the range is longer than `originalUrl`. */
-        val dropsStrayPercent: Boolean = false,
+        /**
+         * Set for rows where the detector drops a stray `%`, so a range is longer than its `originalUrl`:
+         * the expected `originalUrl` of every URL in the row.
+         */
+        val strayPercentOriginalUrls: ImmutableList<String>? = null,
     )
-
-    private fun ranges(s: String, o: LinksDetektorOptions): ImmutableList<IntRange> =
-        LinksDetektor(s, o).detect().map { it.range }.toImmutableList()
 
     private val cases: ImmutableList<RangeCase> = persistentListOf(
         RangeCase("http://example.com", LinksDetektorOptions.Default, persistentListOf(0 until 18)),
@@ -80,21 +80,24 @@ class UrlRangeTest {
             "see http://exa%mple.com/x ok",
             LinksDetektorOptions.Default,
             persistentListOf(4 until 25),
-            dropsStrayPercent = true
+            strayPercentOriginalUrls = persistentListOf("http://example.com/x")
         ),
         RangeCase(
             "ab%zz.com rest",
             LinksDetektorOptions.Default,
             persistentListOf(0 until 9),
-            dropsStrayPercent = true
+            strayPercentOriginalUrls = persistentListOf("abzz.com")
         ),
         RangeCase(
             "a.com a%.com",
             LinksDetektorOptions.Default,
             persistentListOf(0 until 5, 6 until 12),
-            dropsStrayPercent = true
+            strayPercentOriginalUrls = persistentListOf("a.com", "a.com")
         ),
     )
+
+    private fun ranges(s: String, o: LinksDetektorOptions): ImmutableList<IntRange> =
+        LinksDetektor(s, o).detect().map { it.range }.toImmutableList()
 
     @Test
     fun rangesMatchSourceSpans() {
@@ -105,11 +108,25 @@ class UrlRangeTest {
 
     @Test
     fun substringMatchesOriginalUrl() {
-        for (case in cases.filterNot { it.dropsStrayPercent }) {
+        for (case in cases) {
             for (url in LinksDetektor(case.input, case.options).detect()) {
                 val sliced = case.input.substring(url.range).replace('\n', ' ').replace('\t', ' ').replace('\r', ' ')
-                assertEquals(url.originalUrl, sliced, "case: ${case.input}")
+                // Only a URL whose source span lost a stray '%' is exempt; clean URLs in the same row are checked.
+                val lostStrayPercent = '%' in sliced && sliced != url.originalUrl
+                if (!lostStrayPercent) {
+                    assertEquals(url.originalUrl, sliced, "case: ${case.input}")
+                }
             }
+        }
+    }
+
+    @Test
+    fun strayPercentRowsKeepCleanOriginalUrls() {
+        for (case in cases) {
+            val expected = case.strayPercentOriginalUrls ?: continue
+            val actual = LinksDetektor(case.input, case.options).detect().map { it.originalUrl.orEmpty() }
+                .toImmutableList()
+            assertEquals(expected, actual, "case: ${case.input}")
         }
     }
 

@@ -14,6 +14,30 @@ import kotlin.time.TimeSource
  */
 class LinksDetektorTest {
 
+    private val optionCombinations: ImmutableList<Triple<LinksDetektorOptions, String, ImmutableList<String>>> =
+        persistentListOf(
+            Triple(
+                LinksDetektorOptions.JSON,
+                """{"url": "http://example.com", "otherUrl": "https://example.org"}""",
+                persistentListOf("http://example.com", "https://example.org")
+            ),
+            Triple(
+                LinksDetektorOptions.JAVASCRIPT,
+                """var url1 = "http://example.com"; var url2 = 'https://example.org';""",
+                persistentListOf("http://example.com", "https://example.org")
+            ),
+            Triple(
+                LinksDetektorOptions.XML,
+                """<url>http://example.com</url><otherUrl>https://example.org</otherUrl>""",
+                persistentListOf("http://example.com", "https://example.org")
+            ),
+            Triple(
+                LinksDetektorOptions.HTML,
+                """<a href="http://example.com">Link</a><script>var url = 'https://example.org';</script>""",
+                persistentListOf("http://example.com", "https://example.org")
+            )
+        )
+
     //region Constructor tests
     @Test
     fun `constructor initializes with content and options`() {
@@ -593,9 +617,13 @@ class LinksDetektorTest {
             val detector = LinksDetektor(content, options)
             val urls = detector.detect()
 
-            assertEquals(expectedUrls.size, urls.size, "Expected ${expectedUrls.size} URLs but found ${urls.size}")
+            assertEquals(
+                expectedUrls.size,
+                urls.size,
+                "case: $options: expected ${expectedUrls.size} URLs but found ${urls.size}"
+            )
             for (expectedUrl in expectedUrls) {
-                assertTrue(urls.any { it.originalUrl == expectedUrl }, "Expected URL $expectedUrl not found")
+                assertTrue(urls.any { it.originalUrl == expectedUrl }, "case: $options: expected URL $expectedUrl not found")
             }
         }
     }
@@ -829,7 +857,6 @@ class LinksDetektorTest {
         assertEquals(1, urls.size)
 
         val normalizedUrl = urls[0].normalize()
-        assertNotNull(normalizedUrl.path)
         assertFalse(assertNotNull(normalizedUrl.path).contains("%25252525"))
     }
 
@@ -1087,28 +1114,4 @@ class LinksDetektorTest {
         assertEquals("/path", url.path)
     }
     //endregion
-
-    private val optionCombinations: ImmutableList<Triple<LinksDetektorOptions, String, ImmutableList<String>>> =
-        persistentListOf(
-            Triple(
-                LinksDetektorOptions.JSON,
-                """{"url": "http://example.com", "otherUrl": "https://example.org"}""",
-                persistentListOf("http://example.com", "https://example.org")
-            ),
-            Triple(
-                LinksDetektorOptions.JAVASCRIPT,
-                """var url1 = "http://example.com"; var url2 = 'https://example.org';""",
-                persistentListOf("http://example.com", "https://example.org")
-            ),
-            Triple(
-                LinksDetektorOptions.XML,
-                """<url>http://example.com</url><otherUrl>https://example.org</otherUrl>""",
-                persistentListOf("http://example.com", "https://example.org")
-            ),
-            Triple(
-                LinksDetektorOptions.HTML,
-                """<a href="http://example.com">Link</a><script>var url = 'https://example.org';</script>""",
-                persistentListOf("http://example.com", "https://example.org")
-            )
-        )
 }

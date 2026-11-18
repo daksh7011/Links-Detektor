@@ -680,7 +680,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
                 if (asRead(content[i]) == original[j]) j-- else if (content[i] != '%') break
                 i--
             }
-            if (j < 0) return (i + 1) until end
+            if (j < 0) return i + 1 until end
         }
         return IntRange.EMPTY
     }

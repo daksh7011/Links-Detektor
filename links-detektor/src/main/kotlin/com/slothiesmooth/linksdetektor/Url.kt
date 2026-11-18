@@ -46,7 +46,9 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      * `content.substring(range)` equals [originalUrl] (with `\n`, `\t` and `\r` read as spaces), except when the
      * detector dropped a stray `%` from the URL: the range then covers the whole source span, including it.
      * For [Url.create] the range is relative to the sanitised string that was scanned (trimmed, spaces replaced
-     * by `%20`, whitespace removed), not to the argument. A [NormalizedUrl] has the range of the [Url] it came from.
+     * by `%20`, whitespace removed), not to the argument. If the URL cannot be located in the scanned string
+     * (not expected for a URL produced by this library), the range is [IntRange.EMPTY].
+     * A [NormalizedUrl] has the range of the [Url] it came from.
      */
     val range: IntRange = urlMarker.range
 

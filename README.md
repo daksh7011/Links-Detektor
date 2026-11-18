@@ -167,6 +167,8 @@ println("Normalized: $normalizedUrl")
 ```kotlin
 fun String.extractLinks(): ImmutableList<String> {
     return LinksDetektorOptions.entries.asSequence()
+        // Single-level domains would turn plain words such as "formats:" into hosts.
+        .filter { it != LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN }
         .flatMap { option ->
             LinksDetektor(this, option).detect().asSequence().mapNotNull { it.host }
         }
@@ -177,9 +179,10 @@ fun String.extractLinks(): ImmutableList<String> {
 val text = "Check multiple formats: https://example.com, <a href='https://github.com'>GitHub</a>, {\"url\": \"https://kotlin.org\"}"
 val links = text.extractLinks()
 println("Found domains: $links")
+// Found domains: [example.com, github.com, kotlin.org]
 ```
 
-> 💪 **Power tip:** This extension function tries all detection options to find as many URLs as possible!
+> 💪 **Power tip:** This extension function tries every detection option (except single-level domains) to find as many URLs as possible!
 </details>
 
 ## 🔀 Migrating from 2.x

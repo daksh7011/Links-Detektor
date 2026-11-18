@@ -39,7 +39,7 @@ internal object Punycode {
         var delta = 0L
         var bias = INITIAL_BIAS
         while (handled < codePoints.size) {
-            val next = codePoints.filter { it >= n }.min()
+            val next = codePoints.minOf { if (it >= n) it else Int.MAX_VALUE }
             delta += (next - n).toLong() * (handled + 1)
             requireNoOverflow(delta)
             n = next

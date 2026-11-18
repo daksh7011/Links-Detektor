@@ -182,6 +182,10 @@ class HostNormalizer(private val host: String?) {
             val lenPart = parts[i].length
             if (lenPart == 0 && i != 0 && i != parts.size - 1) {
                 numberOfFilledZeroes = totalSize - size
+                if (numberOfFilledZeroes < 0) {
+                    // Too many sections around the double colon: the address does not fit.
+                    return null
+                }
                 for (k in i until numberOfFilledZeroes + i) {
                     sectionToTwoBytes(0).copyInto(bytes, k * 2)
                 }

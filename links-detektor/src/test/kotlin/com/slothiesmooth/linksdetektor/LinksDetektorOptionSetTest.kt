@@ -112,4 +112,27 @@ class LinksDetektorOptionSetTest {
             )
         }
     }
+
+    @Test
+    fun `no option set throws on short inputs`() {
+        val corpus = persistentListOf(
+            "[1:2]", "(a)", "[a.b]", "\"x\"", "'y'", "<z>", "{q}", "a.", ".a", "[::1]",
+            "http://[1:2]", "(http://localhost)", "[localhost]",
+            "a:b c", "1:2 x",
+        )
+        val entries = LinksDetektorOptions.entries
+        for (bits in 0 until (1 shl entries.size)) {
+            var subset = persistentSetOf<LinksDetektorOptions>()
+            for (index in entries.indices) {
+                if (bits and (1 shl index) != 0) subset = subset.adding(entries[index])
+            }
+            for (input in corpus) {
+                try {
+                    LinksDetektor(input, subset).detect()
+                } catch (e: Exception) {
+                    throw AssertionError("detect() threw for \"$input\" with $subset", e)
+                }
+            }
+        }
+    }
 }

@@ -257,7 +257,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
     }
 
     /**
-     * Whether a matching character (quote, bracket) just ended a pending single-level domain, such as the
+     * Whether a quote or bracket just ended a pending single-level domain, such as the
      * closing bracket in `(http://localhost)`. Only possible when [LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN]
      * is combined with a quote, bracket or XML option.
      */
@@ -299,7 +299,12 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
         ) { // takes care of case like hi:
             inputTextReader.goBack() // unread the ":" so readDomainName can take care of the port
             bufferStringBuilder.deleteRange(bufferStringBuilder.length - 1, bufferStringBuilder.length)
-            readDomainName(bufferStringBuilder.toString())
+            val colonPosition = inputTextReader.position
+            if (!readDomainName(bufferStringBuilder.toString()) && inputTextReader.position <= colonPosition) {
+                // The domain reader rolled back onto the ":" it was handed. Skip it, otherwise the main loop
+                // reads the same ":" again and backtracks until the endless-loop guard throws.
+                inputTextReader.seek(colonPosition + 1)
+            }
         } else {
             readEnd(ReadEndState.InvalidUrl)
             length = 0

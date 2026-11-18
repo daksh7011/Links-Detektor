@@ -5,6 +5,11 @@ on:
     branches:
       - master
 
+# Releases on Maven Central are immutable: never run two publishes at once, never cancel one half way.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   build:
     permissions:

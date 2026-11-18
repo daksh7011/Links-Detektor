@@ -12,5 +12,6 @@ class WebAppGraphTest {
         val graph = createGraph<WebAppGraph>()
         assertEquals(DefaultFeatureOrder, graph.featureOrder)
         assertEquals(DetektorRoute, graph.appStartRoute.route)
+        assertEquals(1, graph.features.size)
     }
 }

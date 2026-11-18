@@ -16,6 +16,7 @@ kotlin {
             api(projects.feature.common.client.api)
             api(projects.feature.common.client.metro)
             api(projects.feature.detektor.client.api)
+            api(projects.feature.detektor.client.basic)
         }
         jvmTest.dependencies {
             implementation(libs.kotlinx.coroutines.swing)

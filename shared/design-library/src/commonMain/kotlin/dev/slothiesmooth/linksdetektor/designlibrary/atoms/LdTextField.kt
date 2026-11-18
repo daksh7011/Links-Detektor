@@ -34,7 +34,10 @@ private val HaloWidth = 3.dp
 private val HairlineWidth = 1.dp
 private const val DOUBLE = 2f
 
-/** A text field with its [label] above it. Focus draws an amber border and a 3 dp halo. */
+/**
+ * A text field with its [label] above it. Focus draws an amber border and a 3 dp halo. [modifier] sits on the whole field with its
+ * label; [fieldModifier] on the editable box itself (for example a test tag a text-input action can find).
+ */
 @Composable
 fun LdTextField(
     value: String,
@@ -44,6 +47,7 @@ fun LdTextField(
     placeholder: String = "",
     minLines: Int = 1,
     maxLines: Int = Int.MAX_VALUE,
+    fieldModifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.ldColors
     val dimens = MaterialTheme.ldDimens
@@ -56,7 +60,7 @@ fun LdTextField(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier
+            modifier = fieldModifier
                 .semantics { contentDescription = label }
                 .drawBehind {
                     if (focused) {

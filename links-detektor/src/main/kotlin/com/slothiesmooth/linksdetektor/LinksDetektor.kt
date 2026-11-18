@@ -4,6 +4,7 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isAlpha
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isDot
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
+import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
 import com.slothiesmooth.linksdetektor.internal.DomainNameReader
 import com.slothiesmooth.linksdetektor.internal.InputTextReader
 import com.slothiesmooth.linksdetektor.internal.UrlMarker
@@ -34,7 +35,7 @@ import java.util.Locale
  * @property content The text content to search for URLs.
  * @property options Configuration options that control detection behavior.
  */
-class LinksDetektor(content: String, options: LinksDetektorOptions) {
+class LinksDetektor(private val content: String, options: LinksDetektorOptions) {
 
     /**
      * Stores options for detection.
@@ -641,7 +642,9 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
 
             // Add the url to the list of good urls.
             if (bufferStringBuilder.isNotEmpty()) {
-                currentUrlMarker.originalUrl = bufferStringBuilder.toString()
+                val originalUrl = bufferStringBuilder.toString()
+                currentUrlMarker.originalUrl = originalUrl
+                currentUrlMarker.range = locate(originalUrl)
                 urlList.add(currentUrlMarker.createUrl())
             }
         }
@@ -659,7 +662,38 @@ class LinksDetektor(content: String, options: LinksDetektorOptions) {
         return state == ReadEndState.ValidUrl
     }
 
+    /**
+     * Finds the span of [content] that [original] was read from.
+     *
+     * The buffer ends at most one consumed-but-unappended character before the reader position. The only
+     * characters the detector drops from inside a URL are stray '%'.
+     */
+    private fun locate(original: String): IntRange {
+        val position = minOf(inputTextReader.position, content.length)
+        for (trailing in 0..MAX_TRAILING) {
+            val end = position - trailing
+            if (end <= 0) break
+            var i = end - 1
+            var j = original.length - 1
+            if (asRead(content[i]) != original[j]) continue
+            while (j >= 0 && i >= 0) {
+                if (asRead(content[i]) == original[j]) j-- else if (content[i] != '%') break
+                i--
+            }
+            if (j < 0) return (i + 1) until end
+        }
+        return IntRange.EMPTY
+    }
+
+    /** Maps a character the way [InputTextReader.read] does: any whitespace becomes a space. */
+    private fun asRead(c: Char): Char = if (c.isWhiteSpace()) ' ' else c
+
     private companion object {
+        /**
+         * How many characters past the end of a URL the reader may already have consumed.
+         */
+        private const val MAX_TRAILING = 3
+
         /**
          * Contains the string to check for and remove if the scheme is this.
          */

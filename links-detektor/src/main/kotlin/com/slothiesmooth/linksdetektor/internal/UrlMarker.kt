@@ -12,6 +12,12 @@ internal class UrlMarker {
      * The original URL string that this marker is tracking.
      */
     var originalUrl: String? = null
+
+    /**
+     * Where [originalUrl] was read from in the scanned string: first index inclusive, last index inclusive.
+     * [IntRange.EMPTY] when the position is unknown.
+     */
+    var range: IntRange = IntRange.EMPTY
     private var _schemeIndex = -1
     private var _usernamePasswordIndex = -1
     private var _hostIndex = -1

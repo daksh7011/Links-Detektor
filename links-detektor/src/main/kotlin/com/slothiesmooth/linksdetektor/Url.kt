@@ -36,6 +36,20 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      */
     val originalUrl: String? = urlMarker.originalUrl
 
+    /**
+     * Where this URL was read from in the scanned string, as an index range.
+     *
+     * `range.first` is the index of the first character the URL was read from and `range.last + 1` is the index
+     * just past the last one, so `content.substring(range)` recovers the source text of the URL. Ranges
+     * returned by one [LinksDetektor.detect] call are ascending and never overlap.
+     *
+     * `content.substring(range)` equals [originalUrl] (with `\n`, `\t` and `\r` read as spaces), except when the
+     * detector dropped a stray `%` from the URL: the range then covers the whole source span, including it.
+     * For [Url.create] the range is relative to the sanitised string that was scanned (trimmed, spaces replaced
+     * by `%20`, whitespace removed), not to the argument. A [NormalizedUrl] has the range of the [Url] it came from.
+     */
+    val range: IntRange = urlMarker.range
+
     internal val urlMarker: UrlMarker
         get() = _urlMarker
 

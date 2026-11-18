@@ -1,8 +1,8 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinMultiplatform
+
 plugins {
     id("ld.published.library")
-    // Versionless: build-logic already puts both plugins on the classpath.
-    id("org.jetbrains.dokka")
-    id("com.vanniktech.maven.publish")
 }
 
 val projectVersion: String = System.getenv("VERSION") ?: libs.versions.lib.get()
@@ -10,11 +10,8 @@ val projectVersion: String = System.getenv("VERSION") ?: libs.versions.lib.get()
 group = "com.slothiesmooth"
 version = projectVersion
 
-dokka {
-    moduleName.set("Links Detektor")
-}
-
 mavenPublishing {
+    configure(KotlinMultiplatform(javadocJar = JavadocJar.Dokka("dokkaGeneratePublicationHtml"), sourcesJar = true))
     coordinates("com.slothiesmooth", "links-detektor", projectVersion)
     pom {
         name.set("Links Detektor")

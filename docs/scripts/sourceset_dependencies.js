@@ -1,1 +1,0 @@
-sourceset_dependencies='{":links-detektor/main":[]}'

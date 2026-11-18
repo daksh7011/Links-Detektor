@@ -11,6 +11,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("com.android.kotlin.multiplatform.library")
+    id("org.jetbrains.dokka")
+    id("com.vanniktech.maven.publish")
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -91,5 +93,24 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 tasks.withType<Test>().configureEach {
     testLogging {
         events("passed", "skipped", "failed")
+    }
+}
+
+dokka {
+    moduleName.set("Links Detektor")
+    dokkaSourceSets.configureEach {
+        includes.from("packages.md")
+        sourceLink {
+            localDirectory.set(file("src/commonMain/kotlin"))
+            remoteUrl("https://github.com/daksh7011/links-detektor/blob/master/links-detektor/src/commonMain/kotlin")
+            remoteLineSuffix.set("#L")
+        }
+        perPackageOption {
+            matchingRegex.set("""com\.slothiesmooth\.linksdetektor\.internal.*""")
+            suppress.set(true)
+        }
+    }
+    pluginsConfiguration.html {
+        footerMessage.set("© 2026 Slothie Smooth - Links Detektor")
     }
 }

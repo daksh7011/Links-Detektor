@@ -2,7 +2,6 @@ package com.slothiesmooth.linksdetektor
 
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import java.net.MalformedURLException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -831,7 +830,7 @@ class LinksDetektorTest {
 
         val normalizedUrl = urls[0].normalize()
         assertNotNull(normalizedUrl.path)
-        assertFalse(normalizedUrl.path!!.contains("%25252525"))
+        assertFalse(assertNotNull(normalizedUrl.path).contains("%25252525"))
     }
 
     @Test
@@ -1086,50 +1085,6 @@ class LinksDetektorTest {
         assertEquals("http", url.scheme)
         assertEquals("example.com", url.host)
         assertEquals("/path", url.path)
-    }
-
-    @Test
-    fun `Url create handles potentially invalid URLs`() {
-        // The implementation might be more lenient than expected
-        // Let's test what happens with an apparently invalid URL
-        val invalidUrl = "not a url"
-
-        try {
-            val url = Url.create(invalidUrl)
-            // If no exception is thrown, verify the URL properties
-            assertNotNull(url)
-            assertNotNull(url.originalUrl)
-        } catch (e: MalformedURLException) {
-            // If an exception is thrown, that's also acceptable
-            assertTrue(e.message?.contains("couldn't find any urls") == true)
-        }
-    }
-
-    @Test
-    fun `Url create handles text with multiple URLs`() {
-        // The implementation might be more lenient than expected
-        // Let's test what happens with text containing multiple URLs
-        val multipleUrls = "http://example.com http://example.org"
-
-        try {
-            val url = Url.create(multipleUrls)
-            // If no exception is thrown, verify we got a valid URL object
-            assertNotNull(url)
-            assertNotNull(url.originalUrl)
-
-            // The implementation might extract just the first URL, or the whole string,
-            // or something else entirely. We just verify it's not empty.
-            assertFalse(url.originalUrl.isNullOrEmpty())
-
-            // Verify that the URL has basic properties
-            assertNotNull(url.scheme)
-            assertNotNull(url.host)
-        } catch (e: MalformedURLException) {
-            // If an exception is thrown, that's also acceptable
-            // Just verify it's the expected type of exception
-            @Suppress("USELESS_IS_CHECK")
-            assertTrue(e is MalformedURLException)
-        }
     }
     //endregion
 

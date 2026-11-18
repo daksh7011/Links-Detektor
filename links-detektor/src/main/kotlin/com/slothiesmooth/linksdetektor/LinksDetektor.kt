@@ -18,7 +18,6 @@ import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
-import java.util.Locale
 
 /**
  * Detects and extracts URLs from text content.
@@ -191,7 +190,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
 
                     // if it doesn't have a scheme, clear the buffer.
                     if (!hasScheme) {
-                        bufferStringBuilder.delete(0, bufferStringBuilder.length)
+                        bufferStringBuilder.deleteRange(0, bufferStringBuilder.length)
                     }
                     bufferStringBuilder.append(curr)
                     if (!readDomainName(bufferStringBuilder.substring(length))) {
@@ -269,20 +268,19 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
     /**
      * We found a ":" and is now trying to read either scheme, username/password
      *
-     * @param length first index of the previous part (could be beginning of the buffer, beginning of the
+     * @param startLength first index of the previous part (could be beginning of the buffer, beginning of the
      * username/password, or beginning
      *
      * @return new index of where the domain starts
      */
-    @Suppress("NAME_SHADOWING")
-    private fun processColon(length: Int): Int {
-        var length = length
+    private fun processColon(startLength: Int): Int {
+        var length = startLength
         if (hasScheme) {
             // read it as username/password if it has scheme
             if (!readUserPass(length) && bufferStringBuilder.isNotEmpty()) {
                 // unread the ":" so that the domain reader can process it
                 inputTextReader.goBack()
-                bufferStringBuilder.delete(bufferStringBuilder.length - 1, bufferStringBuilder.length)
+                bufferStringBuilder.deleteRange(bufferStringBuilder.length - 1, bufferStringBuilder.length)
                 val backtrackOnFail: Int = inputTextReader.position - bufferStringBuilder.length + length
                 if (!readDomainName(bufferStringBuilder.substring(length))) {
                     // go back to length location and restart search
@@ -299,7 +297,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
             inputTextReader.canReadChars(1)
         ) { // takes care of case like hi:
             inputTextReader.goBack() // unread the ":" so readDomainName can take care of the port
-            bufferStringBuilder.delete(bufferStringBuilder.length - 1, bufferStringBuilder.length)
+            bufferStringBuilder.deleteRange(bufferStringBuilder.length - 1, bufferStringBuilder.length)
             readDomainName(bufferStringBuilder.toString())
         } else {
             readEnd(ReadEndState.InvalidUrl)
@@ -432,7 +430,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
                 bufferStringBuilder.append(curr)
                 if (numSlashes == 1) {
                     // Return only if it's approved protocol. This can be expanded to allow others
-                    if (VALID_SCHEMES.contains(bufferStringBuilder.toString().lowercase(Locale.getDefault()))) {
+                    if (VALID_SCHEMES.contains(bufferStringBuilder.toString().lowercase())) {
                         currentUrlMarker.setIndex(UrlPart.SCHEME, 0)
                         return true
                     }
@@ -496,7 +494,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
         return if (rollback) {
             // got to here, so there is no username and password. (We didn't find a @)
             val distance = bufferStringBuilder.length - start
-            bufferStringBuilder.delete(start, bufferStringBuilder.length)
+            bufferStringBuilder.deleteRange(start, bufferStringBuilder.length)
             val currIndex = (inputTextReader.position - distance - if (done) 1 else 0).coerceAtLeast(0)
             inputTextReader.seek(currIndex)
             false
@@ -614,7 +612,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
                 // no port found; it was something like google.com:hello.world
                 if (portLen == 1) {
                     // remove the ":" from the end.
-                    bufferStringBuilder.delete(bufferStringBuilder.length - 1, bufferStringBuilder.length)
+                    bufferStringBuilder.deleteRange(bufferStringBuilder.length - 1, bufferStringBuilder.length)
                 }
                 currentUrlMarker.unsetIndex(UrlPart.PORT)
                 return readEnd(ReadEndState.ValidUrl)
@@ -670,7 +668,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
             // get the last character. if its a quote, cut it off.
             val len = bufferStringBuilder.length
             if (quoteStart && bufferStringBuilder[len - 1] == '\"') {
-                bufferStringBuilder.delete(len - 1, len)
+                bufferStringBuilder.deleteRange(len - 1, len)
             }
 
             // Add the url to the list of good urls.
@@ -683,7 +681,7 @@ class LinksDetektor(private val content: String, options: ImmutableSet<LinksDete
         }
 
         // clear out the buffer.
-        bufferStringBuilder.delete(0, bufferStringBuilder.length)
+        bufferStringBuilder.deleteRange(0, bufferStringBuilder.length)
 
         // reset the state of internal objects.
         quoteStart = false

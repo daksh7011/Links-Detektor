@@ -10,7 +10,6 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isUnreserved
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
 import com.slothiesmooth.linksdetektor.internal.model.ReaderNextState
 import kotlinx.collections.immutable.ImmutableList
-import java.util.*
 
 /**
  * Validates and processes domain names during URL detection.
@@ -219,7 +218,7 @@ internal class DomainNameReader(
             if (newStart > 0) {
                 // make sure the location is not at the end. Otherwise the thing is just invalid.
                 if (newStart < currentDomain.length) {
-                    bufferStringBuilder.replace(0, bufferStringBuilder.length, currentDomain.substring(newStart))
+                    bufferStringBuilder.setRange(0, bufferStringBuilder.length, currentDomain.substring(newStart))
 
                     // cut out the previous part, so now the domain name has to be from here.
                     _startDomainName = 0
@@ -414,10 +413,10 @@ internal class DomainNameReader(
         if (domainLength >= MAX_DOMAIN_LENGTH || dotCount > MAX_NUMBER_LABELS) {
             valid = false
         } else if (_numeric) {
-            val testDomain = bufferStringBuilder.substring(_startDomainName).lowercase(Locale.getDefault())
+            val testDomain = bufferStringBuilder.substring(_startDomainName).lowercase()
             valid = isValidIpv4(testDomain)
         } else if (_seenBracket) {
-            val testDomain = bufferStringBuilder.substring(_startDomainName).lowercase(Locale.getDefault())
+            val testDomain = bufferStringBuilder.substring(_startDomainName).lowercase()
             valid = isValidIpv6(testDomain)
         } else if (_currentLabelLength > 0 && _dots >= 1 || _dots >= 2 && _currentLabelLength == 0 || _options.has(
                 LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN
@@ -609,7 +608,7 @@ internal class DomainNameReader(
                     hexSection = true // reset hex to true
                     hexDigits = 0 // reset count for hex digits
                     numSections++
-                    lastSection.delete(0, lastSection.length) // clear last section
+                    lastSection.deleteRange(0, lastSection.length) // clear last section
                 }
                 else -> if (zoneIndicesMode) {
                     if (domainArray[index].isUnreserved().not()) {

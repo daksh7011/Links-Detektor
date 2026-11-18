@@ -2,7 +2,7 @@ package com.slothiesmooth.linksdetektor.internal
 
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
-import java.util.*
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Utility object for URL manipulation operations.
@@ -21,7 +21,7 @@ internal object UrlUtil {
         url ?: return ""
 
         val decodedUrlBuilder = StringBuilder(url)
-        val pendingPercentIndices = Stack<Int>()
+        val pendingPercentIndices = persistentListOf<Int>().builder()
         var currentPosition = 0
         while (currentPosition < decodedUrlBuilder.length - 2) {
             val currentCharacter = decodedUrlBuilder[currentPosition]
@@ -32,7 +32,7 @@ internal object UrlUtil {
                     val hexDigits = decodedUrlBuilder.substring(currentPosition + 1, currentPosition + 3)
                     val decodedCharacter = hexDigits.toInt(16).toChar()
 
-                    decodedUrlBuilder.delete(currentPosition, currentPosition + 3) // delete the % and two hex digits
+                    decodedUrlBuilder.deleteRange(currentPosition, currentPosition + 3) // delete the % and two hex digits
                     decodedUrlBuilder.insert(currentPosition, decodedCharacter) // add decoded character
 
                     if (decodedCharacter == '%') {
@@ -40,19 +40,19 @@ internal object UrlUtil {
                     } else if (pendingPercentIndices.isNotEmpty() &&
                         decodedCharacter.isHex() &&
                         decodedUrlBuilder.getOrNull(currentPosition - 1)?.isHex() == true &&
-                        currentPosition - pendingPercentIndices.peek() == 2
+                        currentPosition - pendingPercentIndices.last() == 2
                     ) {
                         // Go back to the last non-decoded percent sign if it can be decoded.
                         // We only need to go back if it's of form %[HEX][HEX]
-                        currentPosition = pendingPercentIndices.pop() - 1 // backtrack to the % sign.
+                        currentPosition = pendingPercentIndices.removeAt(pendingPercentIndices.lastIndex) - 1 // backtrack to the % sign.
                     } else if (pendingPercentIndices.isNotEmpty() &&
                         currentPosition == decodedUrlBuilder.length - 2
                     ) {
                         // special case to handle %[HEX][Unknown][end of string]
-                        currentPosition = pendingPercentIndices.pop() - 1 // backtrack to the % sign.
+                        currentPosition = pendingPercentIndices.removeAt(pendingPercentIndices.lastIndex) - 1 // backtrack to the % sign.
                     }
                 } else {
-                    pendingPercentIndices.push(currentPosition)
+                    pendingPercentIndices.add(currentPosition)
                 }
             }
             currentPosition++
@@ -81,7 +81,8 @@ internal object UrlUtil {
         return buildString(url.length * 2) {
             url.forEach { character ->
                 when {
-                    character.code <= 32 || character.code >= 127 || character == '#' || character == '%' -> append(String.format("%%%02X", character.code.toByte()))
+                    character.code <= 32 || character.code >= 127 || character == '#' || character == '%' ->
+                        append("%" + (character.code and 0xFF).toString(16).uppercase().padStart(2, '0'))
                     else -> append(character)
                 }
             }

@@ -101,6 +101,7 @@ class HostNormalizerGoldenTest {
             Triple("..example..com..", null, null),
             Triple("a...b", null, null),
             Triple("...", null, null),
+            Triple("[1:2:3:4:5:6:7:8:9]", "[1:2:3:4:5:6:7:8:9]", null),
             Triple("localhost", "localhost", null),
             Triple("ex_ample.com", "ex_ample.com", null),
             Triple("-example-.com", "-example-.com", null)

@@ -7,7 +7,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
-import org.apache.commons.lang3.StringUtils
 import java.net.MalformedURLException
 
 /**
@@ -68,7 +67,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      * @return A string in the format: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]#[fragment]
      */
     val fullUrl: String
-        get() = fullUrlWithoutFragment + StringUtils.defaultString(fragment)
+        get() = fullUrlWithoutFragment + fragment.orEmpty()
 
     /**
      * Gets the URL string without the fragment component.
@@ -81,14 +80,14 @@ open class Url internal constructor(urlMarker: UrlMarker) {
     val fullUrlWithoutFragment: String
         get() {
             val url = StringBuilder()
-            if (!StringUtils.isEmpty(scheme)) {
+            if (scheme.isNotEmpty()) {
                 url.append(scheme)
                 url.append(":")
             }
             url.append("//")
-            if (!StringUtils.isEmpty(username)) {
+            if (username.isNotEmpty()) {
                 url.append(username)
-                if (!StringUtils.isEmpty(password)) {
+                if (password.isNotEmpty()) {
                     url.append(":")
                     url.append(password)
                 }
@@ -116,16 +115,14 @@ open class Url internal constructor(urlMarker: UrlMarker) {
         get() {
             if (_scheme == null) {
                 if (exists(UrlPart.SCHEME)) {
-                    _scheme = getPart(UrlPart.SCHEME)
-                    val index = _scheme!!.indexOf(":")
-                    if (index != -1) {
-                        _scheme = _scheme!!.substring(0, index)
-                    }
-                } else if (!originalUrl!!.startsWith("//")) {
+                    val schemePart = getPart(UrlPart.SCHEME).orEmpty()
+                    val index = schemePart.indexOf(":")
+                    _scheme = if (index != -1) schemePart.substring(0, index) else schemePart
+                } else if (originalUrl?.startsWith("//") != true) {
                     _scheme = DEFAULT_SCHEME
                 }
             }
-            return StringUtils.defaultString(_scheme)
+            return _scheme.orEmpty()
         }
 
     /**
@@ -141,7 +138,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             if (_username == null) {
                 populateUsernamePassword()
             }
-            return StringUtils.defaultString(_username)
+            return _username.orEmpty()
         }
 
     /**
@@ -157,7 +154,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             if (_password == null) {
                 populateUsernamePassword()
             }
-            return StringUtils.defaultString(_password)
+            return _password.orEmpty()
         }
 
     /**
@@ -171,9 +168,11 @@ open class Url internal constructor(urlMarker: UrlMarker) {
     open val host: String?
         get() {
             if (rawHost == null) {
-                rawHost = getPart(UrlPart.HOST)
-                if (exists(UrlPart.PORT)) {
-                    rawHost = rawHost!!.substring(0, rawHost!!.length - 1)
+                val hostPart = getPart(UrlPart.HOST)
+                rawHost = if (hostPart != null && exists(UrlPart.PORT)) {
+                    hostPart.substring(0, hostPart.length - 1)
+                } else {
+                    hostPart
                 }
             }
             return rawHost
@@ -227,7 +226,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             if (_query == null) {
                 _query = getPart(UrlPart.QUERY)
             }
-            return StringUtils.defaultString(_query)
+            return _query.orEmpty()
         }
 
     /**
@@ -242,7 +241,7 @@ open class Url internal constructor(urlMarker: UrlMarker) {
             if (_fragment == null) {
                 _fragment = getPart(UrlPart.FRAGMENT)
             }
-            return StringUtils.defaultString(_fragment)
+            return _fragment.orEmpty()
         }
 
     /**
@@ -262,18 +261,16 @@ open class Url internal constructor(urlMarker: UrlMarker) {
      * if it exists.
      */
     private fun populateUsernamePassword() {
-        if (exists(UrlPart.USERNAME_PASSWORD)) {
-            val usernamePassword = getPart(UrlPart.USERNAME_PASSWORD)
-            val usernamePasswordParts =
-                usernamePassword!!.substring(0, usernamePassword.length - 1).split(':')
-                    .dropLastWhile { it.isEmpty() }
-                    .toImmutableList()
-            if (usernamePasswordParts.size == 1) {
-                _username = usernamePasswordParts[0]
-            } else if (usernamePasswordParts.size == 2) {
-                _username = usernamePasswordParts[0]
-                _password = usernamePasswordParts[1]
-            }
+        val usernamePassword = getPart(UrlPart.USERNAME_PASSWORD) ?: return
+        val usernamePasswordParts =
+            usernamePassword.substring(0, usernamePassword.length - 1).split(':')
+                .dropLastWhile { it.isEmpty() }
+                .toImmutableList()
+        if (usernamePasswordParts.size == 1) {
+            _username = usernamePasswordParts[0]
+        } else if (usernamePasswordParts.size == 2) {
+            _username = usernamePasswordParts[0]
+            _password = usernamePasswordParts[1]
         }
     }
 
@@ -318,8 +315,9 @@ open class Url internal constructor(urlMarker: UrlMarker) {
         if (!exists(part)) {
             return null
         }
-        val nextPart: UrlPart = nextExistingPart(part) ?: return originalUrl!!.substring(_urlMarker.indexOf(part))
-        return originalUrl!!.substring(_urlMarker.indexOf(part), _urlMarker.indexOf(nextPart))
+        val source = originalUrl ?: return null
+        val nextPart: UrlPart = nextExistingPart(part) ?: return source.substring(_urlMarker.indexOf(part))
+        return source.substring(_urlMarker.indexOf(part), _urlMarker.indexOf(nextPart))
     }
 
     /**

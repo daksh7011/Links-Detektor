@@ -73,11 +73,11 @@ internal class InputTextReader(private val content: String) {
      *
      * @param offset The offset from the current position (0 for the current character).
      * @return The character at the specified offset from the current position.
-     * @throws ArrayIndexOutOfBoundsException If the offset is beyond the content bounds.
+     * @throws IndexOutOfBoundsException If the offset is beyond the content bounds.
      */
     fun peekChar(offset: Int): Char {
         if (!canReadChars(offset)) {
-            throw ArrayIndexOutOfBoundsException()
+            throw IndexOutOfBoundsException()
         }
         return content[position + offset]
     }
@@ -113,11 +113,11 @@ internal class InputTextReader(private val content: String) {
      * The method also checks for potential infinite backtracking loops.
      *
      * @param position The new position to set (index in the content).
-     * @throws NegativeArraySizeException If excessive backtracking is detected,
+     * @throws IllegalStateException If excessive backtracking is detected,
      *         indicating a potential infinite loop.
      */
     fun seek(position: Int) {
-        val backtrackLength = Math.max(this.position - position, 0)
+        val backtrackLength = maxOf(this.position - position, 0)
         backtrackedCount += backtrackLength
         this.position = position
         checkBacktrackLoop(backtrackLength)
@@ -131,7 +131,7 @@ internal class InputTextReader(private val content: String) {
      *
      * The method also checks for potential infinite backtracking loops.
      *
-     * @throws NegativeArraySizeException If excessive backtracking is detected,
+     * @throws IllegalStateException If excessive backtracking is detected,
      *         indicating a potential infinite loop.
      */
     fun goBack() {
@@ -147,11 +147,11 @@ internal class InputTextReader(private val content: String) {
      * infinite loops in parsing algorithms. If the total backtracked count exceeds
      * a threshold (content length × [MAX_BACKTRACK_MULTIPLIER]), an exception is thrown.
      *
-     * @param backtrackLength The length of the most recent backtrack operation.
-     * @throws NegativeArraySizeException If excessive backtracking is detected.
+     * @param lastBacktrackLength The length of the most recent backtrack operation.
+     * @throws IllegalStateException If excessive backtracking is detected.
      */
-    private fun checkBacktrackLoop(backtrackLength: Int) {
-        var backtrackLength = backtrackLength
+    private fun checkBacktrackLoop(lastBacktrackLength: Int) {
+        var backtrackLength = lastBacktrackLength
         if (backtrackedCount > content.length * MAX_BACKTRACK_MULTIPLIER) {
             if (backtrackLength < MINIMUM_BACKTRACK_LENGTH) {
                 backtrackLength = MINIMUM_BACKTRACK_LENGTH
@@ -161,7 +161,7 @@ internal class InputTextReader(private val content: String) {
                 backtrackLength = content.length - start
             }
             val badText: String = content.substring(start, start + backtrackLength)
-            throw NegativeArraySizeException(
+            throw IllegalStateException(
                 "Backtracked max amount of characters. Endless loop detected. Bad Text: '" +
                         badText + "'"
             )

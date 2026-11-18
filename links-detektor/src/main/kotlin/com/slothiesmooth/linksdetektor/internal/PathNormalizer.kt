@@ -1,7 +1,6 @@
 package com.slothiesmooth.linksdetektor.internal
 
-import org.apache.commons.lang3.StringUtils
-import java.util.Stack
+import kotlinx.collections.immutable.persistentListOf
 
 internal class PathNormalizer {
     /**
@@ -10,13 +9,12 @@ internal class PathNormalizer {
      * gets rid of extra dots and slashes, and re-encodes it once
      */
     fun normalizePath(path: String?): String? {
-        var path = path
-        if (StringUtils.isEmpty(path)) {
+        if (path.isNullOrEmpty()) {
             return path
         }
-        path = UrlUtil.decode(path)
-        path = sanitizeDotsAndSlashes(path)
-        return UrlUtil.encode(path)
+        val decoded = UrlUtil.decode(path)
+        val sanitized = sanitizeDotsAndSlashes(decoded)
+        return UrlUtil.encode(sanitized)
     }
 
     companion object {
@@ -28,8 +26,8 @@ internal class PathNormalizer {
          * 5. Adds a slash at the end if there isn't one
          */
         private fun sanitizeDotsAndSlashes(path: String?): String {
-            val stringBuilder = StringBuilder(path)
-            val slashIndexStack = Stack<Int>()
+            val stringBuilder = StringBuilder(path.orEmpty())
+            val slashIndexStack = persistentListOf<Int>().builder()
             var index = 0
             while (index < stringBuilder.length - 1) {
                 if (stringBuilder[index] == '/') {
@@ -41,24 +39,24 @@ internal class PathNormalizer {
                                 index == stringBuilder.length - 3
                             ) {
                                 val endOfPath = index == stringBuilder.length - 3
-                                slashIndexStack.pop()
+                                slashIndexStack.removeAt(slashIndexStack.lastIndex)
                                 val endIndex = index + 3
                                 // backtrack so we can detect if this / is part of another replacement
-                                index = if (slashIndexStack.empty()) -1 else slashIndexStack.pop() - 1
+                                index = if (slashIndexStack.isEmpty()) -1 else slashIndexStack.removeAt(slashIndexStack.lastIndex) - 1
                                 val startIndex = if (endOfPath) index + 1 else index
-                                stringBuilder.delete(startIndex + 1, endIndex)
+                                stringBuilder.deleteRange(startIndex + 1, endIndex)
                             }
                         } else if (index < stringBuilder.length - 2 && stringBuilder[index + 2] == '/' ||
                             index == stringBuilder.length - 2
                         ) {
                             val endOfPath = index == stringBuilder.length - 2
-                            slashIndexStack.pop()
+                            slashIndexStack.removeAt(slashIndexStack.lastIndex)
                             val startIndex = if (endOfPath) index + 1 else index
-                            stringBuilder.delete(startIndex, index + 2) // "/./" -> "/"
+                            stringBuilder.deleteRange(startIndex, index + 2) // "/./" -> "/"
                             index-- // backtrack so we can detect if this / is part of another replacement
                         }
                     } else if (stringBuilder[index + 1] == '/') {
-                        slashIndexStack.pop()
+                        slashIndexStack.removeAt(slashIndexStack.lastIndex)
                         stringBuilder.deleteCharAt(index)
                         index--
                     }

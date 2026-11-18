@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm")
 
-    id("com.github.johnrengelman.shadow")
     id("io.gitlab.arturbosch.detekt")
 
     // Apply Dokka for Kotlin documentation
@@ -31,19 +30,7 @@ kotlin {
 dependencies {
     detektPlugins(libs.detekt)
 
-    implementation(libs.kotlin.stdlib)
-
-    // Logging dependencies
-    implementation(libs.groovy)
-    implementation(libs.jansi)
-    implementation(libs.logback)
-    implementation(libs.logback.groovy)
-    implementation(libs.logging)
-
-    api(libs.commonsMath3)
     api(libs.kotlinx.collections.immutable)
-
-    implementation(libs.commonsLang3)
 
     // Testing dependencies
     testImplementation(kotlin("test"))

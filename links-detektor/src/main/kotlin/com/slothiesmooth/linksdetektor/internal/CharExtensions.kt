@@ -2,7 +2,6 @@ package com.slothiesmooth.linksdetektor.internal
 
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import org.apache.commons.lang3.StringUtils
 
 /**
  * Provides extension functions for character and string operations used in URL detection.
@@ -104,7 +103,7 @@ internal object CharExtensions {
      *         Returns an array containing an empty string if the input is empty.
      */
     internal fun String.splitByDot(): ImmutableList<String> {
-        if (StringUtils.isEmpty(this)) {
+        if (isEmpty()) {
             return persistentListOf()
         }
         val splitList = persistentListOf<String>().builder()

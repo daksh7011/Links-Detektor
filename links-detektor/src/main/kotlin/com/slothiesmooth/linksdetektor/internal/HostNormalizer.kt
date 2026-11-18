@@ -4,12 +4,7 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isHex
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.splitByDot
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import org.apache.commons.lang3.StringUtils
 import java.net.IDN
-import java.net.Inet6Address
-import java.net.InetAddress
-import java.net.UnknownHostException
-import java.util.Locale
 import kotlin.text.iterator
 
 /**
@@ -45,7 +40,7 @@ class HostNormalizer(private val host: String?) {
     }
 
     private fun normalizeHost() {
-        if (StringUtils.isEmpty(host)) {
+        if (host.isNullOrEmpty()) {
             return
         }
         var host: String
@@ -56,24 +51,11 @@ class HostNormalizer(private val host: String?) {
             // occurs when the url is invalid. Just return
             return
         }
-        host = host.lowercase(Locale.getDefault())
+        host = host.lowercase()
         host = UrlUtil.decode(host)
         bytes = tryDecodeHostToIp(host)
-        if (bytes != null) {
-            val address: InetAddress
-            try {
-                address = InetAddress.getByAddress(bytes)
-                val ipAddress: String = address.hostAddress
-                host = if (address is Inet6Address) {
-                    "[$ipAddress]"
-                } else {
-                    ipAddress
-                }
-            } catch (e: UnknownHostException) {
-                return
-            }
-        }
-        if (StringUtils.isEmpty(host)) {
+        bytes?.let { host = formatIp(it) }
+        if (host.isEmpty()) {
             return
         }
         host = UrlUtil.removeExtraDots(host)
@@ -177,7 +159,7 @@ class HostNormalizer(private val host: String?) {
      */
     private fun tryDecodeHostToIPv6(host: String): ByteArray? {
         val ip = host.substring(1, host.length - 1)
-        val parts: ImmutableList<String> = ip.split(":".toRegex()).toImmutableList()
+        val parts: ImmutableList<String> = ip.split(':').toImmutableList()
         if (parts.size < 3) {
             return null
         }
@@ -202,7 +184,7 @@ class HostNormalizer(private val host: String?) {
             if (lenPart == 0 && i != 0 && i != parts.size - 1) {
                 numberOfFilledZeroes = totalSize - size
                 for (k in i until numberOfFilledZeroes + i) {
-                    System.arraycopy(sectionToTwoBytes(0), 0, bytes, k * 2, 2)
+                    sectionToTwoBytes(0).copyInto(bytes, k * 2)
                 }
             }
             var section: Int
@@ -214,12 +196,19 @@ class HostNormalizer(private val host: String?) {
             if (section > MAX_IPV6_PART || section < MIN_IP_PART) {
                 return null
             }
-            System.arraycopy(sectionToTwoBytes(section), 0, bytes, (numberOfFilledZeroes + i) * 2, 2)
+            val offset = (numberOfFilledZeroes + i) * 2
+            if (offset + 2 > bytes.size) {
+                // Too many sections, e.g. nine groups: the address does not fit in 16 bytes.
+                return null
+            }
+            sectionToTwoBytes(section).copyInto(bytes, offset)
         }
         if (ipv4Address != null) {
-            System.arraycopy(
-                ipv4Address, IPV4_MAPPED_IPV6_START_OFFSET, bytes, IPV4_MAPPED_IPV6_START_OFFSET,
-                NUMBER_BYTES_IN_IPV4
+            ipv4Address.copyInto(
+                bytes,
+                IPV4_MAPPED_IPV6_START_OFFSET,
+                IPV4_MAPPED_IPV6_START_OFFSET,
+                IPV4_MAPPED_IPV6_START_OFFSET + NUMBER_BYTES_IN_IPV4
             )
         }
         return bytes

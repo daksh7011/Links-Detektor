@@ -537,12 +537,6 @@ style:
     excludes:
       - '**/test/**'
       - '**/*Test/**'
-      # Temporary (Task 4): these still import java.util.*; Task 5 removes the entries.
-      - '**/internal/UrlUtil.kt'
-      - '**/internal/DomainNameReader.kt'
-      - '**/internal/PathNormalizer.kt'
-      - '**/linksdetektor/LinksDetektor.kt'
-      - '**/internal/HostNormalizer.kt'
     imports:
       - value: 'java.util.*'
         reason: 'Use kotlinx.collections.immutable; the library is multiplatform.'

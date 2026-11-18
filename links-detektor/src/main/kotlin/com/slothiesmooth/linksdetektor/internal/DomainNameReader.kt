@@ -29,7 +29,7 @@ import java.util.*
  * @property bufferStringBuilder Buffer used to accumulate the domain name characters.
  * @property currentDomain The initial string that might be part of a domain name.
  * @param inputTextReader The input stream to read characters from.
- * @param linksDetektorOptions Configuration options that affect domain name validation.
+ * @param optionMask Configuration options that affect domain name validation.
  * @param characterHandler Handler called for each non-domain character to track special characters.
  */
 internal class DomainNameReader(
@@ -45,7 +45,7 @@ internal class DomainNameReader(
      * The domain name started with a partial domain name found. This is the original string of the domain name only.
      */
     private val currentDomain: String?,
-    private val linksDetektorOptions: LinksDetektorOptions,
+    private val optionMask: OptionMask,
     private val characterHandler: CharacterHandler,
 ) {
 
@@ -72,7 +72,7 @@ internal class DomainNameReader(
     /**
      * Detection option of this reader.
      */
-    private val _options: LinksDetektorOptions
+    private val _options: OptionMask
 
     /**
      * Keeps track the number of dots that were found in the domain name.
@@ -127,7 +127,7 @@ internal class DomainNameReader(
 
     init {
         _reader = inputTextReader
-        _options = linksDetektorOptions
+        _options = optionMask
         _characterHandler = characterHandler
     }
 
@@ -200,7 +200,7 @@ internal class DomainNameReader(
                 } else if (curr.isAlpha() || curr == '-' || curr.code >= INTERNATIONAL_CHAR_START) {
                     _numeric = false
                 } else if (curr.isNumeric().not() &&
-                    _options.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).not()
+                    _options.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).not()
                 ) {
                     // if its not _numeric and not alphabetical, then restart searching for a domain from this point.
                     newStart = index + 1
@@ -419,7 +419,7 @@ internal class DomainNameReader(
         } else if (_seenBracket) {
             val testDomain = bufferStringBuilder.substring(_startDomainName).lowercase(Locale.getDefault())
             valid = isValidIpv6(testDomain)
-        } else if (_currentLabelLength > 0 && _dots >= 1 || _dots >= 2 && _currentLabelLength == 0 || _options.hasFlag(
+        } else if (_currentLabelLength > 0 && _dots >= 1 || _dots >= 2 && _currentLabelLength == 0 || _options.has(
                 LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN
             ) && _dots == 0
         ) {

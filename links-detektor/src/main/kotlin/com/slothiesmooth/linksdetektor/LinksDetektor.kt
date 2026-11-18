@@ -7,12 +7,14 @@ import com.slothiesmooth.linksdetektor.internal.CharExtensions.isNumeric
 import com.slothiesmooth.linksdetektor.internal.CharExtensions.isWhiteSpace
 import com.slothiesmooth.linksdetektor.internal.DomainNameReader
 import com.slothiesmooth.linksdetektor.internal.InputTextReader
+import com.slothiesmooth.linksdetektor.internal.OptionMask
 import com.slothiesmooth.linksdetektor.internal.UrlMarker
 import com.slothiesmooth.linksdetektor.internal.UrlPart
 import com.slothiesmooth.linksdetektor.internal.model.CharacterMatch
 import com.slothiesmooth.linksdetektor.internal.model.ReadEndState
 import com.slothiesmooth.linksdetektor.internal.model.ReaderNextState
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -36,14 +38,15 @@ import java.util.Locale
  * customized through [LinksDetektorOptions].
  *
  * @property content The text content to search for URLs.
- * @property options Configuration options that control detection behavior.
+ * @property options The set of options that control detection behavior; any combination is allowed.
+ *                    An empty set behaves like [LinksDetektorOptions.Default].
  */
-class LinksDetektor(private val content: String, options: LinksDetektorOptions) {
+class LinksDetektor(private val content: String, options: ImmutableSet<LinksDetektorOptions>) {
 
     /**
-     * Stores options for detection.
+     * The combined bit mask of the options for detection.
      */
-    private val linksDetektorOptions: LinksDetektorOptions = options
+    private val optionMask: OptionMask = OptionMask.of(options)
 
     /**
      * The input stream to read.
@@ -103,6 +106,14 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
         get() = inputTextReader.backtrackedCount
 
     /**
+     * Creates a detector with a single option (or one of the predefined combined options).
+     *
+     * @param content The text content to search for URLs.
+     * @param options The option to detect with.
+     */
+    constructor(content: String, options: LinksDetektorOptions) : this(content, persistentSetOf(options))
+
+    /**
      * Detects URLs in the content string and returns them as a list of Url objects.
      *
      * This method parses the content string using the specified options to identify
@@ -130,7 +141,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
                 ' ' -> {
                     // space was found, check if it's a valid single level domain.
                     if (
-                        linksDetektorOptions.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
+                        optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
                         bufferStringBuilder.isNotEmpty() &&
                         hasScheme
                     ) {
@@ -193,7 +204,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
                 '/' -> // "/" was found, then we either read a scheme, or if we already read a scheme, then
                     // we are reading an url in the format http://123123123/asdf
                     if (hasScheme ||
-                        linksDetektorOptions.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
+                        optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
                         bufferStringBuilder.length > 1
                     ) {
                         // We already have the scheme, so then we already read:
@@ -221,20 +232,39 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
                 else -> // Check if we need to match characters. If we match characters and this is a start or stop of range,
                     // either way reset the world and start processing again.
                     if (checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
-                        readEnd(ReadEndState.InvalidUrl)
+                        if (endsSingleLevelDomain()) {
+                            // A closing quote or bracket right after "http://localhost": the pending host is a
+                            // single-level domain. Unread the character (and its count) so the domain reader
+                            // finishes the URL, as it does for a space.
+                            characterMatchCounts[curr] = getCharacterCount(curr) - 1
+                            inputTextReader.goBack()
+                            readDomainName(bufferStringBuilder.substring(length))
+                        } else {
+                            readEnd(ReadEndState.InvalidUrl)
+                        }
                         length = 0
                     } else {
                         bufferStringBuilder.append(curr)
                     }
             }
         }
-        if (linksDetektorOptions.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
+        if (optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
             bufferStringBuilder.isNotEmpty() &&
             hasScheme
         ) {
             readDomainName(bufferStringBuilder.substring(length))
         }
     }
+
+    /**
+     * Whether a matching character (quote, bracket) just ended a pending single-level domain, such as the
+     * closing bracket in `(http://localhost)`. Only possible when [LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN]
+     * is combined with a quote, bracket or XML option.
+     */
+    private fun endsSingleLevelDomain(): Boolean =
+        optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
+            bufferStringBuilder.isNotEmpty() &&
+            hasScheme
 
     /**
      * We found a ":" and is now trying to read either scheme, username/password
@@ -265,7 +295,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
             hasScheme = true
             length = bufferStringBuilder.length // set length to be right after the scheme
         } else if (bufferStringBuilder.isNotEmpty() &&
-            linksDetektorOptions.hasFlag(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
+            optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
             inputTextReader.canReadChars(1)
         ) { // takes care of case like hi:
             inputTextReader.goBack() // unread the ":" so readDomainName can take care of the port
@@ -296,7 +326,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
      */
     private fun checkMatchingCharacter(curr: Char): CharacterMatch {
         // This is a quote and we are matching quotes.
-        if (curr == '\"' && linksDetektorOptions.hasFlag(LinksDetektorOptions.QUOTE_MATCH) || curr == '\'' && linksDetektorOptions.hasFlag(
+        if (curr == '\"' && optionMask.has(LinksDetektorOptions.QUOTE_MATCH) || curr == '\'' && optionMask.has(
                 LinksDetektorOptions.SINGLE_QUOTE_MATCH
             )
         ) {
@@ -319,18 +349,18 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
 
             // if there was already a quote found, or the number of quotes is even, return that we have to stop, else its a start.
             return if (quoteStart || currVal % 2 == 0) CharacterMatch.CharacterMatchStop else CharacterMatch.CharacterMatchStart
-        } else if (linksDetektorOptions.hasFlag(LinksDetektorOptions.BRACKET_MATCH) && (curr == '[' || curr == '{' || curr == '(')) {
+        } else if (optionMask.has(LinksDetektorOptions.BRACKET_MATCH) && (curr == '[' || curr == '{' || curr == '(')) {
             // Look for start of bracket
             characterMatchCounts[curr] = getCharacterCount(curr) + 1
             return CharacterMatch.CharacterMatchStart
-        } else if (linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && curr == '<') {
+        } else if (optionMask.has(LinksDetektorOptions.XML) && curr == '<') {
             // If its html, look for "<"
             characterMatchCounts[curr] = getCharacterCount(curr) + 1
             return CharacterMatch.CharacterMatchStart
         } else if (
-            linksDetektorOptions.hasFlag(LinksDetektorOptions.BRACKET_MATCH) &&
+            optionMask.has(LinksDetektorOptions.BRACKET_MATCH) &&
             (curr == ']' || curr == '}' || curr == ')') ||
-            linksDetektorOptions.hasFlag(LinksDetektorOptions.XML) && curr == '>'
+            optionMask.has(LinksDetektorOptions.XML) && curr == '>'
         ) {
             // If we catch an end bracket increment its count and get rid of not ipv6 flag
             val currVal = getCharacterCount(curr) + 1
@@ -385,7 +415,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
     private fun readScheme(): Boolean {
         // Check if we are checking HTML and the length is longer than mailto:
         // Check if the string is actually mailto: then just return nothing.
-        if (linksDetektorOptions.hasFlag(LinksDetektorOptions.HTML) && bufferStringBuilder.length >= HTML_MAILTO.length && HTML_MAILTO.equals(
+        if (optionMask.has(LinksDetektorOptions.HTML) && bufferStringBuilder.length >= HTML_MAILTO.length && HTML_MAILTO.equals(
                 bufferStringBuilder.substring(bufferStringBuilder.length - HTML_MAILTO.length),
                 ignoreCase = true
             )
@@ -489,7 +519,7 @@ class LinksDetektor(private val content: String, options: LinksDetektorOptions) 
             inputTextReader,
             bufferStringBuilder,
             current,
-            linksDetektorOptions,
+            optionMask,
             object : DomainNameReader.CharacterHandler {
                 override fun addCharacter(character: Char) {
                     checkMatchingCharacter(character)

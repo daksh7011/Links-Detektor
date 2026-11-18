@@ -193,7 +193,9 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
      * Gets the port of the URL.
      *
      * @return The port written in the URL; otherwise the default port of the scheme (80 for http, 443 for https,
-     * 21 for ftp); `-1` if there is neither, or the written port is not a valid number.
+     * 21 for ftp); `-1` if there is neither, or the written port is not a valid number or is above 65535 (such a
+     * port is treated as no port, and [fullUrl] omits it). A written port of `0` is returned as `0` and is not
+     * rendered into [fullUrl].
      */
     public val port: Int
         get() {
@@ -201,7 +203,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
                 val portString = getPart(UrlPart.PORT)
                 _port = if (portString != null && !portString.isEmpty()) {
                     try {
-                        portString.toInt()
+                        portString.toInt().takeIf { it <= MAX_PORT } ?: -1
                     } catch (e: NumberFormatException) {
                         -1
                     }
@@ -363,6 +365,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
      * Companion object providing factory methods
      */
     public companion object {
+        private const val MAX_PORT = 65535
         private const val DEFAULT_SCHEME = "http"
         private const val ENCODED_COLON = "%3a"
         private val SCHEME_PORT_MAP: ImmutableMap<String, Int> =

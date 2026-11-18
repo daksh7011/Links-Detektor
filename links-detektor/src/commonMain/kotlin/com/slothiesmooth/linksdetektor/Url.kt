@@ -63,6 +63,9 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
      * This property returns a formatted URL string that includes all parts of the URL,
      * including the fragment (if present).
      *
+     * If the host is absent (or, for a [NormalizedUrl], could not be normalised) the host as written in the
+     * original URL is used, and an empty string if there is none; the text `null` never appears.
+     *
      * @return A string in the format: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]#[fragment]
      */
     public val fullUrl: String
@@ -92,7 +95,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
                 }
                 url.append("@")
             }
-            url.append(host)
+            url.append(renderedHost.orEmpty())
             if (port > 0 && port != SCHEME_PORT_MAP[scheme]) {
                 url.append(":")
                 url.append(port)
@@ -176,6 +179,13 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
             }
             return rawHost
         }
+
+    /**
+     * The host as written into [fullUrl]. This is [host], except that a [NormalizedUrl] whose host could not
+     * be normalised renders the host as it appears in the original URL.
+     */
+    internal open val renderedHost: String?
+        get() = host
 
     /**
      * port = 0 means it hasn't been set yet. port = -1 means there is no port

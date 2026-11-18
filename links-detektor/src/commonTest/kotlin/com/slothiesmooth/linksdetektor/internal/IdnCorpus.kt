@@ -58,6 +58,9 @@ internal object IdnCorpus {
         ".a",
         "a".repeat(64) + ".com",
         "\u00FC".repeat(60) + ".com",
+        "\uD800.com",
+        "a\uDC00b.com",
+        "\u00E9\uD83D",
     )
 
     /** Inputs where `PureIdn` deliberately accepts what `java.net.IDN` rejects, with the `PureIdn` output. */

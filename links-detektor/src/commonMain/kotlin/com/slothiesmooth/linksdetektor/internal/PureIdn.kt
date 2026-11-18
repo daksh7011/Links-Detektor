@@ -29,8 +29,8 @@ internal object PureIdn {
      *
      * @param host The host name; labels may be separated by `.`, `U+3002`, `U+FF0E` or `U+FF61`.
      * @return The ASCII host name, with `.` between labels.
-     * @throws IllegalArgumentException If a label is empty (other than the last), too long, or starts with `xn--`
-     *         after mapping.
+     * @throws IllegalArgumentException If a label is empty (other than the last), too long, starts with `xn--`
+     *         after mapping, or contains a lone surrogate.
      */
     fun toAscii(host: String): String {
         val labels = host.split('.', '\u3002', '\uFF0E', '\uFF61').toImmutableList()
@@ -44,7 +44,23 @@ internal object PureIdn {
         return result.build().joinToString(".")
     }
 
+    /** Whether [label] has a high surrogate without a following low one, or a low surrogate without a preceding high one. */
+    private fun hasLoneSurrogate(label: String): Boolean {
+        var index = 0
+        while (index < label.length) {
+            val char = label[index]
+            if (char.isHighSurrogate()) {
+                if (index + 1 < label.length && label[index + 1].isLowSurrogate()) index++ else return true
+            } else if (char.isLowSurrogate()) {
+                return true
+            }
+            index++
+        }
+        return false
+    }
+
     private fun labelToAscii(label: String): String {
+        require(!hasLoneSurrogate(label)) { "The label contains an unpaired surrogate" }
         if (label.all { it.code < ASCII_LIMIT }) {
             require(label.length <= MAX_LABEL_LENGTH) { "The label in the input is too long" }
             return label

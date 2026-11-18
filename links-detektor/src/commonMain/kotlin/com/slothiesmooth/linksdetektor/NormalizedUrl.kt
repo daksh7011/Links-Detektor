@@ -17,6 +17,7 @@ import com.slothiesmooth.linksdetektor.internal.UrlMarker
 public class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlMarker) {
     private var _isPopulated = false
     private var _hostBytes: ByteArray? = null
+    private var _unnormalizedHost: String? = null
 
     /**
      * Gets the normalized host part of the URL.
@@ -35,6 +36,13 @@ public class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlM
             }
             return rawHost
         }
+
+    /**
+     * The host as it appears in [fullUrl]: the normalised host, or the host as written in the original URL
+     * when normalisation failed (so [fullUrl] never contains `null` as a host).
+     */
+    override val renderedHost: String?
+        get() = host ?: _unnormalizedHost
 
     /**
      * Gets the normalized path part of the URL.
@@ -59,14 +67,15 @@ public class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlM
      *
      * This is useful for efficient IP address comparison and manipulation.
      *
-     * @return The byte array representing the IP address, or null if the host is not an IP address.
+     * @return A copy of the byte array representing the IP address (changing it does not affect later calls),
+     * or null if the host is not an IP address.
      */
     override val hostBytes: ByteArray?
         get() {
             if (_hostBytes == null) {
                 populateHostAndHostBytes()
             }
-            return _hostBytes
+            return _hostBytes?.copyOf()
         }
 
     /**
@@ -75,7 +84,9 @@ public class NormalizedUrl internal constructor(urlMarker: UrlMarker) : Url(urlM
      */
     private fun populateHostAndHostBytes() {
         if (!_isPopulated) {
-            val hostNormalizer = HostNormalizer(super.host)
+            val original = super.host
+            _unnormalizedHost = original
+            val hostNormalizer = HostNormalizer(original)
             rawHost = hostNormalizer.normalizedHost
             _hostBytes = hostNormalizer.bytes
             _isPopulated = true

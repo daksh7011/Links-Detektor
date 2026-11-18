@@ -96,7 +96,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
                 url.append("@")
             }
             url.append(renderedHost.orEmpty())
-            if (port > 0 && port != SCHEME_PORT_MAP[scheme]) {
+            if (port > 0 && port != defaultPort()) {
                 url.append(":")
                 url.append(port)
             }
@@ -203,7 +203,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
                         -1
                     }
                 } else {
-                    SCHEME_PORT_MAP[scheme] ?: -1
+                    defaultPort() ?: -1
                 }
             }
             return _port
@@ -271,6 +271,9 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
      * It extracts the username and password from the USERNAME_PASSWORD part of the URL
      * if it exists.
      */
+    /** The default port of [scheme], whatever its case, or null if the scheme has none. */
+    private fun defaultPort(): Int? = SCHEME_PORT_MAP[scheme.lowercase()]
+
     private fun populateUsernamePassword() {
         val usernamePassword = getPart(UrlPart.USERNAME_PASSWORD) ?: return
         val usernamePasswordParts =

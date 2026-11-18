@@ -554,7 +554,10 @@ internal class DomainNameReader(
         // Return false if we don't see [....]
         // or if we only have '[]'
         // or if we detect [:8000: ...]; only [::8000: ...] is okay
-        if ((domainArray.size < 3 || domainArray[domainArray.size - 1] != ']' || domainArray[0] != '[' || domainArray[1] == ':') && domainArray[2] != ':') {
+        if (domainArray.size < 3) {
+            return false
+        }
+        if ((domainArray[domainArray.size - 1] != ']' || domainArray[0] != '[' || domainArray[1] == ':') && domainArray[2] != ':') {
             return false
         }
         var numSections = 1
@@ -577,7 +580,7 @@ internal class DomainNameReader(
                 '%', ']' -> {
                     if (domainArray[index] == '%') {
                         // see if there's a urlencoded dot
-                        if (domainArray.size - index >= 2 && domainArray[index + 1] == '2' && domainArray[index + 2] == 'e') {
+                        if (domainArray.size - index > 2 && domainArray[index + 1] == '2' && domainArray[index + 2] == 'e') {
                             lastSection.append("%2e")
                             index += 2
                             hexSection = false

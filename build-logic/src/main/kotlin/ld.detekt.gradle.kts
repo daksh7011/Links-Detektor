@@ -42,22 +42,38 @@ val detektCheck by tasks.registering(Detekt::class) {
 }
 
 // The house rule (immutable collections only) is enforced here: detekt's ForbiddenMethodCall needs type resolution,
-// which `detektCheck` does not have, so this regex guard is the enforcing gate.
+// which `detektCheck` does not have, so this regex guard is the enforcing gate. It covers main and test sources.
+// It cannot see inferred plain results (for example of `.map {}` or `.filter {}`); reviewers enforce those.
 val bannedCollections by tasks.registering {
-    description = "Fails when production sources use mutable or java.util collections."
+    description = "Fails when sources use mutable, plain or java.util collections."
     group = "verification"
     val sources = fileTree(rootDir) {
-        include("**/src/*Main/**/*.kt", "**/src/main/**/*.kt")
+        include(
+            "**/src/*Main/**/*.kt",
+            "**/src/main/**/*.kt",
+            "**/src/*Test/**/*.kt",
+            "**/src/test/**/*.kt",
+        )
         exclude("**/build/**", "build-logic/**")
     }
     inputs.files(sources)
     doLast {
         val banned = Regex(
-            """\b(mutableListOf|arrayListOf|mutableSetOf|hashSetOf|linkedSetOf|mutableMapOf|hashMapOf|linkedMapOf|ArrayList|HashSet|HashMap|LinkedHashSet|LinkedHashMap)\s*[<(]|^import java\.util\.""",
+            listOf(
+                """\b(mutableListOf|arrayListOf|mutableSetOf|hashSetOf|linkedSetOf|mutableMapOf|hashMapOf|linkedMapOf|ArrayList|HashSet|HashMap|LinkedHashSet|LinkedHashMap)\s*[<(]""",
+                """^import java\.util\.(?!Locale\b)""",
+                """\b(List|Set|Map|Collection|MutableList|MutableSet|MutableMap|MutableCollection)\s*<""",
+                """\b(listOf|setOf|mapOf|emptyList|emptySet|emptyMap|listOfNotNull|buildList|buildSet|buildMap|toMutableList|toMutableSet|toMutableMap)\s*[(<{]""",
+                """\.(toList|toSet|toMap)\s*\(""",
+            ).joinToString("|"),
             RegexOption.MULTILINE
         )
-        val hits = sources.files.filter { banned.containsMatchIn(it.readText()) }
-        check(hits.isEmpty()) { "Mutable collections are banned (house rule): $hits" }
+        val hits = sources.files.flatMap { file ->
+            file.readLines().withIndex()
+                .filter { (_, line) -> banned.containsMatchIn(line) }
+                .map { (index, line) -> "${file.relativeTo(rootDir)}:${index + 1}: ${line.trim()}" }
+        }
+        check(hits.isEmpty()) { "Mutable or plain collections are banned (house rule):\n" + hits.joinToString("\n") }
     }
 }
 

@@ -49,8 +49,6 @@ labels:
   - name: library
     color: 1D76DB
     oldname: commands
-  - name: sample
-    color: 1D76DB
   - name: ci
     color: 1D76DB
   - name: dependency

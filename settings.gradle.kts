@@ -1,4 +1,5 @@
-rootProject.name = "links-detektor"
+// Not "links-detektor": the root project name would clash with the :links-detektor type-safe accessor.
+rootProject.name = "links-detektor-root"
 
 pluginManagement {
     includeBuild("build-logic")
@@ -19,5 +20,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":links-detektor")

@@ -42,8 +42,10 @@
 #    steps:
 #    - name: Checkout repository
 #      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+#
 #    - name: Set up Java
 #      uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+#      with:
 #        java-version: 17
 #        distribution: temurin
 #
@@ -53,6 +55,7 @@
 #    # Initializes the CodeQL tools for scanning.
 #    - name: Initialize CodeQL
 #      uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+#      with:
 #        languages: ${{ matrix.language }}
 #        build-mode: ${{ matrix.build-mode }}
 #        # If you wish to specify custom queries, you can do so here or in a config file.
@@ -69,4 +72,5 @@
 #
 #    - name: Perform CodeQL Analysis
 #      uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+#      with:
 #        category: "/language:${{matrix.language}}"

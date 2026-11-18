@@ -186,6 +186,15 @@ public class LinksDetektor public constructor(
                     readDomainName(bufferStringBuilder.substring(length))
                     length = 0
                 }
+                '#', '?' -> if (endsUserinfoCandidate()) {
+                    // A '#' or '?' ends the host of a pending single-level domain, like '/' does, so a later '@'
+                    // belongs to the fragment or query and not to userinfo.
+                    inputTextReader.goBack()
+                    readDomainName(bufferStringBuilder.substring(length))
+                    length = 0
+                } else {
+                    bufferStringBuilder.append(curr)
+                }
                 '@' -> if (bufferStringBuilder.isNotEmpty()) {
                     currentUrlMarker.setIndex(UrlPart.USERNAME_PASSWORD, length)
                     bufferStringBuilder.append(curr)
@@ -267,6 +276,12 @@ public class LinksDetektor public constructor(
             readDomainName(bufferStringBuilder.substring(length))
         }
     }
+
+    /** Whether a `#` or `?` ends a pending single-level host, such as `evil` in `http://evil#@good.com`. */
+    private fun endsUserinfoCandidate(): Boolean =
+        optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
+            bufferStringBuilder.isNotEmpty() &&
+            hasScheme
 
     /**
      * Whether a quote or bracket just ended a pending single-level domain, such as the

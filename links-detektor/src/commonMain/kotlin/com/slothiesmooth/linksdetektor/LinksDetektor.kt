@@ -294,6 +294,10 @@ public class LinksDetektor public constructor(
                 }
                 length = 0
             }
+            if (length > bufferStringBuilder.length) {
+                // The user/password read ended the url and cleared the buffer: restart from its beginning.
+                length = 0
+            }
         } else if (readScheme() && bufferStringBuilder.isNotEmpty()) {
             hasScheme = true
             length = bufferStringBuilder.length // set length to be right after the scheme
@@ -536,7 +540,14 @@ public class LinksDetektor public constructor(
         )
 
         // Try to read the dns and act on the response.
-        return when (reader.readDomainName()) {
+        val state = reader.readDomainName()
+        if (reader.rewroteBuffer) {
+            // The buffer now starts with the domain: the scheme and credentials are gone from it.
+            currentUrlMarker.unsetIndex(UrlPart.SCHEME)
+            currentUrlMarker.unsetIndex(UrlPart.USERNAME_PASSWORD)
+            currentUrlMarker.setIndex(UrlPart.HOST, 0)
+        }
+        return when (state) {
             ReaderNextState.ValidDomainName -> readEnd(ReadEndState.ValidUrl)
             ReaderNextState.ReadFragment -> readFragment()
             ReaderNextState.ReadPath -> readPath()

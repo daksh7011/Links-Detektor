@@ -95,6 +95,13 @@ internal class DomainNameReader(
     private var _startDomainName = 0
 
     /**
+     * Whether the reader replaced the whole buffer with the tail of the domain, dropping everything that
+     * preceded it (scheme, username and password). Marker indices computed before the read are then stale.
+     */
+    var rewroteBuffer: Boolean = false
+        private set
+
+    /**
      * Keeps track if the entire domain name is numeric.
      */
     private var _numeric = false
@@ -219,6 +226,7 @@ internal class DomainNameReader(
                 // make sure the location is not at the end. Otherwise the thing is just invalid.
                 if (newStart < currentDomain.length) {
                     bufferStringBuilder.setRange(0, bufferStringBuilder.length, currentDomain.substring(newStart))
+                    rewroteBuffer = true
 
                     // cut out the previous part, so now the domain name has to be from here.
                     _startDomainName = 0

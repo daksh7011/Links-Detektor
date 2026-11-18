@@ -96,7 +96,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
                 url.append("@")
             }
             url.append(renderedHost.orEmpty())
-            if (port > 0 && port != SCHEME_PORT_MAP[scheme]) {
+            if (port > 0 && port != defaultPort()) {
                 url.append(":")
                 url.append(port)
             }
@@ -118,7 +118,9 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
             if (_scheme == null) {
                 if (exists(UrlPart.SCHEME)) {
                     val schemePart = getPart(UrlPart.SCHEME).orEmpty()
-                    val index = schemePart.indexOf(":")
+                    val colon = schemePart.indexOf(":")
+                    // The detector also accepts a percent-encoded colon, as in "http%3a//".
+                    val index = if (colon != -1) colon else schemePart.indexOf(ENCODED_COLON, ignoreCase = true)
                     _scheme = if (index != -1) schemePart.substring(0, index) else schemePart
                 } else if (originalUrl?.startsWith("//") != true) {
                     _scheme = DEFAULT_SCHEME
@@ -204,7 +206,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
                         -1
                     }
                 } else {
-                    SCHEME_PORT_MAP[scheme] ?: -1
+                    defaultPort() ?: -1
                 }
             }
             return _port
@@ -272,6 +274,9 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
      * It extracts the username and password from the USERNAME_PASSWORD part of the URL
      * if it exists.
      */
+    /** The default port of [scheme], whatever its case, or null if the scheme has none. */
+    private fun defaultPort(): Int? = SCHEME_PORT_MAP[scheme.lowercase()]
+
     private fun populateUsernamePassword() {
         val usernamePassword = getPart(UrlPart.USERNAME_PASSWORD) ?: return
         val usernamePasswordParts =
@@ -359,6 +364,7 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
      */
     public companion object {
         private const val DEFAULT_SCHEME = "http"
+        private const val ENCODED_COLON = "%3a"
         private val SCHEME_PORT_MAP: ImmutableMap<String, Int> =
             persistentMapOf("http" to 80, "https" to 443, "ftp" to 21)
 

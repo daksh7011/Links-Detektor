@@ -189,7 +189,7 @@ internal class DomainNameReader(
                     currArray[index + 2].isHex()
                 ) {
                     // handle url encoded dot
-                    if (currArray[index + 1] == '2' && currArray[index + 2] == 'e') {
+                    if (currArray[index + 1] == '2' && currArray[index + 2].equals('e', ignoreCase = true)) {
                         _dots++
                         _currentLabelLength = 0
                     } else {
@@ -565,7 +565,7 @@ internal class DomainNameReader(
         if (domainArray.size < 3) {
             return false
         }
-        if ((domainArray[domainArray.size - 1] != ']' || domainArray[0] != '[' || domainArray[1] == ':') && domainArray[2] != ':') {
+        if (domainArray[domainArray.size - 1] != ']' || domainArray[0] != '[' || domainArray[1] == ':' && domainArray[2] != ':') {
             return false
         }
         var numSections = 1

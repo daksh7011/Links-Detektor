@@ -24,10 +24,15 @@ class NormalizedUrlTest {
     @Test
     fun `fullUrl falls back to the raw host when the host cannot be normalised`() {
         // The detector accepts this host, but IDN conversion rejects the lone surrogate in it.
-        val url = LinksDetektor("http://\uD800a.com", LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).detect().first().normalize()
+        val url = LinksDetektor("http://${LONE_SURROGATE}a.com", LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).detect().first().normalize()
 
         assertNull(url.host)
-        assertEquals("http://\uD800a.com/", url.fullUrl)
-        assertEquals("http://\uD800a.com/", url.toString())
+        assertEquals("http://${LONE_SURROGATE}a.com/", url.fullUrl)
+        assertEquals("http://${LONE_SURROGATE}a.com/", url.toString())
+    }
+
+    private companion object {
+        // Built from a char: a string literal holding a lone surrogate is rewritten to U+FFFD in klibs.
+        const val LONE_SURROGATE: Char = '\uD800'
     }
 }

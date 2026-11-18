@@ -164,12 +164,29 @@ class LinksDetektorOptionSetTest {
         }
     }
 
+    // The fuzz is split into several tests of 2_000 strings each so that every one stays well under the
+    // 2 s per-test timeout of the JS test runner; together they cover 10_000 strings x every option.
     @Test
-    fun `seeded fuzz never throws and every accessor of every result works`() {
+    fun `seeded fuzz 1`() = fuzz(20261118)
+
+    @Test
+    fun `seeded fuzz 2`() = fuzz(20261119)
+
+    @Test
+    fun `seeded fuzz 3`() = fuzz(20261120)
+
+    @Test
+    fun `seeded fuzz 4`() = fuzz(20261121)
+
+    @Test
+    fun `seeded fuzz 5`() = fuzz(20261122)
+
+    /** Never throws, and every accessor of every result works, for [FUZZ_ROUNDS] random strings x every option. */
+    private fun fuzz(seed: Int) {
         val alphabet = "aAzZ09:/@.[]()%?#'\"<>{}\u3002\uFF0E\u30A4\u00E9\u00DF -_=&~+;,"
-        val random = Random(20261118)
+        val random = Random(seed)
         val entries = LinksDetektorOptions.entries.toImmutableList()
-        repeat(10_000) { round ->
+        repeat(FUZZ_ROUNDS) { round ->
             val length = random.nextInt(0, 41)
             val text = buildString { repeat(length) { append(alphabet[random.nextInt(alphabet.length)]) } }
             // Bias a third of the inputs towards URL-ish prefixes so the deeper states are reached.
@@ -211,6 +228,8 @@ class LinksDetektorOptionSetTest {
     }
 
     private companion object {
+        const val FUZZ_ROUNDS = 2_000
+
         val PREFIXES: ImmutableList<String> = persistentListOf(
             "http://", "https://", "//", "HTTP://:@", "http://a:b@", "ftp://[", "http%3a//", "x:",
         )

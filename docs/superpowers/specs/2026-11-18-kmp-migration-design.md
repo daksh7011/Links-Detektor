@@ -50,7 +50,7 @@ build-logic/src/main/kotlin/
 | Tier | Targets | Reason |
 |---|---|---|
 | Ship now | jvm, android, iosArm64, iosSimulatorArm64, macosArm64, wasmJs, js(IR) | No deps; each has a platform NFKC primitive |
-| Ship now | linuxX64, linuxArm64, mingwX64 | NFKC via `com.doist.x:normalize` 1.2.0 (publishes linux/mingw variants), scoped to a `nativeNonApple` source set so other targets stay stdlib-only. Full IDN parity with Apple/JS targets. (Owner override: Linux is not de-scoped.) |
+| Ship now | linuxX64, linuxArm64, mingwX64 | NFKC via an internal pure-Kotlin `TableNfkc` built from generated Unicode 15.0.0 tables (generator + pinned UCD in `tools/nfkc-gen/`), verified against `java.text.Normalizer` on every code point. No native dependency. (Owner override: Linux is not de-scoped. 2026-11-19: doist normalize dropped — it forced `-lunistring` on every Linux consumer and leaked per call.) |
 | Skip | iosX64, macosX64, tvOS/watchOS | CMP dropped iosX64; no demand |
 - wasm/js library tests on Node (`browser(); nodejs()`); Karma only in app modules.
 - Library Android minSdk ≈ 23 (not hr's 31). JVM bytecode level: decision 3.
@@ -123,7 +123,7 @@ Parallel: 6 needs only 3 (can run alongside 4–5); 5 can overlap 4; 7 needs 4 +
 
 ## Owner decisions (resolved 2026-11-18)
 1. **Versioning:** pre-releases `3.0.0-alpha1`, `-alpha2`, … → `3.0.0-beta1`, … → `3.0.0-rc1`, … → `3.0.0`. `HostNormalizer` goes internal. Release Drafter / `master.yml` must support pre-release tags (mark GitHub release as pre-release; Maven Central accepts the suffix).
-2. **Library targets:** tier 1 + linux/mingw (doist normalize for NFKC on those only; fallback generated tables).
+2. **Library targets:** tier 1 + linux/mingw, NFKC from generated Unicode tables (`TableNfkc`); the library's only dependency is kotlinx-collections-immutable.
 3. **JVM floors:** library bytecode **17** (`jvmTarget` 17, toolchain may be newer). Apps may use 21+. Library Android minSdk 23.
 4. **App hosts — end state is everywhere:** Android (phones + tablets), iOS (iPhone + iPad), desktop as **native installers** (macOS `.dmg`, Windows `.exe`/`.msi`, Linux `.deb` + ideally `.rpm`/AppImage), and web. Order: web + desktop first, then Android, then iOS. Desktop installers via `compose.desktop.nativeDistributions` + jpackage — they bundle a trimmed JRE, so users never see a jar or need Java installed. jpackage can't cross-build, so CI needs a macOS/Windows/Ubuntu runner matrix. macOS signing/notarization and Windows code signing are a later decision (unsigned builds trigger Gatekeeper/SmartScreen warnings).
 5. **`Url.range`:** add it (additive, ships in 3.0.0).

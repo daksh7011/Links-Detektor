@@ -38,7 +38,8 @@ kotlin {
     linuxArm64()
     mingwX64()
     js {
-        nodejs()
+        // Mocha's default limit is 2 s per test, which grows tight on a slow runner (the fuzz and scaling tests).
+        nodejs { testTask { useMocha { timeout = "30s" } } }
         browser { testTask { enabled = false } }
     }
     wasmJs {

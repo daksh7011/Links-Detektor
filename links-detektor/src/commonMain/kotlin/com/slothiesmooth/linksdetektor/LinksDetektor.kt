@@ -642,8 +642,8 @@ public class LinksDetektor public constructor(
                 if (portLen == 1) {
                     // remove the ":" from the end.
                     bufferStringBuilder.deleteRange(bufferStringBuilder.length - 1, bufferStringBuilder.length)
+                    currentUrlMarker.unsetIndex(UrlPart.PORT)
                 }
-                currentUrlMarker.unsetIndex(UrlPart.PORT)
                 return readEnd(ReadEndState.ValidUrl)
             } else {
                 // this is a valid character in the port string.

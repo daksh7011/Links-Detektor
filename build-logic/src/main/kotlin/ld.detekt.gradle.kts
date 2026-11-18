@@ -47,14 +47,16 @@ val detektCheck by tasks.registering(Detekt::class) {
 val bannedCollections by tasks.registering {
     description = "Fails when sources use mutable, plain or java.util collections."
     group = "verification"
-    val sources = fileTree(rootDir) {
+    // Captured here so the task action does not reach back into the script (configuration cache).
+    val root = rootDir
+    val sources = fileTree(root) {
         include(
             "**/src/*Main/**/*.kt",
             "**/src/main/**/*.kt",
             "**/src/*Test/**/*.kt",
             "**/src/test/**/*.kt",
         )
-        exclude("**/build/**", "build-logic/**")
+        exclude("**/build/**", "build-logic/**", ".claude/**", ".superpowers/**")
     }
     inputs.files(sources)
     doLast {
@@ -71,7 +73,7 @@ val bannedCollections by tasks.registering {
         val hits = sources.files.flatMap { file ->
             file.readLines().withIndex()
                 .filter { (_, line) -> banned.containsMatchIn(line) }
-                .map { (index, line) -> "${file.relativeTo(rootDir)}:${index + 1}: ${line.trim()}" }
+                .map { (index, line) -> "${file.relativeTo(root)}:${index + 1}: ${line.trim()}" }
         }
         check(hits.isEmpty()) { "Mutable or plain collections are banned (house rule):\n" + hits.joinToString("\n") }
     }

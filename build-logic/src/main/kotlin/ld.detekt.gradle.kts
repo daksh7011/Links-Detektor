@@ -64,15 +64,25 @@ val bannedCollections by tasks.registering {
             listOf(
                 """\b(mutableListOf|arrayListOf|mutableSetOf|hashSetOf|linkedSetOf|mutableMapOf|hashMapOf|linkedMapOf|ArrayList|HashSet|HashMap|LinkedHashSet|LinkedHashMap)\s*[<(]""",
                 """^import java\.util\.(?!Locale\b)""",
-                """\b(List|Set|Map|Collection|MutableList|MutableSet|MutableMap|MutableCollection)\s*<""",
+                """\b(List|Collection|MutableList|MutableSet|MutableMap|MutableCollection)\s*<""",
                 """\b(listOf|setOf|mapOf|emptyList|emptySet|emptyMap|listOfNotNull|buildList|buildSet|buildMap|toMutableList|toMutableSet|toMutableMap)\s*[(<{]""",
                 """\.(toList|toSet|toMap)\s*\(""",
             ).joinToString("|"),
             RegexOption.MULTILINE
         )
+        // Metro's multibinding and view-model factory APIs are typed with plain Set and Map. These two files are the only
+        // place they appear, each converts at once, and only the plain Set/Map pattern is waived there.
+        val plainSetOrMap = Regex("""\b(Set|Map)\s*<""")
+        val metroTypedFiles = setOf(
+            "client/src/commonMain/kotlin/dev/slothiesmooth/linksdetektor/client/BaseAppGraph.kt",
+            "client/src/commonMain/kotlin/dev/slothiesmooth/linksdetektor/client/LdViewModelFactory.kt",
+        )
         val hits = sources.files.flatMap { file ->
+            val metroTyped = file.relativeTo(root).invariantSeparatorsPath in metroTypedFiles
             file.readLines().withIndex()
-                .filter { (_, line) -> banned.containsMatchIn(line) }
+                .filter { (_, line) ->
+                    banned.containsMatchIn(line) || (!metroTyped && plainSetOrMap.containsMatchIn(line))
+                }
                 .map { (index, line) -> "${file.relativeTo(root)}:${index + 1}: ${line.trim()}" }
         }
         check(hits.isEmpty()) { "Mutable or plain collections are banned (house rule):\n" + hits.joinToString("\n") }

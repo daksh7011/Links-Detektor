@@ -23,7 +23,7 @@ class HighlightTest {
         val text = "see a.com and b.com"
         val out = buildHighlight(text, persistentListOf(link(0, 4, 9), link(1, 14, 19)), selectedId = 1, style)
         assertEquals(text, out.text)
-        val tags = out.getStringAnnotations(LINK_TAG, 0, text.length)
+        val tags = out.getStringAnnotations(LINK_TAG, 0, text.length).toImmutableList()
         assertEquals(
             persistentListOf("0" to (4 to 9), "1" to (14 to 19)),
             tags.map { it.item to (it.start to it.end) }.toImmutableList(),

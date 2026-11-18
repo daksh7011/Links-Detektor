@@ -127,6 +127,40 @@ class DetektorViewModelTest {
     }
 
     @Test
+    fun `late result while debouncing does not keep a stale selection`() = runTest {
+        val gate = GatedDispatcher()
+        val vm = vm(dispatcher = gate)
+        vm.onInputChange("a.com b.com")
+        advanceTimeBy(INPUT_DEBOUNCE_MS)
+        runCurrent()
+        vm.onInputChange("x.com y.com z.com") // newer input is now waiting out its debounce
+        gate.release() // the older detection lands meanwhile
+        runCurrent()
+        vm.onSelectLink(1)
+        assertEquals(1, vm.state.value.selectedId)
+        advanceTimeBy(INPUT_DEBOUNCE_MS)
+        runCurrent()
+        gate.release()
+        advanceUntilIdle()
+        assertEquals("x.com y.com z.com", (vm.state.value.result as UiState.Ready).value.analyzedText)
+        assertNull(vm.state.value.selectedId)
+    }
+
+    @Test
+    fun `typing past the cap again changes nothing but the flag`() = runTest {
+        val vm = vm()
+        val base = "a.com " + "b".repeat(MAX_INPUT_CHARS)
+        vm.onInputChange(base)
+        advanceUntilIdle()
+        vm.onSelectLink(0)
+        vm.onInputChange(base + "c")
+        runCurrent()
+        assertFalse(vm.state.value.detecting)
+        assertEquals(0, vm.state.value.selectedId)
+        assertTrue(vm.state.value.truncated)
+    }
+
+    @Test
     fun `input over the cap is cut and flagged`() = runTest {
         val vm = vm()
         vm.onInputChange("a".repeat(MAX_INPUT_CHARS + 5))

@@ -22,6 +22,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions.HTML
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions.QUOTE_MATCH
@@ -39,6 +40,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 private const val SAMPLE = "docs at https://example.com/a and HTTP://Sub.Example.ORG/x"
 
@@ -147,5 +149,17 @@ class DetektorScreenTest {
         }
         setContent { host(stale, width = 1000.dp) }
         onNodeWithTag("detektor-highlight").assertTextContains("tiny")
+    }
+
+    @Test
+    fun `detail labels stay on one line on a narrow sheet`() = runComposeUiTest {
+        val link = (ready("see http://user:pw@Sub.Example.org:8080/x?q=1#f ok").result as UiState.Ready).value.links.single()
+        // 360 dp wide sheet: 16 dp gutters, 24 dp panel padding.
+        setContent { LdTheme { Box(Modifier.size(328.dp, 900.dp)) { DetailPane(link, onClose = {}) } } }
+        val oneLine = with(density) { 20.sp.toPx() } * 1.5f
+        persistentListOf("Full URL", "Scheme", "Username", "Password", "Host", "Port", "Path", "Query", "Fragment").forEach { label ->
+            val height = onNodeWithText(label).fetchSemanticsNode().size.height
+            assertTrue(height <= oneLine, "$label is $height px high, so it wraps")
+        }
     }
 }

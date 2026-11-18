@@ -27,10 +27,13 @@ internal val RowSpecs: ImmutableList<RowSpec> = persistentListOf(
 
 /** The parts of [link], original beside tidied; a part both versions lack is left out, except the full URL, host and port. */
 fun detailRows(link: DetectedLink): ImmutableList<PartRow> = RowSpecs
-    .filter { spec -> spec.alwaysShown || spec.value(link.original).isNotEmpty() || link.normalized?.let(spec.value).orEmpty().isNotEmpty() }
-    .map { spec ->
+    .mapNotNull { spec ->
         val original = spec.value(link.original)
         val normalized = link.normalized?.let(spec.value)
-        PartRow(spec.label, original, normalized, changed = normalized != null && normalized != original)
+        if (spec.alwaysShown || original.isNotEmpty() || !normalized.isNullOrEmpty()) {
+            PartRow(spec.label, original, normalized, changed = normalized != null && normalized != original)
+        } else {
+            null
+        }
     }
     .toImmutableList()

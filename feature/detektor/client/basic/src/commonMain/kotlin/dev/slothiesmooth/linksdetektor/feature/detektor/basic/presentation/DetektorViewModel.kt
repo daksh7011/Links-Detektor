@@ -66,12 +66,22 @@ class DetektorViewModel(private val detectLinks: DetectLinksUseCase) : BaseViewM
         mutableState.update { current ->
             // A newer input is already waiting out its debounce: keep showing that work as in progress.
             val latest = current.input == request.text && current.options == request.options
-            current.copy(result = outcome, detecting = current.detecting && !latest)
+            val sameResult = (current.result as? UiState.Ready)?.value == (outcome as? UiState.Ready)?.value
+            current.copy(
+                result = outcome,
+                detecting = current.detecting && !latest,
+                // A selection belongs to the result it was picked from.
+                selectedId = current.selectedId.takeIf { sameResult },
+            )
         }
     }
 
     fun onInputChange(text: String) {
         val kept = capped(text)
+        if (kept == mutableState.value.input) {
+            mutableState.update { it.copy(truncated = kept.length < text.length) }
+            return
+        }
         mutableState.update {
             it.copy(input = kept, truncated = kept.length < text.length, detecting = true, selectedId = null)
         }

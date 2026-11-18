@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -53,8 +55,9 @@ import kotlinx.collections.immutable.ImmutableSet
 
 private val HighlightMaxHeight = 200.dp
 private val RuleWidth = 1.dp
-private const val LABEL_WEIGHT = 1f
-private const val VALUE_WEIGHT = 2f
+
+// Wide enough for the longest label ("Username", "Password", "Fragment") in the label style, so none breaks mid-word.
+private val LabelWidth = 88.dp
 
 @Composable
 internal fun InputPane(
@@ -203,19 +206,22 @@ internal fun DetailPane(link: DetectedLink, onClose: (() -> Unit)?, modifier: Mo
     LdPanel(modifier.testTag("detektor-detail")) {
         Column(verticalArrangement = Arrangement.spacedBy(dimens.space3)) {
             TableRow {
-                Cell("", LABEL_WEIGHT)
-                Cell("Original", VALUE_WEIGHT, LdTextStyle.Caption, colors.dim)
-                if (link.normalized != null) Cell("Tidied", VALUE_WEIGHT, LdTextStyle.Caption, colors.dim)
+                Spacer(Modifier.width(LabelWidth))
+                Cell("Original", Modifier.weight(1f), LdTextStyle.Caption, colors.dim)
+                Cell("Tidied", Modifier.weight(1f), LdTextStyle.Caption, colors.dim)
             }
-            rows.forEach { row ->
+            rows.forEachIndexed { index, row ->
                 TableRow {
-                    Cell(row.label, LABEL_WEIGHT, LdTextStyle.Label, colors.dim)
-                    Cell(row.original, VALUE_WEIGHT, LdTextStyle.Code)
-                    row.normalized?.let { Cell(it, VALUE_WEIGHT, LdTextStyle.Code, if (row.changed) colors.amber else colors.fg) }
+                    Cell(row.label, Modifier.width(LabelWidth), LdTextStyle.Label, colors.dim)
+                    Cell(row.original, Modifier.weight(1f), LdTextStyle.Code)
+                    when {
+                        row.normalized != null ->
+                            Cell(row.normalized, Modifier.weight(1f), LdTextStyle.Code, if (row.changed) colors.amber else colors.fg)
+
+                        index == 0 -> Cell("This link could not be tidied.", Modifier.weight(1f), LdTextStyle.BodySm, colors.dim)
+                        else -> Spacer(Modifier.weight(1f))
+                    }
                 }
-            }
-            if (link.normalized == null) {
-                LdText("This link could not be tidied.", style = LdTextStyle.BodySm, color = colors.dim)
             }
             if (onClose != null) LdButton("Close", onClick = onClose, style = LdButtonStyle.Ghost)
         }
@@ -230,9 +236,9 @@ private fun TableRow(content: @Composable RowScope.() -> Unit) {
 @Composable
 private fun RowScope.Cell(
     text: String,
-    weight: Float,
+    modifier: Modifier,
     style: LdTextStyle = LdTextStyle.Body,
     color: Color = MaterialTheme.ldColors.fg,
 ) {
-    LdText(text, modifier = Modifier.weight(weight), style = style, color = color)
+    LdText(text, modifier = modifier, style = style, color = color)
 }

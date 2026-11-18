@@ -8,45 +8,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-
+  labeler:
     permissions:
       contents: read
       pull-requests: write
       issues: write
-
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@v7
       - name: Labeler
         uses: actions/labeler@v5.0.0
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: 21
-          distribution: temurin
+  build:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/_build.yml
 
-      - name: Gradle (Setup)
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: false
-          gradle-home-cache-includes: |
-            caches
-            notifications
-            jdks
-            wrapper
+  apple:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/_apple.yml
 
-      - name: Make sure gradlew is executable
-        run: "chmod +x ./gradlew"
-
-      - name: Build and test
-        run: "./gradlew detektCheck :links-detektor:jvmTest"
-
-      - name: Upload JARs
-        uses: actions/upload-artifact@v4
-        with:
-          name: JARs
-          path: links-detektor/build/libs/*.jar
+  windows:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/_windows.yml

@@ -6,46 +6,83 @@ on:
       - master
 
 jobs:
-  build-master:
+  build:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/_build.yml
+
+  apple:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/_apple.yml
+
+  windows:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/_windows.yml
+
+  publish:
+    name: Release, publish and deploy docs
+    needs: [build, apple, windows]
     permissions:
       contents: write
       pull-requests: write
       pages: write
       id-token: write
 
-    runs-on: ubuntu-latest
+    # All Kotlin/Native targets (Apple included) publish from one macOS host.
+    runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle (Setup)
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          dependency-graph: generate-and-submit
+
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+
+      # The version is the `lib` entry of the catalog: 3.0.0-alphaN, -betaN, -rcN, then 3.0.0. Release Drafter's own
+      # resolver cannot produce that format, so it is only given the result. Releases on Maven Central are immutable,
+      # so publishing is skipped when the version already exists there.
+      - name: Resolve version
+        run: |
+          VERSION=$(grep -m1 '^lib = ' gradle/libs.versions.toml | cut -d'"' -f2)
+          echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)[0-9]+)?$' || { echo "::error::Bad version $VERSION"; exit 1; }
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          case "$VERSION" in *-*) echo "PRERELEASE=true" ;; *) echo "PRERELEASE=false" ;; esac >> "$GITHUB_ENV"
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "https://repo1.maven.org/maven2/com/slothiesmooth/links-detektor/$VERSION/")
+          [ "$CODE" = "200" ] && echo "ALREADY_PUBLISHED=true" >> "$GITHUB_ENV" || echo "ALREADY_PUBLISHED=false" >> "$GITHUB_ENV"
 
       - name: Release Drafter
         id: release_drafter
         uses: release-drafter/release-drafter@v6
+        with:
+          version: ${{ env.VERSION }}
+          tag: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          prerelease: ${{ env.PRERELEASE }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set version to env
-        run: echo "VERSION=$(echo ${{steps.release_drafter.outputs.resolved_version}})" >> $GITHUB_ENV
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: 21
-          distribution: temurin
-
-      - name: Gradle (Setup)
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          dependency-graph: generate-and-submit
-
-      - name: Make sure gradlew is executable
-        run: "chmod +x ./gradlew"
-
-      - name: Build project
-        run: "VERSION=${{steps.release_drafter.outputs.resolved_version}} ./gradlew build"
+      - name: Test and check ABI
+        run: ./gradlew :links-detektor:allTests :links-detektor:checkKotlinAbi
 
       - name: Release to Maven central
-        run: "./gradlew links-detektor:publishAllPublicationsToMavenCentralRepository"
+        if: env.ALREADY_PUBLISHED == 'false'
+        run: ./gradlew :links-detektor:publishAllPublicationsToMavenCentralRepository
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
@@ -53,18 +90,8 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
 
-      - name: Upload JARs
-        uses: actions/upload-artifact@v4
-        with:
-          name: JARs
-          path: links-detektor/build/libs/*.jar
-
-      - name: Upload Assets to Release
-        uses: shogo82148/actions-upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release_drafter.outputs.upload_url }}
-          asset_path: links-detektor/build/libs/*.jar
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate API docs
+        run: ./gradlew :links-detektor:dokkaGenerate
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -72,7 +99,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'docs'
+          path: links-detektor/build/dokka/html
 
       - name: Deploy to GitHub Pages
         id: deployment

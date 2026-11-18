@@ -2,6 +2,7 @@ _extends: ".github"
 
 name-template: '$RESOLVED_VERSION'
 tag-template: '$RESOLVED_VERSION'
+# The workflow passes the version (from gradle/libs.versions.toml) explicitly; the resolver is not used.
 categories:
   - title: '🚀 Features'
     labels:
@@ -20,17 +21,6 @@ categories:
       - 'CI'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 change-title-escapes: '\<*_&@' # You can add # and @ to disable mentions, and add ` to disable code blocks.
-version-resolver:
-  major:
-    labels:
-      - 'major'
-  minor:
-    labels:
-      - 'minor'
-  patch:
-    labels:
-      - 'patch'
-  default: patch
 template: |
   ## Changes
 

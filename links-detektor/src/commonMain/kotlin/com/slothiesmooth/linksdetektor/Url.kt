@@ -269,6 +269,9 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
     public open val hostBytes: ByteArray?
         get() = null
 
+    /** The default port of [scheme], whatever its case, or null if the scheme has none. */
+    private fun defaultPort(): Int? = SCHEME_PORT_MAP[scheme.lowercase()]
+
     /**
      * Parses and populates the username and password fields from the URL.
      *
@@ -276,9 +279,6 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
      * It extracts the username and password from the USERNAME_PASSWORD part of the URL
      * if it exists.
      */
-    /** The default port of [scheme], whatever its case, or null if the scheme has none. */
-    private fun defaultPort(): Int? = SCHEME_PORT_MAP[scheme.lowercase()]
-
     private fun populateUsernamePassword() {
         val usernamePassword = getPart(UrlPart.USERNAME_PASSWORD) ?: return
         val usernamePasswordParts =

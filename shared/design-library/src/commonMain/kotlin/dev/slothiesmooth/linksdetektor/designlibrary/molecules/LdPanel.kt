@@ -1,0 +1,24 @@
+package dev.slothiesmooth.linksdetektor.designlibrary.molecules
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import dev.slothiesmooth.linksdetektor.designlibrary.tokens.ldColors
+import dev.slothiesmooth.linksdetektor.designlibrary.tokens.ldDimens
+
+/** A surface-coloured panel with a 20 dp corner and 24 dp padding. No shadow, no border. */
+@Composable
+fun LdPanel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val dimens = MaterialTheme.ldDimens
+    Column(
+        modifier = modifier
+            .background(MaterialTheme.ldColors.surface, RoundedCornerShape(dimens.radiusPanel))
+            .padding(dimens.space6),
+        content = content,
+    )
+}

@@ -2,6 +2,7 @@ package com.slothiesmooth.linksdetektor.internal
 
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions
 import kotlinx.collections.immutable.ImmutableSet
+import kotlin.jvm.JvmInline
 
 /**
  * The bitwise union of a set of [LinksDetektorOptions], with a single place that implements the bit test.

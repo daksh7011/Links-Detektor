@@ -57,7 +57,7 @@ internal class PathNormalizer {
                         }
                     } else if (stringBuilder[index + 1] == '/') {
                         slashIndexStack.removeAt(slashIndexStack.lastIndex)
-                        stringBuilder.deleteCharAt(index)
+                        stringBuilder.deleteAt(index)
                         index--
                     }
                 }

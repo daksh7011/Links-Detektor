@@ -163,3 +163,6 @@ gradle-app.setting
 /src/main/resources/noods.json
 /.idea/ktor.xml
 .idea
+
+# Kotlin Gradle plugin session data
+.kotlin/

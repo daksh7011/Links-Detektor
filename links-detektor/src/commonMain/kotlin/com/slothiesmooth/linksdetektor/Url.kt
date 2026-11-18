@@ -188,7 +188,10 @@ public open class Url internal constructor(urlMarker: UrlMarker) {
         get() = host
 
     /**
-     * port = 0 means it hasn't been set yet. port = -1 means there is no port
+     * Gets the port of the URL.
+     *
+     * @return The port written in the URL; otherwise the default port of the scheme (80 for http, 443 for https,
+     * 21 for ftp); `-1` if there is neither, or the written port is not a valid number.
      */
     public val port: Int
         get() {

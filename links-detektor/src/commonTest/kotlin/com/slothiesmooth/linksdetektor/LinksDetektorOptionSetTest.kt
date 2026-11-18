@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 /**
  * Tests for the option-set constructor of [LinksDetektor].
@@ -152,6 +153,7 @@ class LinksDetektorOptionSetTest {
             for (url in LinksDetektor(input, LinksDetektorOptions.Default).detect()) {
                 touchEverything(url)
                 assertEquals(url.fullUrl, url.toString())
+                assertFalse(url.host.orEmpty().contains('?'), "case: $input host: ${url.host}")
             }
         }
     }

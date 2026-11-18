@@ -199,7 +199,7 @@ public class LinksDetektor public constructor(
                 } else {
                     bufferStringBuilder.append(curr)
                 }
-                '@' -> if (bufferStringBuilder.substring(length).any { it == '#' || it == '?' || it == '\\' }) {
+                '@' -> if (leftAuthorityBefore(length)) {
                     // Text before this '@' already left the authority, so it cannot be userinfo.
                     readEnd(ReadEndState.InvalidUrl)
                     length = 0
@@ -284,6 +284,14 @@ public class LinksDetektor public constructor(
             readDomainName(bufferStringBuilder.substring(length))
         }
     }
+
+    /**
+     * Whether the buffer from [start] holds a `#`, `?`, `/` or `\`. These end the authority, so an `@` after one
+     * never makes the text before it userinfo. Shared by both places that accept an `@`.
+     */
+    private fun leftAuthorityBefore(start: Int): Boolean =
+        bufferStringBuilder.substring(start.coerceIn(0, bufferStringBuilder.length))
+            .any { it == '#' || it == '?' || it == '/' || it == '\\' }
 
     /**
      * Whether a quote or bracket just ended a pending single-level domain, such as the
@@ -514,6 +522,10 @@ public class LinksDetektor public constructor(
 
             // if we hit this, then everything is ok, and we are matching a domain name.
             if (curr == '@') {
+                if (leftAuthorityBefore(beginningOfUsername)) {
+                    // The text before this '@' already left the authority, so it cannot be userinfo.
+                    return readEnd(ReadEndState.InvalidUrl)
+                }
                 bufferStringBuilder.append(curr)
                 currentUrlMarker.setIndex(UrlPart.USERNAME_PASSWORD, beginningOfUsername)
                 return readDomainName("")

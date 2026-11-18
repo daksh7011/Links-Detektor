@@ -6,6 +6,7 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Userinfo cannot contain `#`, `?` or `/`: those start the fragment, query or path, so a later `@` belongs to them.
@@ -26,6 +27,16 @@ class UserinfoDelimiterTest {
         "http://evil\\x@good.com",
         "http://evil.org#@good.com",
         "http://evil.org\\@good.com",
+        "http://evil#u:p@good.com",
+        "'http://evil#u:p@good.com'",
+        "\"http://evil?u:p@good.com\"",
+        "(http://evil#u:p@good.com)",
+        "<a href=\"http://evil?u:p@good.com\">",
+        "evil#u:p@good.com",
+        "localhost?user:pass@good.com",
+        "http://evil:80#u:p@good.com",
+        "http://evil\\u:p@good.com",
+        "http://evil.org:8080\\u:p@good.com",
     )
 
     private fun detectAll(input: String): ImmutableList<Url> =
@@ -76,6 +87,8 @@ class UserinfoDelimiterTest {
                     val written = "${url.username} ${url.originalUrl}"
                     val earlierHostInUserinfo =
                         url.host == "good.com" && (written.contains("evil") || written.contains("localhost"))
+                    assertFalse(url.username.any { it in DELIMITERS }, "username: $case")
+                    assertFalse(url.password.any { it in DELIMITERS }, "password: $case")
                     assertFalse(earlierHostInUserinfo, case)
                 }
             }
@@ -107,5 +120,22 @@ class UserinfoDelimiterTest {
                 assertEquals("", url.username, "option=$option")
             }
         }
+    }
+
+    @Test
+    fun goodComIsStillFoundWithoutTheEarlierTextAsUserinfo() {
+        for (option in LinksDetektorOptions.entries) {
+            for (input in confusingInputs.filter { it.first().isLetter() }) {
+                val hosts = LinksDetektor(input, option).detect().map { it.host }
+                assertTrue(
+                    hosts.any { it == "good.com" || it == "evil" || it == "localhost" || it == "evil.org" },
+                    "option=$option input=$input hosts=$hosts",
+                )
+            }
+        }
+    }
+
+    private companion object {
+        const val DELIMITERS = "#?/\\"
     }
 }

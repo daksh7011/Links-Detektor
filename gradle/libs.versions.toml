@@ -1,19 +1,36 @@
 [versions]
-lib = "2.0.3" # Links Detektor library version
+lib = "3.0.0-alpha1" # Links Detektor library version
 
-detekt = "1.23.8"  # Note: Plugin versions must be updated in the settings.gradle.kts too
-kotlin = "2.2.0"  # Note: Plugin versions must be updated in the settings.gradle.kts too
+kotlin = "2.4.20"
+agp = "9.3.3"
+detekt = "1.23.8"
+dokka = "2.3.0"
+vanniktech = "0.37.0"
 
-dokka = "2.0.0"  # Kotlin documentation generator
-
-# Collections
 kotlinx-collections-immutable = "0.5.2"
+doist-normalize = "1.2.0"
+junit-bom = "5.14.4"
+
+android-compileSdk = "37"
+android-minSdk = "23"
 
 [libraries]
-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
-
-# Collections
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
+doist-normalize = { module = "com.doist.x:normalize", version.ref = "doist-normalize" }
 
-# Documentation
-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+# Tests
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-bom" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+
+# Static analysis
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech" }

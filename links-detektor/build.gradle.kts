@@ -1,22 +1,14 @@
 plugins {
-    kotlin("jvm")
-
-    id("io.gitlab.arturbosch.detekt")
-
-    // Apply Dokka for Kotlin documentation
+    alias(libs.plugins.kotlin.jvm)
+    // Versionless: build-logic already puts both plugins on the classpath.
     id("org.jetbrains.dokka")
     id("com.vanniktech.maven.publish")
-    signing
 }
 
 val projectVersion: String = System.getenv("VERSION") ?: libs.versions.lib.get()
 
 group = "com.slothiesmooth"
 version = projectVersion
-
-repositories {
-    mavenCentral()
-}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -28,18 +20,9 @@ kotlin {
 }
 
 dependencies {
-    detektPlugins(libs.detekt)
-
     api(libs.kotlinx.collections.immutable)
 
-    // Testing dependencies
     testImplementation(kotlin("test"))
-}
-
-detekt {
-    buildUponDefaultConfig = true
-    autoCorrect = true
-    config.from(rootProject.files("detekt.yml"))
 }
 
 // Configure all JAR names
@@ -54,73 +37,9 @@ tasks.withType<Test> {
     }
 }
 
-// Task to copy Dokka documentation to docs directory in the root project
-tasks.register<Copy>("copyDokkaToDocsDir") {
-    dependsOn("dokkaHtml")
-    from(layout.buildDirectory.dir("dokka/html"))
-    into(rootProject.file("docs"))
-    description = "Copies Dokka documentation to docs directory in the root project"
+dokka {
+    moduleName.set("Links Detektor")
 }
-
-// Make build task finalized by copyDokkaToDocsDir task
-tasks.named("build") {
-    finalizedBy("copyDokkaToDocsDir")
-}
-
-// TODO: Migrate to dokka2 standards
-// Configure Dokka to generate KDoc documentation
-tasks.dokkaHtml {
-    outputDirectory.set(layout.buildDirectory.dir("dokka"))
-
-    // Set custom Dokka plugin options
-    pluginsMapConfiguration.set(
-        mapOf(
-            "org.jetbrains.dokka.base.DokkaBase" to """
-                {
-                  "customStyleSheets": [],
-                  "customAssets": [],
-                  "footerMessage": "© 2025 Slothie Smooth - Links Detektor",
-                  "separateInheritedMembers": true
-                }
-            """
-        )
-    )
-
-    // Configure Dokka options
-    dokkaSourceSets.configureEach {
-        // Set project name and description
-        moduleName.set("Links Detektor")
-        moduleVersion.set(projectVersion)
-
-        // Documentation settings
-        includeNonPublic.set(false)
-        skipEmptyPackages.set(true)
-        reportUndocumented.set(true)
-        jdkVersion.set(21)
-
-        // Add source links to GitHub
-        sourceLink {
-            localDirectory.set(file("src/main/kotlin"))
-            remoteUrl.set(uri("https://github.com/daksh7011/links-detektor/blob/master/lib/src/main/kotlin").toURL())
-            remoteLineSuffix.set("#L")
-        }
-
-        // Customize documentation appearance
-        perPackageOption {
-            matchingRegex.set("com\\.slothiesmooth\\.linksdetektor\\.internal.*")
-            suppress.set(true)
-        }
-
-        // Add custom documentation links
-        externalDocumentationLink {
-            url.set(uri("https://kotlinlang.org/api/latest/jvm/stdlib/").toURL())
-        }
-
-        // Include module documentation
-        includes.from("packages.md")
-    }
-}
-
 
 mavenPublishing {
     coordinates("com.slothiesmooth", "links-detektor", projectVersion)
@@ -153,13 +72,4 @@ mavenPublishing {
 
     publishToMavenCentral(automaticRelease = true)
     signAllPublications()
-}
-
-signing {
-    val signingKey = System.getenv("SIGNING_KEY") ?: project.findProperty("signingKey") as String?
-    val signingPassword = System.getenv("SIGNING_PASSWORD") ?: project.findProperty("signingPassword") as String?
-
-    if (signingKey != null && signingPassword != null) {
-        useInMemoryPgpKeys(signingKey, signingPassword)
-    }
 }

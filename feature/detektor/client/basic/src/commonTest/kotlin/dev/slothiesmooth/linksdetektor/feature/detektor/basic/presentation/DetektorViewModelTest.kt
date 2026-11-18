@@ -41,7 +41,7 @@ private class GatedDispatcher : CoroutineDispatcher() {
         private set
 
     override fun dispatch(context: CoroutineContext, block: Runnable) {
-        queued = queued.add(block)
+        queued = queued.adding(block)
     }
 
     fun release() {
@@ -102,7 +102,7 @@ class DetektorViewModelTest {
         var ran: PersistentList<String> = persistentListOf()
         val vm = vm(
             engine = { content, options ->
-                ran = ran.add(content)
+                ran = ran.adding(content)
                 LibraryLinkEngine().detect(content, options)
             },
             dispatcher = gate,
@@ -149,7 +149,7 @@ class DetektorViewModelTest {
     fun `toggling options flips the set and any combination detects`() = runTest {
         var seen: PersistentList<ImmutableSet<LinksDetektorOptions>> = persistentListOf()
         val vm = vm { content, options ->
-            seen = seen.add(options)
+            seen = seen.adding(options)
             LibraryLinkEngine().detect(content, options)
         }
         vm.onInputChange("\"http://a.com\" 'http://b.com'")

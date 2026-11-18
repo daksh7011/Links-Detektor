@@ -64,4 +64,26 @@ class HostEdgeCaseTest {
 
         assertEquals("[2001:db8:0:0:0:0:0:1]", url.host)
     }
+
+    /** A name may be 253 characters long without its trailing dot (RFC 1035 allows 255 octets on the wire). */
+    @Test
+    fun domainOf253CharactersIsTheLongestDetected() {
+        val longest = "${"a".repeat(49)}.".repeat(5) + "com"
+        assertEquals(253, longest.length)
+
+        val detected = LinksDetektor("http://$longest/x", LinksDetektorOptions.Default).detect()
+        assertEquals(persistentListOf(longest), detected.map { it.host }.toImmutableList())
+        assertEquals(longest, detected.first().normalize().host)
+
+        val tooLong = "b$longest"
+        assertEquals(persistentListOf(), LinksDetektor("http://$tooLong/x", LinksDetektorOptions.Default).detect())
+    }
+
+    @Test
+    fun firstLabelOf63CharactersIsTheLongestDetected() {
+        val label = "a".repeat(63)
+
+        assertEquals("$label.com", LinksDetektor("http://$label.com", LinksDetektorOptions.Default).detect().first().host)
+        assertEquals(persistentListOf(), LinksDetektor("http://a$label.com", LinksDetektorOptions.Default).detect())
+    }
 }

@@ -96,6 +96,7 @@ jobs:
           name: ${{ env.VERSION }}
           prerelease: ${{ env.PRERELEASE }}
           publish: true
+          commitish: ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

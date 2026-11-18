@@ -58,7 +58,7 @@ internal class HostNormalizer(private val host: String?) {
             return
         }
         host = UrlUtil.removeExtraDots(host)
-        normalizedHost = UrlUtil.encode(host).replace("\\x", "%")
+        normalizedHost = encodeDelimiters(UrlUtil.encode(host).replace("\\x", "%"))
     }
 
     /**
@@ -218,12 +218,31 @@ internal class HostNormalizer(private val host: String?) {
     }
 
     companion object {
+        private const val HEX_RADIX = 16
         private const val MAX_NUMERIC_DOMAIN_VALUE = 4294967295L
         private const val MAX_IPV4_PART = 255
         private const val MIN_IP_PART = 0
         private const val MAX_IPV6_PART = 0xFFFF
         private const val IPV4_MAPPED_IPV6_START_OFFSET = 12
         private const val NUMBER_BYTES_IN_IPV4 = 4
+
+        /**
+         * Percent-encodes the characters that would end the host if the normalised URL were parsed again:
+         * decoding (or the IDN mapping of a full-width form) can put them into a host.
+         *
+         * @param host The normalised host.
+         * @return The host with `/`, `?`, `@`, `\` and, outside an IPv6 literal, `:` encoded.
+         */
+        private fun encodeDelimiters(host: String): String {
+            val bracketed = host.startsWith("[")
+            return buildString(host.length) {
+                for (char in host) {
+                    val delimiter = char == '/' || char == '?' || char == '@' || char == '\\' || char == ':' && !bracketed
+                    if (delimiter) append('%').append(char.code.toString(HEX_RADIX).uppercase()) else append(char)
+                }
+            }
+        }
+
         private fun isHexSection(section: String): Boolean {
             for (element in section) {
                 if (element.isHex().not()) {

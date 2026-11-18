@@ -26,7 +26,8 @@ internal class PathNormalizer {
          * 5. Adds a slash at the end if there isn't one
          */
         private fun sanitizeDotsAndSlashes(path: String?): String {
-            val stringBuilder = StringBuilder(path.orEmpty())
+            // A gap buffer keeps the in-place deletions linear in the length of the path.
+            val stringBuilder = GapBuffer(path.orEmpty())
             val slashIndexStack = persistentListOf<Int>().builder()
             var index = 0
             while (index < stringBuilder.length - 1) {
@@ -64,7 +65,7 @@ internal class PathNormalizer {
                 index++
             }
             if (stringBuilder.isEmpty()) {
-                stringBuilder.append("/") // Every path has at least a slash
+                stringBuilder.append('/') // Every path has at least a slash
             }
             return stringBuilder.toString()
         }

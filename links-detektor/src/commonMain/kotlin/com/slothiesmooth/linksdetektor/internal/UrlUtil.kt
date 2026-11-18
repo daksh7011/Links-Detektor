@@ -20,7 +20,8 @@ internal object UrlUtil {
     internal fun decode(url: String?): String {
         url ?: return ""
 
-        val decodedUrlBuilder = StringBuilder(url)
+        // A gap buffer keeps the in-place replacements linear in the length of the url.
+        val decodedUrlBuilder = GapBuffer(url)
         val pendingPercentIndices = persistentListOf<Int>().builder()
         var currentPosition = 0
         while (currentPosition < decodedUrlBuilder.length - 2) {
@@ -29,7 +30,7 @@ internal object UrlUtil {
                 if (decodedUrlBuilder.getOrNull(currentPosition + 1)?.isHex() == true &&
                     decodedUrlBuilder.getOrNull(currentPosition + 2)?.isHex() == true
                 ) {
-                    val hexDigits = decodedUrlBuilder.substring(currentPosition + 1, currentPosition + 3)
+                    val hexDigits = "${decodedUrlBuilder[currentPosition + 1]}${decodedUrlBuilder[currentPosition + 2]}"
                     val decodedCharacter = hexDigits.toInt(16).toChar()
 
                     decodedUrlBuilder.deleteRange(currentPosition, currentPosition + 3) // delete the % and two hex digits

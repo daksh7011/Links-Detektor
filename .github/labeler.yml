@@ -6,7 +6,7 @@ dependency:
 
 ci:
   - changed-files:
-      - any-glob-to-any-file: 'github/**/*'
+      - any-glob-to-any-file: '.github/**/*'
 
 library:
   - changed-files:

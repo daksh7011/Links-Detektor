@@ -565,7 +565,7 @@ internal class DomainNameReader(
         if (domainArray.size < 3) {
             return false
         }
-        if ((domainArray[domainArray.size - 1] != ']' || domainArray[0] != '[' || domainArray[1] == ':') && domainArray[2] != ':') {
+        if (domainArray[domainArray.size - 1] != ']' || domainArray[0] != '[' || domainArray[1] == ':' && domainArray[2] != ':') {
             return false
         }
         var numSections = 1

@@ -284,6 +284,12 @@ public class LinksDetektor public constructor(
                             readEnd(ReadEndState.InvalidUrl)
                         }
                         length = 0
+                    } else if (curr in GLUE_ENDERS && endsSingleLevelDomain()) {
+                        // An unmatched closer after a single-word host is not part of it, as with dotted hosts:
+                        // "http://localhost)" is the URL http://localhost.
+                        inputTextReader.goBack()
+                        readDomainName(bufferStringBuilder.substring(length))
+                        length = 0
                     } else {
                         bufferStringBuilder.append(curr)
                     }
@@ -348,7 +354,9 @@ public class LinksDetektor public constructor(
             length = bufferStringBuilder.length // set length to be right after the scheme
         } else if (bufferStringBuilder.isNotEmpty() &&
             optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
-            inputTextReader.canReadChars(1)
+            inputTextReader.canReadChars(1) &&
+            // "docs: " is a word and a colon, not a host: no port can follow the colon.
+            bufferStringBuilder[bufferStringBuilder.length - 1] != ' '
         ) { // takes care of case like hi:
             inputTextReader.goBack() // unread the ":" so readDomainName can take care of the port
             bufferStringBuilder.deleteRange(bufferStringBuilder.length - 1, bufferStringBuilder.length)

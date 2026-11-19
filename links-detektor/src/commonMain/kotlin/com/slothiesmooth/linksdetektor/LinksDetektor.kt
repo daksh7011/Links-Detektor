@@ -74,6 +74,9 @@ public class LinksDetektor public constructor(
      */
     private var quoteStart = false
 
+    /** The closing bracket or quote that matches the punctuation glued before the scheme, if one was cut off. */
+    private var gluedCloser: Char? = null
+
     /**
      * If the first character in the url is a single quote, then look for matching quote at the end.
      */
@@ -260,7 +263,13 @@ public class LinksDetektor public constructor(
                 }
                 else -> // Check if we need to match characters. If we match characters and this is a start or stop of range,
                     // either way reset the world and start processing again.
-                    if (checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
+                    if (curr == gluedCloser && endsSingleLevelDomain()) {
+                        // The bracket or quote that was glued before the scheme closes here, so it ends the host:
+                        // "(http://localhost)" is the URL http://localhost.
+                        inputTextReader.goBack()
+                        readDomainName(bufferStringBuilder.substring(length))
+                        length = 0
+                    } else if (checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
                         if (endsSingleLevelDomain()) {
                             // A closing quote or bracket right after "http://localhost": the pending host is a
                             // single-level domain. Unread the character (and its count) so the domain reader
@@ -477,7 +486,7 @@ public class LinksDetektor public constructor(
                 bufferStringBuilder.append(curr)
                 if (numSlashes == 1) {
                     // Return only if it's approved protocol. This can be expanded to allow others
-                    if (VALID_SCHEMES.contains(bufferStringBuilder.toString().lowercase())) {
+                    if (dropGluedPrefix()) {
                         currentUrlMarker.setIndex(UrlPart.SCHEME, 0)
                         return true
                     }
@@ -499,6 +508,36 @@ public class LinksDetektor public constructor(
             }
         }
         return false
+    }
+
+    /** The character that closes the one glued before a scheme, or null if there is none to look for. */
+    private fun closerOf(opener: Char): Char? = when (opener) {
+        '(' -> ')'
+        '[' -> ']'
+        '{' -> '}'
+        '<' -> '>'
+        '"', '\'' -> opener
+        else -> null
+    }
+
+    /**
+     * Checks that the buffer ends with a valid scheme such as `http://`, and cuts off any punctuation glued in
+     * front of it (`(http://`, `"http://`, `x,http://`), so the URL starts at the scheme.
+     *
+     * @return True if the buffer now is exactly a valid scheme.
+     */
+    private fun dropGluedPrefix(): Boolean {
+        val text = bufferStringBuilder.toString().lowercase()
+        val scheme = VALID_SCHEMES.firstOrNull { text.endsWith(it) } ?: return false
+        val start = text.length - scheme.length
+        if (start > 0 && text[start - 1] !in SCHEME_GLUE) {
+            return false
+        }
+        if (start > 0) {
+            gluedCloser = closerOf(text[start - 1])
+        }
+        bufferStringBuilder.deleteRange(0, start)
+        return true
     }
 
     /**
@@ -747,6 +786,7 @@ public class LinksDetektor public constructor(
         // reset the state of internal objects.
         quoteStart = false
         hasScheme = false
+        gluedCloser = null
         dontMatchIpv6 = false
         currentUrlMarker = UrlMarker()
 
@@ -790,6 +830,11 @@ public class LinksDetektor public constructor(
          * Contains the string to check for and remove if the scheme is this.
          */
         private const val HTML_MAILTO = "mailto:"
+
+        /**
+         * Characters that may be glued right before a scheme without being part of the URL, as in `(http://a.com)`.
+         */
+        private const val SCHEME_GLUE = "([{<\"',;:*!"
 
         /**
          * Valid protocol schemes.

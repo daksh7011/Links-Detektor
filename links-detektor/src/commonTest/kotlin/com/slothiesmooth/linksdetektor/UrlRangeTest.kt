@@ -44,7 +44,7 @@ class UrlRangeTest {
         RangeCase(
             "\"http://a.com\" 'http://b.com'",
             LinksDetektorOptions.Default,
-            persistentListOf(8 until 13, 23 until 28)
+            persistentListOf(1 until 13, 16 until 28)
         ),
         RangeCase(
             "a.com a.com a.com",

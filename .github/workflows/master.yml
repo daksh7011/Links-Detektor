@@ -41,6 +41,7 @@ jobs:
     outputs:
       version: ${{ steps.resolve.outputs.version }}
       released: ${{ steps.resolve.outputs.released }}
+      web_needed: ${{ steps.web_needed.outputs.web_needed }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -107,6 +108,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # The web app is deployed when this run made the release, and also when a re-run finds the release for VERSION
+      # without its web zip (a partial failure last time). This only reads the release: it never publishes anything.
+      - name: Check whether the web app is still to ship
+        id: web_needed
+        run: |
+          if [ "$ALREADY_PUBLISHED" = "false" ]; then NEEDED=true
+          elif gh release view "$VERSION" --json assets --jq '.assets[].name' 2>/dev/null | grep -qx "links-detektor-web-$VERSION.zip"; then NEEDED=false
+          elif gh release view "$VERSION" >/dev/null 2>&1; then NEEDED=true
+          else NEEDED=false
+          fi
+          echo "web_needed=$NEEDED" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Generate API docs
         run: ./gradlew :links-detektor:dokkaGenerate
 
@@ -122,29 +137,30 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
-  # Only when this run released a new version (same gate as Maven Central and Release Drafter), stable or pre-release.
-  # There is no manual trigger: it would re-run the publish. To redeploy by hand, run `npm run deploy` in deploy/web.
+  # Runs when this run released a new version (same gate as Maven Central and Release Drafter), or when the release for
+  # VERSION exists but has no web zip yet, so a re-run after a partial failure still deploys and attaches. It never
+  # re-publishes: the Maven Central step stays gated on ALREADY_PUBLISHED. There is no manual trigger, since that would
+  # re-run the publish. Manual recovery is in deploy/web/README.md.
   web:
     name: Deploy web app and attach zip
-    needs: publish
-    if: needs.publish.outputs.released == 'true'
+    needs: [build, publish]
+    if: needs.publish.outputs.web_needed == 'true'
     permissions:
       contents: write
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.publish.outputs.version }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Java
-        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
-          distribution: temurin
-          java-version: '21'
+          persist-credentials: false
 
-      - name: Gradle (Setup)
-        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      # The distribution the build job already tested and size-checked, not a rebuild.
+      - name: Download web distribution
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: links-detektor-web
+          path: webApp/build/dist/wasmJs/productionExecutable
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -152,11 +168,12 @@ jobs:
           cache: npm
           cache-dependency-path: deploy/web/package-lock.json
 
-      - name: Build web distribution
-        run: ./gradlew :webApp:wasmJsBrowserDistribution
-
       - name: Check payload budget
         run: node scripts/wasm-size.mjs webApp/build/dist/wasmJs/productionExecutable --budget-mb 5
+
+      # Source maps are not shipped, neither in the zip nor on the Worker.
+      - name: Drop source maps
+        run: find webApp/build/dist/wasmJs/productionExecutable -name '*.map' -delete
 
       - name: Package
         run: |
@@ -167,17 +184,25 @@ jobs:
 
       - name: Attach to the GitHub release
         run: gh release upload "$VERSION" "links-detektor-web-$VERSION.zip" "links-detektor-web-$VERSION.zip.sha256" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install deploy tooling
+        working-directory: deploy/web
+        run: npm ci
 
       - name: Deploy Worker
         working-directory: deploy/web
-        run: npm ci && npx wrangler deploy | tee "$RUNNER_TEMP/deploy.log"
+        shell: bash
+        run: npx wrangler deploy | tee "$RUNNER_TEMP/deploy.log"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       # The public technowolf.in URL is not recorded as working yet, so check the workers.dev URL wrangler printed.
       - name: Smoke check
+        shell: bash
         run: |
           URL=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' "$RUNNER_TEMP/deploy.log" | head -1)
           [ -n "$URL" ] || { echo "::error::No workers.dev URL in the deploy output"; exit 1; }
-          curl -fsS -o /dev/null "$URL/links-detektor/"
+          curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "$URL/links-detektor/" | grep -q '<title>Links Detektor</title>'

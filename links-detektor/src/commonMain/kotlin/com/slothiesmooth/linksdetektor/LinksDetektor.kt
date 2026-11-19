@@ -74,8 +74,11 @@ public class LinksDetektor public constructor(
      */
     private var quoteStart = false
 
-    /** The closing bracket or quote that matches the punctuation glued before the scheme, if one was cut off. */
-    private var gluedCloser: Char? = null
+    /**
+     * Characters that end a pending single-level host because punctuation was cut off before its scheme, such as
+     * the `)` of `(http://localhost)`. Empty when nothing was cut off.
+     */
+    private var gluedEnders: String = ""
 
     /**
      * If the first character in the url is a single quote, then look for matching quote at the end.
@@ -263,8 +266,8 @@ public class LinksDetektor public constructor(
                 }
                 else -> // Check if we need to match characters. If we match characters and this is a start or stop of range,
                     // either way reset the world and start processing again.
-                    if (curr == gluedCloser && endsSingleLevelDomain()) {
-                        // The bracket or quote that was glued before the scheme closes here, so it ends the host:
+                    if (curr in gluedEnders && endsSingleLevelDomain()) {
+                        // Punctuation was glued before the scheme and this closes it, so it ends the host:
                         // "(http://localhost)" is the URL http://localhost.
                         inputTextReader.goBack()
                         readDomainName(bufferStringBuilder.substring(length))
@@ -510,16 +513,6 @@ public class LinksDetektor public constructor(
         return false
     }
 
-    /** The character that closes the one glued before a scheme, or null if there is none to look for. */
-    private fun closerOf(opener: Char): Char? = when (opener) {
-        '(' -> ')'
-        '[' -> ']'
-        '{' -> '}'
-        '<' -> '>'
-        '"', '\'' -> opener
-        else -> null
-    }
-
     /**
      * Checks that the buffer ends with a valid scheme such as `http://`, and cuts off any punctuation glued in
      * front of it (`(http://`, `"http://`, `x,http://`), so the URL starts at the scheme.
@@ -527,14 +520,23 @@ public class LinksDetektor public constructor(
      * @return True if the buffer now is exactly a valid scheme.
      */
     private fun dropGluedPrefix(): Boolean {
-        val text = bufferStringBuilder.toString().lowercase()
-        val scheme = VALID_SCHEMES.firstOrNull { text.endsWith(it) } ?: return false
-        val start = text.length - scheme.length
-        if (start > 0 && text[start - 1] !in SCHEME_GLUE) {
+        val length = bufferStringBuilder.length
+        val scheme = VALID_SCHEMES.firstOrNull {
+            it.length <= length && bufferStringBuilder.substring(length - it.length).lowercase() == it
+        } ?: return false
+        val start = length - scheme.length
+        if (start > 0 && bufferStringBuilder[start - 1] !in SCHEME_GLUE) {
             return false
         }
-        if (start > 0) {
-            gluedCloser = closerOf(text[start - 1])
+        // The punctuation before the scheme: in the buffer, or just before it in the input when the buffer was
+        // restarted at the scheme (as the '[' branch does).
+        val before = if (start > 0) {
+            bufferStringBuilder[start - 1]
+        } else {
+            content.getOrNull(inputTextReader.position - scheme.length - 1)
+        }
+        if (before != null && before in SCHEME_GLUE) {
+            gluedEnders = GLUE_ENDERS + if (before in SELF_CLOSING_GLUE) before.toString() else ""
         }
         bufferStringBuilder.deleteRange(0, start)
         return true
@@ -786,7 +788,7 @@ public class LinksDetektor public constructor(
         // reset the state of internal objects.
         quoteStart = false
         hasScheme = false
-        gluedCloser = null
+        gluedEnders = ""
         dontMatchIpv6 = false
         currentUrlMarker = UrlMarker()
 
@@ -834,7 +836,13 @@ public class LinksDetektor public constructor(
         /**
          * Characters that may be glued right before a scheme without being part of the URL, as in `(http://a.com)`.
          */
-        private const val SCHEME_GLUE = "([{<\"',;:*!"
+        private const val SCHEME_GLUE = "([{<>\"',;:*!"
+
+        /** Closers that end a single-level host when punctuation was cut off before its scheme. */
+        private const val GLUE_ENDERS = ")]}><\"'"
+
+        /** Glue that is its own closer, as in `*http://localhost*`. */
+        private const val SELF_CLOSING_GLUE = "*!,;"
 
         /**
          * Valid protocol schemes.

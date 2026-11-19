@@ -89,7 +89,7 @@ internal fun InputPane(
 }
 
 private const val UNTIDY_MESSAGE = "This link could not be tidied."
-private const val STACK_ABOVE_LABEL_SHARE = 0.3f
+private const val STACK_ABOVE_LABEL_SHARE = 0.25f
 
 private fun optionLabel(option: LinksDetektorOptions): String = when (option) {
     LinksDetektorOptions.Default -> "Default"
@@ -252,7 +252,7 @@ private fun StackedDetail(rows: ImmutableList<PartRow>, tidyable: Boolean, modif
     Column(modifier, verticalArrangement = Arrangement.spacedBy(dimens.space4)) {
         rows.forEachIndexed { index, row ->
             Column(verticalArrangement = Arrangement.spacedBy(dimens.space1)) {
-                LdText(row.label, style = LdTextStyle.Label)
+                LdText(row.label, style = LdTextStyle.Label, color = colors.dim)
                 LdText("Original", style = LdTextStyle.Caption, color = colors.dim)
                 LdText(row.original, Modifier.fillMaxWidth(), style = LdTextStyle.Code)
                 when {

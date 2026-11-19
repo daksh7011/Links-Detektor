@@ -191,15 +191,22 @@ class DetektorScreenTest {
         onAllNodesWithText("Tidied").fetchSemanticsNodes().forEach { node ->
             assertTrue(node.size.height <= oneLine, "a caption wraps at $fontScale x")
         }
-        if (fontScale >= 2f) {
-            onNodeWithTag("detail-stacked").assertExists()
-            val minWidth = 100f * density.density
-            persistentListOf("Sub.Example.org", "sub.example.org").forEach { value ->
-                val width = onNodeWithText(value).fetchSemanticsNode().size.width
-                assertTrue(width >= minWidth, "$value cell is only $width px wide at $fontScale x")
-            }
-        } else if (fontScale <= 1f) {
-            onNodeWithTag("detail-stacked").assertDoesNotExist()
+        onNodeWithTag("detail-stacked").assertExists()
+        val minWidth = 100f * density.density
+        persistentListOf("Sub.Example.org", "sub.example.org").forEach { value ->
+            val width = onNodeWithText(value).fetchSemanticsNode().size.width
+            assertTrue(width >= minWidth, "$value cell is only $width px wide at $fontScale x")
         }
+    }
+
+    @Test
+    fun `a wide detail pane keeps the table layout`() = runComposeUiTest {
+        val link = (ready(SAMPLE).result as UiState.Ready).value.links.first()
+        setContent {
+            LdTheme {
+                Box(Modifier.width(900.dp).wrapContentHeight(unbounded = true)) { DetailPane(link, onClose = {}) }
+            }
+        }
+        onNodeWithTag("detail-stacked").assertDoesNotExist()
     }
 }

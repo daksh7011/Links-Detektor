@@ -81,6 +81,16 @@ depend on the `-jvm` artifact directly.
 
 </details>
 
+## 🖥️ Showcase app
+
+A Compose Multiplatform app that runs the library live: paste text, see every detected link highlighted, and compare each
+original with its tidied form. It is hosted at <https://technowolf.in/links-detektor/> (live once the first release deploys).
+
+```bash
+./gradlew :desktopApp:run                    # desktop
+./gradlew :webApp:wasmJsBrowserDevelopmentRun  # web, in your browser
+```
+
 ## 🚀 Quick Start
 
 <div style="text-align: center;">

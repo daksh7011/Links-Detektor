@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "links-detektor-web",
+  "compatibility_date": "2026-09-01",
+  // A pass-through script so the Worker is a valid service-binding target. Files sit at the root of the directory;
+  // base_path mounts them under /links-detektor at serve time, so the same build also works at any other prefix.
+  "main": "worker.js",
+  "assets": {
+    "directory": "../../webApp/build/dist/wasmJs/productionExecutable",
+    "binding": "ASSETS",
+    "base_path": "/links-detektor"
+  },
+  "workers_dev": true,
+  "observability": { "enabled": true }
+}

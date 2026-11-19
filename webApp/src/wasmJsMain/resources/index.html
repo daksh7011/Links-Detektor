@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0d0c0a;color-scheme:dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d0c0a">
+    <title>Links Detektor</title>
+    <style>html,body{margin:0;background:#0d0c0a;color:#f5f1ea}</style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <p id="boot" role="status">Loading Links Detektor…</p>
+    <script>
+        (function () {
+            var boot = document.getElementById("boot");
+            // A module declaring one WasmGC struct type; validates only where WasmGC exists.
+            var gc = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 95, 1, 120, 0]);
+            var supported = typeof WebAssembly === "object" && WebAssembly.validate(gc);
+            if (!supported) {
+                boot.textContent = "Links Detektor needs a browser with WebAssembly GC: " +
+                    "Chrome or Edge 119, Firefox 120, Safari 18.2, or newer.";
+                return;
+            }
+            var failed = "Links Detektor could not load. Reload the page to try again.";
+            // composeApp.js fetches and instantiates the wasm itself: a failure there is a rejection or an error, not a script error.
+            function loadFailed() { if (document.getElementById("boot")) boot.textContent = failed; }
+            window.addEventListener("unhandledrejection", loadFailed);
+            window.addEventListener("error", loadFailed);
+            var app = document.createElement("script");
+            app.src = "composeApp.js";
+            app.onerror = loadFailed;
+            document.body.appendChild(app);
+        })();
+    </script>
+    <noscript><p>Links Detektor needs JavaScript.</p></noscript>
+</body>
+</html>

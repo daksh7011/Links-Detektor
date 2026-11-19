@@ -168,3 +168,6 @@ gradle-app.setting
 
 # Kotlin Gradle plugin session data
 .kotlin/
+
+deploy/web/node_modules/
+deploy/web/.wrangler/

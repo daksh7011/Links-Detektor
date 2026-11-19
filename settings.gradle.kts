@@ -24,3 +24,12 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":links-detektor")
+include(":shared:presentation")
+include(":shared:design-library")
+include(":feature:common:client:api")
+include(":feature:common:client:metro")
+include(":feature:detektor:client:api")
+include(":feature:detektor:client:basic")
+include(":client")
+include(":desktopApp")
+include(":webApp")

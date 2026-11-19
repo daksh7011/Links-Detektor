@@ -38,6 +38,10 @@ jobs:
     # All Kotlin/Native targets (Apple included) publish from one macOS host.
     runs-on: macos-latest
 
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      web_needed: ${{ steps.web_needed.outputs.web_needed }}
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -63,6 +67,7 @@ jobs:
       # resolver cannot produce that format, so it is only given the result. Releases on Maven Central are immutable,
       # so publishing and the GitHub release are skipped when the version already exists there.
       - name: Resolve version
+        id: resolve
         run: |
           VERSION=$(grep -m1 '^lib = ' gradle/libs.versions.toml | cut -d'"' -f2)
           echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)[0-9]+)?$' || { echo "::error::Bad version $VERSION"; exit 1; }
@@ -70,6 +75,7 @@ jobs:
           case "$VERSION" in *-*) echo "PRERELEASE=true" ;; *) echo "PRERELEASE=false" ;; esac >> "$GITHUB_ENV"
           CODE=$(curl -s -o /dev/null -w '%{http_code}' "https://repo1.maven.org/maven2/com/slothiesmooth/links-detektor/$VERSION/")
           [ "$CODE" = "200" ] && echo "ALREADY_PUBLISHED=true" >> "$GITHUB_ENV" || echo "ALREADY_PUBLISHED=false" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Test and check ABI
         run: ./gradlew :links-detektor:allTests :links-detektor:checkKotlinAbi
@@ -100,6 +106,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # The web app is deployed when this run made the release, and also when a re-run finds the release for VERSION
+      # without its web zip (a partial failure last time) AND the tag still points at this commit. Without that commit
+      # check a later fix-forward push would ship its HEAD under an old version; that case is manual recovery
+      # (deploy/web/README.md). This only reads the release: it never publishes anything.
+      - name: Check whether the web app is still to ship
+        id: web_needed
+        run: |
+          NEEDED=false
+          if [ "$ALREADY_PUBLISHED" = "false" ]; then NEEDED=true
+          elif ASSETS=$(gh release view "$VERSION" --json assets --jq '.assets[].name' 2>/dev/null); then
+            if echo "$ASSETS" | grep -qx "links-detektor-web-$VERSION.zip"; then :
+            elif [ "$(gh api "repos/$GITHUB_REPOSITORY/commits/$VERSION" --jq .sha 2>/dev/null)" = "$GITHUB_SHA" ]; then NEEDED=true
+            else echo "::warning::Web app not shipped: the tag $VERSION does not point at $GITHUB_SHA (or the lookup failed). Use manual recovery in deploy/web/README.md."
+            fi
+          else echo "::warning::Web app not shipped: the GitHub release for $VERSION is missing or the lookup failed."
+          fi
+          echo "web_needed=$NEEDED" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Generate API docs
         run: ./gradlew :links-detektor:dokkaGenerate
 
@@ -114,3 +140,75 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # Runs when this run released a new version (same gate as Maven Central and Release Drafter), or when the release for
+  # VERSION exists but has no web zip yet, so a re-run after a partial failure still deploys and attaches. It never
+  # re-publishes: the Maven Central step stays gated on ALREADY_PUBLISHED. There is no manual trigger, since that would
+  # re-run the publish. Manual recovery is in deploy/web/README.md.
+  web:
+    name: Deploy web app and attach zip
+    needs: [build, publish]
+    if: needs.publish.outputs.web_needed == 'true'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.publish.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The distribution the build job already tested and size-checked, not a rebuild.
+      - name: Download web distribution
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: links-detektor-web
+          path: webApp/build/dist/wasmJs/productionExecutable
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: deploy/web/package-lock.json
+
+      - name: Check payload budget
+        run: node scripts/wasm-size.mjs webApp/build/dist/wasmJs/productionExecutable --budget-mb 5
+
+      # Source maps are not shipped, neither in the zip nor on the Worker.
+      - name: Drop source maps
+        run: find webApp/build/dist/wasmJs/productionExecutable -name '*.map' -delete
+
+      - name: Package
+        run: |
+          cd webApp/build/dist/wasmJs/productionExecutable
+          zip -r "$GITHUB_WORKSPACE/links-detektor-web-$VERSION.zip" .
+          cd "$GITHUB_WORKSPACE"
+          sha256sum "links-detektor-web-$VERSION.zip" > "links-detektor-web-$VERSION.zip.sha256"
+
+      - name: Install deploy tooling
+        working-directory: deploy/web
+        run: npm ci
+
+      - name: Deploy Worker
+        working-directory: deploy/web
+        shell: bash
+        run: npx wrangler deploy | tee "$RUNNER_TEMP/deploy.log"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # The public technowolf.in URL is not recorded as working yet, so check the workers.dev URL wrangler printed.
+      - name: Smoke check
+        shell: bash
+        run: |
+          URL=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' "$RUNNER_TEMP/deploy.log" | head -1)
+          [ -n "$URL" ] || { echo "::error::No workers.dev URL in the deploy output"; exit 1; }
+          curl -fsS --retry 5 --retry-delay 3 --retry-all-errors -o "$RUNNER_TEMP/index.html" "$URL/links-detektor/"
+          grep -q '<title>Links Detektor</title>' "$RUNNER_TEMP/index.html"
+
+      # Last, so the zip only exists on the release once the deploy and smoke check succeeded.
+      - name: Attach to the GitHub release
+        run: gh release upload "$VERSION" "links-detektor-web-$VERSION.zip" "links-detektor-web-$VERSION.zip.sha256" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

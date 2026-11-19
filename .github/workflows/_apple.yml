@@ -24,4 +24,4 @@ jobs:
       # The ABI check runs here too: the Apple klib dumps can only be produced on a Mac. `assemble` also
       # cross-compiles linuxArm64 and mingwX64.
       - name: Apple tests, ABI check and assemble
-        run: ./gradlew :links-detektor:iosSimulatorArm64Test :links-detektor:macosArm64Test :links-detektor:checkKotlinAbi :links-detektor:assemble --continue
+        run: ./gradlew :links-detektor:iosSimulatorArm64Test :links-detektor:macosArm64Test :links-detektor:checkKotlinAbi :links-detektor:assemble :client:compileKotlinIosSimulatorArm64 --continue

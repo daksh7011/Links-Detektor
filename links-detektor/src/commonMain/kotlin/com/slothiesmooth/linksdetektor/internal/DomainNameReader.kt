@@ -26,7 +26,7 @@ import kotlinx.collections.immutable.ImmutableList
  * should be read next.
  *
  * @property bufferStringBuilder Buffer used to accumulate the domain name characters.
- * @property currentDomain The initial string that might be part of a domain name.
+ * @property initialDomain The initial string that might be part of a domain name.
  * @param inputTextReader The input stream to read characters from.
  * @param optionMask Configuration options that affect domain name validation.
  * @param characterHandler Handler called for each non-domain character to track special characters.
@@ -43,7 +43,7 @@ internal class DomainNameReader(
     /**
      * The domain name started with a partial domain name found. This is the original string of the domain name only.
      */
-    private val currentDomain: String?,
+    private val initialDomain: String?,
     private val optionMask: OptionMask,
     private val characterHandler: CharacterHandler,
 ) {
@@ -138,12 +138,39 @@ internal class DomainNameReader(
     }
 
     /**
+     * The initial domain without the brackets and quotes written in front of it, which are not part of a host:
+     * `(a.com` is the host `a.com`. They are cut out of the buffer too, when the host starts the buffer; after a
+     * scheme the result is empty, which makes the host invalid. A `[` is kept, since it can open an IPv6 address.
+     */
+    private fun withoutLeadingWrappers(): String? {
+        if (initialDomain == null) {
+            return null
+        }
+        val wrappers = initialDomain.takeWhile { it in LEADING_WRAPPERS }.length
+        if (wrappers > 0) {
+            val start = bufferStringBuilder.length - initialDomain.length
+            if (start > 0) {
+                // Something such as a scheme comes first ("https://}evil.com"): the URL cannot skip the wrapper
+                // and stay one piece of the text, so it is not a host at all.
+                return ""
+            }
+            bufferStringBuilder.deleteRange(start, start + wrappers)
+        }
+        return initialDomain.substring(wrappers)
+    }
+
+    /**
      * Reads and parses the current string to make sure the domain name started where it was supposed to,
      * and the current domain name is correct.
      * @return The next state to use after reading the current.
      */
     private fun readCurrent(): ReaderNextState {
+        val currentDomain = withoutLeadingWrappers()
         if (currentDomain != null) {
+            if (currentDomain.isEmpty() && initialDomain.orEmpty().isNotEmpty()) {
+                // Nothing but brackets or quotes was read as the start of a host.
+                return ReaderNextState.InvalidDomainName
+            }
             // Handles the case where the string is ".hello"
             if (currentDomain.length == 1 && currentDomain[0].isDot()) {
                 return ReaderNextState.InvalidDomainName
@@ -645,6 +672,9 @@ internal class DomainNameReader(
     }
 
     companion object {
+        /** Brackets and quotes that are cut off the front of a host; `[` stays, it can open an IPv6 address. */
+        private const val LEADING_WRAPPERS = "<>\"'()]}{"
+
         /**
          * Characters a single-level domain may not hold: brackets and quotes belong to the text around a URL.
          */

@@ -3,6 +3,7 @@ package com.slothiesmooth.linksdetektor
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -72,13 +73,57 @@ class JunkHostTest {
     }
 
     @Test
-    fun noHostEndsWithAColonUnderAnyOption() {
+    fun noHostEndsWithAColonUnderAnyOptionPair() {
+        val colonInputs = persistentListOf(
+            "[docs: http://wiki]", "docs: http://wiki", "see docs: now", "key:\"http://a.com\"",
+            "{url:\"http://svc\"}", "var u={host:'h'}", "title:<b>", "docs:(x)", "[docs:(http://wiki)]",
+        )
         for (option in LinksDetektorOptions.entries) {
-            for (input in persistentListOf("[docs: http://wiki]", "docs: http://wiki", "see docs: now")) {
-                for (url in LinksDetektor(input, option).detect()) {
-                    assertFalse(url.host.orEmpty().endsWith(":"), "option=$option input=$input host=${url.host}")
+            val options = persistentSetOf(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN, option)
+            for (input in colonInputs) {
+                for (url in LinksDetektor(input, options).detect()) {
+                    assertFalse(url.host.orEmpty().endsWith(":"), "options=$options input=$input host=${url.host}")
                 }
             }
+        }
+    }
+
+    @Test
+    fun singleWordHostWithAPortKeepsItsPortAndDropsTheCloser() {
+        val single = LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN
+        val expected = persistentMapOf(
+            "http://localhost:8080" to "http://localhost:8080",
+            "localhost:8080" to "localhost:8080",
+            "http://localhost:8080)" to "http://localhost:8080",
+            "(served at http://localhost:8080)" to "http://localhost:8080",
+            "http://localhost:8080 x" to "http://localhost:8080",
+        )
+        for ((input, text) in expected) {
+            val urls = LinksDetektor(input, single).detect()
+
+            assertEquals(1, urls.size, input)
+            assertEquals("localhost", urls.first().host, input)
+            assertEquals(8080, urls.first().port, input)
+            assertEquals(text, input.substring(urls.first().range), input)
+        }
+    }
+
+    @Test
+    fun anEmptyHostIsNotEndedByACloserThatFollowsTheScheme() {
+        val single = LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN
+        for (input in persistentListOf("https://}evil.com", "x http://)evil.com y", "(http://)a.com", "http%3a//}?.o.uk")) {
+            for (url in LinksDetektor(input, single).detect()) {
+                assertFalse(url.host.orEmpty().any { it in junkCharacters }, "input=$input host=${url.host}")
+            }
+        }
+    }
+
+    @Test
+    fun aLeadingWrapperIsNotPartOfADottedHost() {
+        val single = LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN
+        val expected = persistentMapOf("(a.com)" to "a.com", "'a.com'" to "a.com", "see (a.com) and 'b.org'" to "a.com")
+        for ((input, host) in expected) {
+            assertEquals(host, LinksDetektor(input, single).detect().first().host, input)
         }
     }
 

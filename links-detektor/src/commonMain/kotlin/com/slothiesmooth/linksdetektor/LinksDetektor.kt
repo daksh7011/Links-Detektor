@@ -80,6 +80,9 @@ public class LinksDetektor public constructor(
      */
     private var gluedEnders: String = ""
 
+    /** Set by [readScheme] when it stopped on a space or a quote or bracket that an option tracks. */
+    private var schemeStoppedOnTerminator = false
+
     /**
      * If the first character in the url is a single quote, then look for matching quote at the end.
      */
@@ -266,7 +269,7 @@ public class LinksDetektor public constructor(
                 }
                 else -> // Check if we need to match characters. If we match characters and this is a start or stop of range,
                     // either way reset the world and start processing again.
-                    if (curr in gluedEnders && endsSingleLevelDomain()) {
+                    if (curr in gluedEnders && endsSingleLevelDomain() && bufferStringBuilder.length > length) {
                         // Punctuation was glued before the scheme and this closes it, so it ends the host:
                         // "(http://localhost)" is the URL http://localhost.
                         inputTextReader.goBack()
@@ -284,7 +287,7 @@ public class LinksDetektor public constructor(
                             readEnd(ReadEndState.InvalidUrl)
                         }
                         length = 0
-                    } else if (curr in GLUE_ENDERS && endsSingleLevelDomain()) {
+                    } else if (curr in GLUE_ENDERS && endsSingleLevelDomain() && bufferStringBuilder.length > length) {
                         // An unmatched closer after a single-word host is not part of it, as with dotted hosts:
                         // "http://localhost)" is the URL http://localhost.
                         inputTextReader.goBack()
@@ -355,8 +358,8 @@ public class LinksDetektor public constructor(
         } else if (bufferStringBuilder.isNotEmpty() &&
             optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
             inputTextReader.canReadChars(1) &&
-            // "docs: " is a word and a colon, not a host: no port can follow the colon.
-            bufferStringBuilder[bufferStringBuilder.length - 1] != ' '
+            // "docs: " and `key:"` are a word and a colon, not a host: no port can follow the colon.
+            !schemeStoppedOnTerminator
         ) { // takes care of case like hi:
             inputTextReader.goBack() // unread the ":" so readDomainName can take care of the port
             bufferStringBuilder.deleteRange(bufferStringBuilder.length - 1, bufferStringBuilder.length)
@@ -478,6 +481,7 @@ public class LinksDetektor public constructor(
      * @return True, if the scheme was found, else false.
      */
     private fun readScheme(): Boolean {
+        schemeStoppedOnTerminator = false
         // Check if we are checking HTML and the length is longer than mailto:
         // Check if the string is actually mailto: then just return nothing.
         if (optionMask.has(LinksDetektorOptions.HTML) && bufferStringBuilder.length >= HTML_MAILTO.length && HTML_MAILTO.equals(
@@ -507,6 +511,7 @@ public class LinksDetektor public constructor(
             } else if (curr == ' ' || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
                 // if we find a space or end of input, then nothing found.
                 bufferStringBuilder.append(curr)
+                schemeStoppedOnTerminator = true
                 return false
             } else if (curr == '[') { // if we're starting to see an ipv6 address
                 inputTextReader.goBack() // unread the '[', so that we can start looking for ipv6
@@ -564,8 +569,6 @@ public class LinksDetektor public constructor(
         // keep looping until "done"
         var done = false
 
-        // if we had a dot in the input, then it might be a domain name and not a username and password.
-        var rollback = false
         while (!done && !inputTextReader.eof()) {
             val curr: Char = inputTextReader.read()
 
@@ -579,31 +582,26 @@ public class LinksDetektor public constructor(
                 currentUrlMarker.setIndex(UrlPart.USERNAME_PASSWORD, beginningOfUsername)
                 return readDomainName("")
             } else if (curr.isDot() || curr == '[') {
-                // everything is still ok, remember that we found a dot or '[' in case we might need to backtrack
+                // everything is still ok: it might be a domain name and not a username and password
                 bufferStringBuilder.append(curr)
-                rollback = true
             } else if (
                 curr == '#' || curr == '?' || curr == '\\' || curr == ' ' || curr == '/' || curr == ':' ||
-                checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched
+                curr in GLUE_ENDERS || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched
             ) {
                 // one of these characters indicates we are in an invalid state and should just return.
-                rollback = true
                 done = true
             } else {
                 // all else, append character assuming it's ok so far.
                 bufferStringBuilder.append(curr)
             }
         }
-        return if (rollback) {
-            // got to here, so there is no username and password. (We didn't find a @)
-            val distance = bufferStringBuilder.length - start
-            bufferStringBuilder.deleteRange(start, bufferStringBuilder.length)
-            val currIndex = (inputTextReader.position - distance - if (done) 1 else 0).coerceAtLeast(0)
-            inputTextReader.seek(currIndex)
-            false
-        } else {
-            readEnd(ReadEndState.InvalidUrl)
-        }
+        // No '@' was found, also when the input simply ended ("localhost:8080"): there is no username and
+        // password. Put back what was read, so the domain reader can take it as a host and port.
+        val distance = bufferStringBuilder.length - start
+        bufferStringBuilder.deleteRange(start, bufferStringBuilder.length)
+        val currIndex = (inputTextReader.position - distance - if (done) 1 else 0).coerceAtLeast(0)
+        inputTextReader.seek(currIndex)
+        return false
     }
 
     /**

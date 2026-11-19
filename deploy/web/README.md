@@ -1,17 +1,20 @@
 # Links Detektor web Worker
 
-A Cloudflare Worker with static assets that serves the Compose Multiplatform wasm build under `/links-detektor/`. It has no script of its own; `assets.base_path` mounts the distribution at that prefix.
+A Cloudflare Worker with static assets that serves the Compose Multiplatform wasm build under `/links-detektor/`. `assets.base_path` mounts the distribution at that prefix. The tiny `worker.js` only passes requests to the assets binding; it exists so the Worker is a valid service-binding target for the website, which forwards `/links-detektor/*` unchanged.
 
 ## Local run
 
 ```bash
 ./gradlew :webApp:wasmJsBrowserDistribution
+find webApp/build/dist/wasmJs/productionExecutable -name '*.map' -delete   # CI ships no source maps
 cd deploy/web && npm ci && npm run dev   # http://localhost:8787/links-detektor/
 ```
 
 ## Deploy
 
-The release workflow (`master.yml`, job `web`) runs `npx wrangler deploy` in this folder. Manually: `npm run deploy` after building the distribution, with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` set. A manual redeploy of an old release is `npm run deploy` from a checkout of its tag, since the release workflow has no manual trigger (it would re-run the Maven Central publish).
+The release workflow (`master.yml`, job `web`) runs `npx wrangler deploy` in this folder. Manually: `npm run deploy` after building the distribution, with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` set. The `web` job also runs when a re-run finds the release for the version without its web zip, so re-running a failed workflow heals itself and never re-publishes to Maven Central.
+
+Manual recovery (the release workflow has no manual trigger, since it would re-run the publish): check out the tag, build with `./gradlew :webApp:wasmJsBrowserDistribution`, delete the `*.map` files from the distribution, zip its contents as `links-detektor-web-<version>.zip` (plus a `.sha256`), run `gh release upload <version> <files> --clobber`, then `npm run deploy` in this folder.
 
 ## Routing decision
 

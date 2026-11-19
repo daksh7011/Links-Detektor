@@ -442,6 +442,11 @@ internal class DomainNameReader(
             // There is no size restriction if the top level domain is international (starts with "xn--")
             valid =
                 topLevelStart.equals("xn--", ignoreCase = true) || _topLevelLength in MIN_TOP_LEVEL_DOMAIN..MAX_TOP_LEVEL_DOMAIN
+
+            // A single-level domain accepts any character, so text such as `>x<` or `{"u"` must be refused here.
+            if (valid && _dots == 0) {
+                valid = (_startDomainName until bufferStringBuilder.length).none { bufferStringBuilder[it] in JUNK_HOST_CHARACTERS }
+            }
         }
         if (valid) {
             // if it's valid, add the last character (if specified) and return the valid state.
@@ -640,6 +645,11 @@ internal class DomainNameReader(
     }
 
     companion object {
+        /**
+         * Characters a single-level domain may not hold: brackets and quotes belong to the text around a URL.
+         */
+        private const val JUNK_HOST_CHARACTERS = "<>\"'()[]{}"
+
         /**
          * The minimum length of a ascii based top level domain.
          */

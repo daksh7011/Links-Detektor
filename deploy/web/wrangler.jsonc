@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "links-detektor-web",
+  "compatibility_date": "2026-09-01",
+  // Assets only: no Worker script. Files sit at the root of the directory; base_path mounts them
+  // under /links-detektor at serve time, so the same build also works at any other prefix.
+  "assets": {
+    "directory": "../../webApp/build/dist/wasmJs/productionExecutable",
+    "base_path": "/links-detektor"
+  },
+  "workers_dev": true,
+  "observability": { "enabled": true }
+}

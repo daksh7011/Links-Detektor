@@ -206,6 +206,8 @@ println("Found domains: $links")
   `http://evil#@good.com` has host `evil`; otherwise at most a bare `good.com` is found, never with `evil` as userinfo.
 - Punctuation glued before a scheme (`(http://a.com)`, `'http://a.com'`, `x,http://a.com`) is no longer part of the URL: it
   starts at the scheme and keeps it. Single-word hosts such as `(http://localhost)` no longer get a host like `(http:/`.
+- With `Default`, a bracket or quote written right before a host no longer hides it: `(a.com)` and `'a.com'` now give the host
+  `a.com` (the leading wrapper is cut off), and a host never contains `<>"'()[]{}`, `:` or `/` (bracketed IPv6 excepted).
 - Normalized hosts keep delimiter characters percent-encoded instead of decoding them.
 - `LinksDetektor` is stateful and not thread-safe; `detect()` is idempotent. `Url.rawHost`/`rawPath` are no longer
   `protected`.

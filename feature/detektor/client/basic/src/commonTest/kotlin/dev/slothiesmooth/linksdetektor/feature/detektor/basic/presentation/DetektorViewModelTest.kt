@@ -65,7 +65,7 @@ class DetektorViewModelTest {
     ) = DetektorViewModel(DetectLinksUseCase(engine, dispatcher))
 
     @Test
-    fun `typing detects after the debounce, not before`() = runTest {
+    fun `typing detects after the debounce and not before`() = runTest {
         val vm = vm()
         vm.onInputChange("go to https://example.com now")
         advanceTimeBy(INPUT_DEBOUNCE_MS - 1)

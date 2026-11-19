@@ -42,7 +42,7 @@ class LdSchemeTest {
     private val scheme = ldColorScheme(c)
 
     @Test
-    fun `every Material role is one of the design tokens, never a stock default`() {
+    fun `every Material role is one of the design tokens and never a stock default`() {
         val palette = persistentSetOf(
             c.stage, c.surface, c.surface2, c.line, c.fg, c.dim, c.ok, c.amber, c.amberHover, c.amberInk,
             c.scrim, Color.Transparent,

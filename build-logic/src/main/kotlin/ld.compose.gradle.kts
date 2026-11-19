@@ -53,3 +53,7 @@ compose.resources {
 extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension> {
     sourceSets.all { languageSettings.optIn("androidx.compose.material3.ExperimentalMaterial3Api") }
 }
+
+// Compose UI tests here run on the desktop jvm target only. The wasmJs check below only guards Compose UI tests on wasm,
+// which these modules do not have, and it fails for every library module because only :webApp declares an executable.
+tasks.matching { it.name == "checkComposeUiTestConfigurationForWasmJs" }.configureEach { enabled = false }

@@ -38,6 +38,10 @@ jobs:
     # All Kotlin/Native targets (Apple included) publish from one macOS host.
     runs-on: macos-latest
 
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      released: ${{ steps.resolve.outputs.released }}
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -63,6 +67,7 @@ jobs:
       # resolver cannot produce that format, so it is only given the result. Releases on Maven Central are immutable,
       # so publishing and the GitHub release are skipped when the version already exists there.
       - name: Resolve version
+        id: resolve
         run: |
           VERSION=$(grep -m1 '^lib = ' gradle/libs.versions.toml | cut -d'"' -f2)
           echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)[0-9]+)?$' || { echo "::error::Bad version $VERSION"; exit 1; }
@@ -70,6 +75,8 @@ jobs:
           case "$VERSION" in *-*) echo "PRERELEASE=true" ;; *) echo "PRERELEASE=false" ;; esac >> "$GITHUB_ENV"
           CODE=$(curl -s -o /dev/null -w '%{http_code}' "https://repo1.maven.org/maven2/com/slothiesmooth/links-detektor/$VERSION/")
           [ "$CODE" = "200" ] && echo "ALREADY_PUBLISHED=true" >> "$GITHUB_ENV" || echo "ALREADY_PUBLISHED=false" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          [ "$CODE" = "200" ] && echo "released=false" >> "$GITHUB_OUTPUT" || echo "released=true" >> "$GITHUB_OUTPUT"
 
       - name: Test and check ABI
         run: ./gradlew :links-detektor:allTests :links-detektor:checkKotlinAbi
@@ -114,3 +121,63 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # Only when this run released a new version (same gate as Maven Central and Release Drafter), stable or pre-release.
+  # There is no manual trigger: it would re-run the publish. To redeploy by hand, run `npm run deploy` in deploy/web.
+  web:
+    name: Deploy web app and attach zip
+    needs: publish
+    if: needs.publish.outputs.released == 'true'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.publish.outputs.version }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle (Setup)
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: deploy/web/package-lock.json
+
+      - name: Build web distribution
+        run: ./gradlew :webApp:wasmJsBrowserDistribution
+
+      - name: Check payload budget
+        run: node scripts/wasm-size.mjs webApp/build/dist/wasmJs/productionExecutable --budget-mb 5
+
+      - name: Package
+        run: |
+          cd webApp/build/dist/wasmJs/productionExecutable
+          zip -r "$GITHUB_WORKSPACE/links-detektor-web-$VERSION.zip" .
+          cd "$GITHUB_WORKSPACE"
+          sha256sum "links-detektor-web-$VERSION.zip" > "links-detektor-web-$VERSION.zip.sha256"
+
+      - name: Attach to the GitHub release
+        run: gh release upload "$VERSION" "links-detektor-web-$VERSION.zip" "links-detektor-web-$VERSION.zip.sha256" --clobber
+
+      - name: Deploy Worker
+        working-directory: deploy/web
+        run: npm ci && npx wrangler deploy | tee "$RUNNER_TEMP/deploy.log"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # The public technowolf.in URL is not recorded as working yet, so check the workers.dev URL wrangler printed.
+      - name: Smoke check
+        run: |
+          URL=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' "$RUNNER_TEMP/deploy.log" | head -1)
+          [ -n "$URL" ] || { echo "::error::No workers.dev URL in the deploy output"; exit 1; }
+          curl -fsS -o /dev/null "$URL/links-detektor/"

@@ -28,7 +28,12 @@ jobs:
       # The showcase app: desktop and web tests, then the production web bundle and its size budget.
       # ubuntu-latest ships Chrome for the Karma wasm tests.
       - name: App tests and web distribution
-        run: ./gradlew jvmTest :webApp:wasmJsBrowserTest :webApp:wasmJsBrowserDistribution :desktopApp:compileKotlin
+        run: >-
+          ./gradlew jvmTest :webApp:wasmJsBrowserTest
+          :shared:design-library:wasmJsBrowserTest :shared:presentation:wasmJsBrowserTest
+          :feature:common:client:api:wasmJsBrowserTest :feature:common:client:metro:wasmJsBrowserTest
+          :feature:detektor:client:api:wasmJsBrowserTest :feature:detektor:client:basic:wasmJsBrowserTest
+          :webApp:wasmJsBrowserDistribution :desktopApp:compileKotlin
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -40,3 +45,5 @@ jobs:
         with:
           name: links-detektor-web
           path: webApp/build/dist/wasmJs/productionExecutable
+          retention-days: 7
+          if-no-files-found: error

@@ -55,5 +55,6 @@ extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtensio
 }
 
 // Compose UI tests here run on the desktop jvm target only. The wasmJs check below only guards Compose UI tests on wasm,
-// which these modules do not have, and it fails for every library module because only :webApp declares an executable.
-tasks.matching { it.name == "checkComposeUiTestConfigurationForWasmJs" }.configureEach { enabled = false }
+// and it fails for every library module because only :webApp declares an executable. Accepted trade-off: wasm
+// commonTest in these modules must not render Compose UI, since that guard is off.
+tasks.named { it == "checkComposeUiTestConfigurationForWasmJs" }.configureEach { enabled = false }

@@ -2,6 +2,8 @@ package dev.slothiesmooth.linksdetektor.feature.detektor.basic.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -17,6 +19,7 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -170,14 +173,33 @@ class DetektorScreenTest {
         setContent {
             val scaled = Density(LocalDensity.current.density, fontScale)
             CompositionLocalProvider(LocalDensity provides scaled) {
-                oneLine = with(scaled) { MaterialTheme.ldType.label.lineHeight.toPx() } * 1.5f
-                // 360 dp wide sheet: 16 dp gutters, 24 dp panel padding.
-                LdTheme { Box(Modifier.size(328.dp, 1600.dp)) { DetailPane(link, onClose = {}) } }
+                LdTheme {
+                    oneLine = with(scaled) { MaterialTheme.ldType.label.lineHeight.toPx() } * 1.5f
+                    // 360 dp wide sheet: 16 dp gutters, 24 dp panel padding. The pane may grow past the test window.
+                    Box(Modifier.width(328.dp).wrapContentHeight(unbounded = true)) { DetailPane(link, onClose = {}) }
+                }
             }
         }
         persistentListOf("Full URL", "Scheme", "Username", "Password", "Host", "Port", "Path", "Query", "Fragment").forEach { label ->
             val height = onNodeWithText(label).fetchSemanticsNode().size.height
+            assertTrue(height > 0, "$label has no height at $fontScale x")
             assertTrue(height <= oneLine, "$label is $height px high at $fontScale x, so it wraps")
+        }
+        onAllNodesWithText("Original").fetchSemanticsNodes().forEach { node ->
+            assertTrue(node.size.height <= oneLine, "a caption wraps at $fontScale x")
+        }
+        onAllNodesWithText("Tidied").fetchSemanticsNodes().forEach { node ->
+            assertTrue(node.size.height <= oneLine, "a caption wraps at $fontScale x")
+        }
+        if (fontScale >= 2f) {
+            onNodeWithTag("detail-stacked").assertExists()
+            val minWidth = 100f * density.density
+            persistentListOf("Sub.Example.org", "sub.example.org").forEach { value ->
+                val width = onNodeWithText(value).fetchSemanticsNode().size.width
+                assertTrue(width >= minWidth, "$value cell is only $width px wide at $fontScale x")
+            }
+        } else if (fontScale <= 1f) {
+            onNodeWithTag("detail-stacked").assertDoesNotExist()
         }
     }
 }

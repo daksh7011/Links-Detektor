@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -86,6 +87,9 @@ internal fun InputPane(
         }
     }
 }
+
+private const val UNTIDY_MESSAGE = "This link could not be tidied."
+private const val STACK_ABOVE_LABEL_SHARE = 0.3f
 
 private fun optionLabel(option: LinksDetektorOptions): String = when (option) {
     LinksDetektorOptions.Default -> "Default"
@@ -198,31 +202,73 @@ private fun ResultRow(link: DetectedLink, selected: Boolean, onClick: () -> Unit
 
 @Composable
 internal fun DetailPane(link: DetectedLink, onClose: (() -> Unit)?, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.ldColors
     val dimens = MaterialTheme.ldDimens
     val rows = remember(link) { detailRows(link) }
     val labelWidth = labelColumnWidth()
     LdPanel(modifier.testTag("detektor-detail")) {
         Column(verticalArrangement = Arrangement.spacedBy(dimens.space3)) {
-            TableRow {
-                Spacer(Modifier.width(labelWidth))
-                Cell("Original", Modifier.weight(1f), LdTextStyle.Caption, colors.dim)
-                Cell("Tidied", Modifier.weight(1f), LdTextStyle.Caption, colors.dim)
-            }
-            rows.forEachIndexed { index, row ->
-                TableRow {
-                    Cell(row.label, Modifier.width(labelWidth), LdTextStyle.Label, colors.dim)
-                    Cell(row.original, Modifier.weight(1f), LdTextStyle.Code)
-                    when {
-                        row.normalized != null ->
-                            Cell(row.normalized, Modifier.weight(1f), LdTextStyle.Code, if (row.changed) colors.amber else colors.fg)
-
-                        index == 0 -> Cell("This link could not be tidied.", Modifier.weight(1f), LdTextStyle.BodySm, colors.dim)
-                        else -> Spacer(Modifier.weight(1f))
-                    }
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                // When the labels take too much of the row for two readable value columns, each row stacks instead.
+                if (labelWidth > maxWidth * STACK_ABOVE_LABEL_SHARE) {
+                    StackedDetail(rows, tidyable = link.normalized != null, Modifier.testTag("detail-stacked"))
+                } else {
+                    TableDetail(rows, tidyable = link.normalized != null, labelWidth)
                 }
             }
             if (onClose != null) LdButton("Close", onClick = onClose, style = LdButtonStyle.Ghost)
+        }
+    }
+}
+
+@Composable
+private fun TableDetail(rows: ImmutableList<PartRow>, tidyable: Boolean, labelWidth: Dp) {
+    val colors = MaterialTheme.ldColors
+    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.ldDimens.space3)) {
+        TableRow {
+            Spacer(Modifier.width(labelWidth))
+            Cell("Original", Modifier.weight(1f), LdTextStyle.Caption, colors.dim)
+            Cell("Tidied", Modifier.weight(1f), LdTextStyle.Caption, colors.dim)
+        }
+        rows.forEachIndexed { index, row ->
+            TableRow {
+                Cell(row.label, Modifier.width(labelWidth), LdTextStyle.Label, colors.dim)
+                Cell(row.original, Modifier.weight(1f), LdTextStyle.Code)
+                when {
+                    row.normalized != null ->
+                        Cell(row.normalized, Modifier.weight(1f), LdTextStyle.Code, if (row.changed) colors.amber else colors.fg)
+
+                    index == 0 && !tidyable -> Cell(UNTIDY_MESSAGE, Modifier.weight(1f), LdTextStyle.BodySm, colors.dim)
+                    else -> Spacer(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StackedDetail(rows: ImmutableList<PartRow>, tidyable: Boolean, modifier: Modifier) {
+    val colors = MaterialTheme.ldColors
+    val dimens = MaterialTheme.ldDimens
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(dimens.space4)) {
+        rows.forEachIndexed { index, row ->
+            Column(verticalArrangement = Arrangement.spacedBy(dimens.space1)) {
+                LdText(row.label, style = LdTextStyle.Label)
+                LdText("Original", style = LdTextStyle.Caption, color = colors.dim)
+                LdText(row.original, Modifier.fillMaxWidth(), style = LdTextStyle.Code)
+                when {
+                    row.normalized != null -> {
+                        LdText("Tidied", style = LdTextStyle.Caption, color = colors.dim)
+                        LdText(
+                            row.normalized,
+                            Modifier.fillMaxWidth(),
+                            style = LdTextStyle.Code,
+                            color = if (row.changed) colors.amber else colors.fg,
+                        )
+                    }
+
+                    index == 0 && !tidyable -> LdText(UNTIDY_MESSAGE, style = LdTextStyle.BodySm, color = colors.dim)
+                }
+            }
         }
     }
 }

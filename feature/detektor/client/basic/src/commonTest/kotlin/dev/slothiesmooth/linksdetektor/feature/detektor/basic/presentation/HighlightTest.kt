@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class HighlightTest {
     private val style =
@@ -52,5 +53,16 @@ class HighlightTest {
     fun `no links gives plain text`() {
         val out = buildHighlight("plain", persistentListOf(), null, style)
         assertEquals(0, out.spanStyles.size)
+    }
+
+    @Test
+    fun `linkIdAt hits inside a link and its last character but not its end or the gaps`() {
+        val out = buildHighlight("see a.com and b.com", persistentListOf(link(0, 4, 9), link(1, 14, 19)), null, style)
+        assertEquals(0, out.linkIdAt(4))
+        assertEquals(0, out.linkIdAt(6))
+        assertEquals(0, out.linkIdAt(8))
+        assertNull(out.linkIdAt(9))
+        assertNull(out.linkIdAt(2))
+        assertEquals(1, out.linkIdAt(18))
     }
 }

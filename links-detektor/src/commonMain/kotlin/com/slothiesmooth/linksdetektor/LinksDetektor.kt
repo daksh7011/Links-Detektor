@@ -80,9 +80,6 @@ public class LinksDetektor public constructor(
      */
     private var gluedEnders: String = ""
 
-    /** Set by [readScheme] when it stopped on a space or a quote or bracket that an option tracks. */
-    private var schemeStoppedOnTerminator = false
-
     /**
      * If the first character in the url is a single quote, then look for matching quote at the end.
      */
@@ -334,6 +331,7 @@ public class LinksDetektor public constructor(
      */
     private fun processColon(startLength: Int): Int {
         var length = startLength
+        val lengthWithColon = bufferStringBuilder.length
         if (hasScheme) {
             // read it as username/password if it has scheme
             if (!readUserPass(length) && bufferStringBuilder.isNotEmpty()) {
@@ -358,8 +356,9 @@ public class LinksDetektor public constructor(
         } else if (bufferStringBuilder.isNotEmpty() &&
             optionMask.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) &&
             inputTextReader.canReadChars(1) &&
-            // "docs: " and `key:"` are a word and a colon, not a host: no port can follow the colon.
-            !schemeStoppedOnTerminator
+            // Only a bare ":" may be a host and a port. When readScheme read on past it ("docs: ", `key:"`, "ws://",
+            // "C:/"), the colon is not followed by a port and the word in front of it is no host.
+            bufferStringBuilder.length == lengthWithColon
         ) { // takes care of case like hi:
             inputTextReader.goBack() // unread the ":" so readDomainName can take care of the port
             bufferStringBuilder.deleteRange(bufferStringBuilder.length - 1, bufferStringBuilder.length)
@@ -481,7 +480,6 @@ public class LinksDetektor public constructor(
      * @return True, if the scheme was found, else false.
      */
     private fun readScheme(): Boolean {
-        schemeStoppedOnTerminator = false
         // Check if we are checking HTML and the length is longer than mailto:
         // Check if the string is actually mailto: then just return nothing.
         if (optionMask.has(LinksDetektorOptions.HTML) && bufferStringBuilder.length >= HTML_MAILTO.length && HTML_MAILTO.equals(
@@ -511,7 +509,6 @@ public class LinksDetektor public constructor(
             } else if (curr == ' ' || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched) {
                 // if we find a space or end of input, then nothing found.
                 bufferStringBuilder.append(curr)
-                schemeStoppedOnTerminator = true
                 return false
             } else if (curr == '[') { // if we're starting to see an ipv6 address
                 inputTextReader.goBack() // unread the '[', so that we can start looking for ipv6
@@ -556,6 +553,27 @@ public class LinksDetektor public constructor(
     }
 
     /**
+     * Whether an `@` comes before the end of the userinfo-and-host part of the text read from [from]: a closing
+     * bracket or quote in front of it belongs to the password then, as in `http://u:pa)ss@a.com`.
+     */
+    private fun atSignFollows(from: Int): Boolean {
+        var index = from
+        // Userinfo is short, and the bound keeps the scan from adding up over text with many colons.
+        val end = minOf(content.length, from + MAX_USERINFO_LOOKAHEAD)
+        while (index < end) {
+            val c = content[index]
+            if (c == '@') {
+                return true
+            }
+            if (c.isWhiteSpace() || c == '/' || c == '?' || c == '#' || c == '\\') {
+                return false
+            }
+            index++
+        }
+        return false
+    }
+
+    /**
      * Reads the input and looks for a username and password.
      * Handles:
      * http://username:password@...
@@ -586,7 +604,8 @@ public class LinksDetektor public constructor(
                 bufferStringBuilder.append(curr)
             } else if (
                 curr == '#' || curr == '?' || curr == '\\' || curr == ' ' || curr == '/' || curr == ':' ||
-                curr in GLUE_ENDERS || checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched
+                curr in GLUE_ENDERS && !atSignFollows(inputTextReader.position) ||
+                checkMatchingCharacter(curr) != CharacterMatch.CharacterNotMatched
             ) {
                 // one of these characters indicates we are in an invalid state and should just return.
                 done = true
@@ -838,6 +857,9 @@ public class LinksDetektor public constructor(
          * Contains the string to check for and remove if the scheme is this.
          */
         private const val HTML_MAILTO = "mailto:"
+
+        /** How far past a closing bracket or quote [atSignFollows] looks for the `@` of userinfo. */
+        private const val MAX_USERINFO_LOOKAHEAD = 256
 
         /**
          * Characters that may be glued right before a scheme without being part of the URL, as in `(http://a.com)`.

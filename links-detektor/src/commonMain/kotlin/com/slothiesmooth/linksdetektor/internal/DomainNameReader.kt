@@ -138,26 +138,36 @@ internal class DomainNameReader(
     }
 
     /**
-     * The initial domain without the brackets and quotes written in front of it, which are not part of a host:
-     * `(a.com` is the host `a.com`. They are cut out of the buffer too, when the host starts the buffer; after a
-     * scheme the result is empty, which makes the host invalid. A `[` is kept, since it can open an IPv6 address.
+     * The initial domain without the brackets and quotes written in front of it or between its parts, which are
+     * not part of a host: `(a.com` and `<p>a.com` are the host `a.com`. Everything up to the last one is cut out
+     * of the buffer too, when the host starts the buffer; after a scheme the result is empty, which makes the host
+     * invalid, because cutting there would leave a range that is not one piece of the text. A domain that opens
+     * with `[` is an IPv6 address and is left alone.
      */
     private fun withoutLeadingWrappers(): String? {
         if (initialDomain == null) {
             return null
         }
-        val wrappers = initialDomain.takeWhile { it in LEADING_WRAPPERS }.length
-        if (wrappers > 0) {
+        val leading = initialDomain.takeWhile { it in LEADING_WRAPPERS }.length
+        val rest = initialDomain.substring(leading)
+        val cut = if (rest.startsWith('[')) {
+            leading
+        } else {
+            leading + rest.indexOfLast { it in LEADING_WRAPPERS || it == '[' } + 1
+        }
+        if (cut > 0) {
             val start = bufferStringBuilder.length - initialDomain.length
             if (start > 0) {
-                // Something such as a scheme comes first ("https://}evil.com"): the URL cannot skip the wrapper
-                // and stay one piece of the text, so it is not a host at all.
                 return ""
             }
-            bufferStringBuilder.deleteRange(start, start + wrappers)
+            bufferStringBuilder.deleteRange(start, start + cut)
         }
-        return initialDomain.substring(wrappers)
+        return initialDomain.substring(cut)
     }
+
+    /** Whether the ':' just read is not followed by a slash, bracket or quote, which no port can follow. */
+    private fun colonStartsAPort(): Boolean =
+        !_reader.canReadChars(1) || _reader.peekChar(0).let { it != '/' && it != '\\' && it !in JUNK_HOST_CHARACTERS }
 
     /**
      * Reads and parses the current string to make sure the domain name started where it was supposed to,
@@ -301,6 +311,10 @@ internal class DomainNameReader(
                 // continue by reading the path
                 return checkDomainNameValid(ReaderNextState.ReadPath, curr)
             } else if (curr == ':' && (!_seenBracket || _seenCompleteBracketSet)) {
+                if (_dots == 0 && _options.has(LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) && !colonStartsAPort()) {
+                    // "docs:/x", `key:"x`: a word and a colon, not a host and a port.
+                    return ReaderNextState.InvalidDomainName
+                }
                 // Don't check for a port if it's in the middle of an ipv6 address
                 // continue by reading the port.
                 return checkDomainNameValid(ReaderNextState.ReadPort, curr)

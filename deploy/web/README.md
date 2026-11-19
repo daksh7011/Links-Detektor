@@ -12,7 +12,7 @@ cd deploy/web && npm ci && npm run dev   # http://localhost:8787/links-detektor/
 
 ## Deploy
 
-The release workflow (`master.yml`, job `web`) runs `npx wrangler deploy` in this folder. Manually: `npm run deploy` after building the distribution, with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` set. The `web` job also runs when a re-run finds the release for the version without its web zip, so re-running a failed workflow heals itself and never re-publishes to Maven Central.
+The release workflow (`master.yml`, job `web`) runs `npx wrangler deploy` in this folder. Manually: `npm run deploy` after building the distribution, with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` set. The `web` job also runs when a re-run finds the release for the version without its web zip, so re-running a failed workflow heals itself and never re-publishes to Maven Central. The build artifact is kept 7 days, so re-running failed jobs after that fails at the download step: use the manual recovery below. The same applies when a later push has moved master past the tagged commit, since the job then declines to ship.
 
 Manual recovery (the release workflow has no manual trigger, since it would re-run the publish): check out the tag, build with `./gradlew :webApp:wasmJsBrowserDistribution`, delete the `*.map` files from the distribution, zip its contents as `links-detektor-web-<version>.zip` (plus a `.sha256`), run `gh release upload <version> <files> --clobber`, then `npm run deploy` in this folder.
 

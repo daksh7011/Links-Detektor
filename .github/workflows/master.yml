@@ -40,7 +40,6 @@ jobs:
 
     outputs:
       version: ${{ steps.resolve.outputs.version }}
-      released: ${{ steps.resolve.outputs.released }}
       web_needed: ${{ steps.web_needed.outputs.web_needed }}
 
     steps:
@@ -77,7 +76,6 @@ jobs:
           CODE=$(curl -s -o /dev/null -w '%{http_code}' "https://repo1.maven.org/maven2/com/slothiesmooth/links-detektor/$VERSION/")
           [ "$CODE" = "200" ] && echo "ALREADY_PUBLISHED=true" >> "$GITHUB_ENV" || echo "ALREADY_PUBLISHED=false" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          [ "$CODE" = "200" ] && echo "released=false" >> "$GITHUB_OUTPUT" || echo "released=true" >> "$GITHUB_OUTPUT"
 
       - name: Test and check ABI
         run: ./gradlew :links-detektor:allTests :links-detektor:checkKotlinAbi
@@ -109,14 +107,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # The web app is deployed when this run made the release, and also when a re-run finds the release for VERSION
-      # without its web zip (a partial failure last time). This only reads the release: it never publishes anything.
+      # without its web zip (a partial failure last time) AND the tag still points at this commit. Without that commit
+      # check a later fix-forward push would ship its HEAD under an old version; that case is manual recovery
+      # (deploy/web/README.md). This only reads the release: it never publishes anything.
       - name: Check whether the web app is still to ship
         id: web_needed
         run: |
+          NEEDED=false
           if [ "$ALREADY_PUBLISHED" = "false" ]; then NEEDED=true
-          elif gh release view "$VERSION" --json assets --jq '.assets[].name' 2>/dev/null | grep -qx "links-detektor-web-$VERSION.zip"; then NEEDED=false
-          elif gh release view "$VERSION" >/dev/null 2>&1; then NEEDED=true
-          else NEEDED=false
+          elif ASSETS=$(gh release view "$VERSION" --json assets --jq '.assets[].name' 2>/dev/null); then
+            if echo "$ASSETS" | grep -qx "links-detektor-web-$VERSION.zip"; then :
+            elif [ "$(gh api "repos/$GITHUB_REPOSITORY/commits/$VERSION" --jq .sha 2>/dev/null)" = "$GITHUB_SHA" ]; then NEEDED=true
+            else echo "::warning::Web app not shipped: the tag $VERSION does not point at $GITHUB_SHA (or the lookup failed). Use manual recovery in deploy/web/README.md."
+            fi
+          else echo "::warning::Web app not shipped: the GitHub release for $VERSION is missing or the lookup failed."
           fi
           echo "web_needed=$NEEDED" >> "$GITHUB_OUTPUT"
         env:
@@ -182,11 +186,6 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           sha256sum "links-detektor-web-$VERSION.zip" > "links-detektor-web-$VERSION.zip.sha256"
 
-      - name: Attach to the GitHub release
-        run: gh release upload "$VERSION" "links-detektor-web-$VERSION.zip" "links-detektor-web-$VERSION.zip.sha256" --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Install deploy tooling
         working-directory: deploy/web
         run: npm ci
@@ -205,4 +204,11 @@ jobs:
         run: |
           URL=$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' "$RUNNER_TEMP/deploy.log" | head -1)
           [ -n "$URL" ] || { echo "::error::No workers.dev URL in the deploy output"; exit 1; }
-          curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "$URL/links-detektor/" | grep -q '<title>Links Detektor</title>'
+          curl -fsS --retry 5 --retry-delay 3 --retry-all-errors -o "$RUNNER_TEMP/index.html" "$URL/links-detektor/"
+          grep -q '<title>Links Detektor</title>' "$RUNNER_TEMP/index.html"
+
+      # Last, so the zip only exists on the release once the deploy and smoke check succeeded.
+      - name: Attach to the GitHub release
+        run: gh release upload "$VERSION" "links-detektor-web-$VERSION.zip" "links-detektor-web-$VERSION.zip.sha256" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

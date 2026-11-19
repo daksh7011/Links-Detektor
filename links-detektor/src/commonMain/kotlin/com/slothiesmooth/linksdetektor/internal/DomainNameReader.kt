@@ -481,18 +481,14 @@ internal class DomainNameReader(
         if (testDomain.isNotEmpty()) {
             // handling format without dots. Ex: http://2123123123123/path/a, http://0x8242343/aksdjf
             if (_dots == 0) {
-                valid = try {
-                    val value: Long = if (testDomain.length > 2 && testDomain[0] == '0' && testDomain[1] == 'x') { // hex
-                        testDomain.substring(2).toLong(16)
-                    } else if (testDomain[0] == '0') { // octal
-                        testDomain.substring(1).toLong(8)
-                    } else { // decimal
-                        testDomain.toLong()
-                    }
-                    value in MIN_NUMERIC_DOMAIN_VALUE..MAX_NUMERIC_DOMAIN_VALUE
-                } catch (e: NumberFormatException) {
-                    false
+                val value: Long? = if (testDomain.length > 2 && testDomain[0] == '0' && testDomain[1] == 'x') { // hex
+                    testDomain.substring(2).toLongOrNull(16)
+                } else if (testDomain[0] == '0') { // octal
+                    testDomain.substring(1).toLongOrNull(8)
+                } else { // decimal
+                    testDomain.toLongOrNull()
                 }
+                valid = value != null && value in MIN_NUMERIC_DOMAIN_VALUE..MAX_NUMERIC_DOMAIN_VALUE
             } else if (_dots == 3) {
                 // Dotted decimal/hex/octal format
                 val parts: ImmutableList<String> = testDomain.splitByDot()
@@ -518,11 +514,7 @@ internal class DomainNameReader(
                         val section: Int = if (parsedNum.isEmpty()) {
                             0
                         } else {
-                            try {
-                                parsedNum.toInt(base)
-                            } catch (e: NumberFormatException) {
-                                return false
-                            }
+                            parsedNum.toIntOrNull(base) ?: return false
                         }
                         if (section < MIN_IP_PART || section > MAX_IP_PART) {
                             valid = false

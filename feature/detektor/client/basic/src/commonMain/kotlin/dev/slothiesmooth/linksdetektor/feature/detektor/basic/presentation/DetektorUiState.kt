@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 /** The longest text that is checked. */
 const val MAX_INPUT_CHARS = 20_000
@@ -55,4 +55,4 @@ fun screenStateOf(state: DetektorUiState): DetektorScreenState = when (val resul
 
 /** The toggles the screen offers, in display order: every option except Default. */
 val ToggleableOptions: ImmutableList<LinksDetektorOptions> =
-    LinksDetektorOptions.entries.filter { it != LinksDetektorOptions.Default }.toImmutableList()
+    LinksDetektorOptions.entries.toPersistentList().removing(LinksDetektorOptions.Default)

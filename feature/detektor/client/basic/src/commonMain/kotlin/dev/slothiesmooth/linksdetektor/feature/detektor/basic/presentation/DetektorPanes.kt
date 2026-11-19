@@ -31,11 +31,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions
 import dev.slothiesmooth.linksdetektor.designlibrary.atoms.LdButton
@@ -55,9 +58,6 @@ import kotlinx.collections.immutable.ImmutableSet
 
 private val HighlightMaxHeight = 200.dp
 private val RuleWidth = 1.dp
-
-// Wide enough for the longest label ("Username", "Password", "Fragment") in the label style, so none breaks mid-word.
-private val LabelWidth = 88.dp
 
 @Composable
 internal fun InputPane(
@@ -151,9 +151,7 @@ internal fun HighlightPane(
                 .pointerInput(highlighted) {
                     detectTapGestures { position ->
                         val offset = layout?.getOffsetForPosition(position) ?: return@detectTapGestures
-                        highlighted.getStringAnnotations(LINK_TAG, offset, offset).firstOrNull()
-                            ?.item?.toIntOrNull()
-                            ?.let(onSelectLink)
+                        highlighted.linkIdAt(offset)?.let(onSelectLink)
                     }
                 },
         )
@@ -203,16 +201,17 @@ internal fun DetailPane(link: DetectedLink, onClose: (() -> Unit)?, modifier: Mo
     val colors = MaterialTheme.ldColors
     val dimens = MaterialTheme.ldDimens
     val rows = remember(link) { detailRows(link) }
+    val labelWidth = labelColumnWidth()
     LdPanel(modifier.testTag("detektor-detail")) {
         Column(verticalArrangement = Arrangement.spacedBy(dimens.space3)) {
             TableRow {
-                Spacer(Modifier.width(LabelWidth))
+                Spacer(Modifier.width(labelWidth))
                 Cell("Original", Modifier.weight(1f), LdTextStyle.Caption, colors.dim)
                 Cell("Tidied", Modifier.weight(1f), LdTextStyle.Caption, colors.dim)
             }
             rows.forEachIndexed { index, row ->
                 TableRow {
-                    Cell(row.label, Modifier.width(LabelWidth), LdTextStyle.Label, colors.dim)
+                    Cell(row.label, Modifier.width(labelWidth), LdTextStyle.Label, colors.dim)
                     Cell(row.original, Modifier.weight(1f), LdTextStyle.Code)
                     when {
                         row.normalized != null ->
@@ -225,6 +224,18 @@ internal fun DetailPane(link: DetectedLink, onClose: (() -> Unit)?, modifier: Mo
             }
             if (onClose != null) LdButton("Close", onClick = onClose, style = LdButtonStyle.Ghost)
         }
+    }
+}
+
+/** The width of the widest label in the label style at the current font scale, so no label breaks and every row lines up. */
+@Composable
+private fun labelColumnWidth(): Dp {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val style = MaterialTheme.ldType.label
+    return remember(measurer, density, style) {
+        val widest = RowSpecs.maxOf { measurer.measure(it.label, style).size.width }
+        with(density) { widest.toDp() }
     }
 }
 

@@ -34,3 +34,7 @@ fun buildHighlight(
         }
     }
 }
+
+/** The id of the link marked at [offset], or null when the offset is not inside a link. */
+fun AnnotatedString.linkIdAt(offset: Int): Int? =
+    getStringAnnotations(LINK_TAG, offset, offset).firstOrNull()?.item?.toIntOrNull()

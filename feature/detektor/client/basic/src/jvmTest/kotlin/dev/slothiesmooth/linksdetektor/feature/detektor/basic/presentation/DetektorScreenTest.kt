@@ -2,11 +2,14 @@ package dev.slothiesmooth.linksdetektor.feature.detektor.basic.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
@@ -20,14 +23,15 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions.HTML
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions.QUOTE_MATCH
 import com.slothiesmooth.linksdetektor.LinksDetektorOptions.SINGLE_QUOTE_MATCH
 import dev.slothiesmooth.linksdetektor.designlibrary.tokens.LdTheme
+import dev.slothiesmooth.linksdetektor.designlibrary.tokens.ldType
 import dev.slothiesmooth.linksdetektor.feature.detektor.basic.domain.usecase.DetectLinksUseCase
 import dev.slothiesmooth.linksdetektor.feature.detektor.basic.domain.usecase.DetectionResult
 import dev.slothiesmooth.linksdetektor.feature.detektor.basic.domain.usecase.LibraryLinkEngine
@@ -152,14 +156,28 @@ class DetektorScreenTest {
     }
 
     @Test
-    fun `detail labels stay on one line on a narrow sheet`() = runComposeUiTest {
+    fun `detail labels stay on one line on a narrow sheet`() = labelsStayOnOneLine(fontScale = 1f)
+
+    @Test
+    fun `detail labels stay on one line at 1_3 times font scale`() = labelsStayOnOneLine(fontScale = 1.3f)
+
+    @Test
+    fun `detail labels stay on one line at double font scale`() = labelsStayOnOneLine(fontScale = 2f)
+
+    private fun labelsStayOnOneLine(fontScale: Float) = runComposeUiTest {
         val link = (ready("see http://user:pw@Sub.Example.org:8080/x?q=1#f ok").result as UiState.Ready).value.links.single()
-        // 360 dp wide sheet: 16 dp gutters, 24 dp panel padding.
-        setContent { LdTheme { Box(Modifier.size(328.dp, 900.dp)) { DetailPane(link, onClose = {}) } } }
-        val oneLine = with(density) { 20.sp.toPx() } * 1.5f
+        var oneLine = 0f
+        setContent {
+            val scaled = Density(LocalDensity.current.density, fontScale)
+            CompositionLocalProvider(LocalDensity provides scaled) {
+                oneLine = with(scaled) { MaterialTheme.ldType.label.lineHeight.toPx() } * 1.5f
+                // 360 dp wide sheet: 16 dp gutters, 24 dp panel padding.
+                LdTheme { Box(Modifier.size(328.dp, 1600.dp)) { DetailPane(link, onClose = {}) } }
+            }
+        }
         persistentListOf("Full URL", "Scheme", "Username", "Password", "Host", "Port", "Path", "Query", "Fragment").forEach { label ->
             val height = onNodeWithText(label).fetchSemanticsNode().size.height
-            assertTrue(height <= oneLine, "$label is $height px high, so it wraps")
+            assertTrue(height <= oneLine, "$label is $height px high at $fontScale x, so it wraps")
         }
     }
 }

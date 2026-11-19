@@ -36,14 +36,16 @@ class HighlightTest {
     fun `ranges outside the text are skipped`() {
         val links = persistentListOf(link(0, 2, 99), link(1, -1, 3), link(2, 3, 3), link(3, 1, 4))
         val out = buildHighlight("short", links, null, style)
-        assertEquals(persistentListOf("3"), out.getStringAnnotations(LINK_TAG, 0, 5).map { it.item }.toImmutableList())
+        val tags = out.getStringAnnotations(LINK_TAG, 0, 5).toImmutableList()
+        assertEquals(persistentListOf("3"), tags.map { it.item }.toImmutableList())
     }
 
     @Test
     fun `an overlapping range is skipped and the earlier one kept`() {
         val links = persistentListOf(link(0, 0, 5), link(1, 3, 8), link(2, 5, 9))
         val out = buildHighlight("0123456789", links, null, style)
-        assertEquals(persistentListOf("0", "2"), out.getStringAnnotations(LINK_TAG, 0, 10).map { it.item }.toImmutableList())
+        val tags = out.getStringAnnotations(LINK_TAG, 0, 10).toImmutableList()
+        assertEquals(persistentListOf("0", "2"), tags.map { it.item }.toImmutableList())
     }
 
     @Test

@@ -200,6 +200,18 @@ class DetektorScreenTest {
     }
 
     @Test
+    fun `a phone sheet stacks the detail rows at 1x font scale`() = runComposeUiTest {
+        val link = (ready(SAMPLE).result as UiState.Ready).value.links.first()
+        setContent {
+            LdTheme {
+                // 375 dp phone: 16 dp gutters on both sides.
+                Box(Modifier.width(343.dp).wrapContentHeight(unbounded = true)) { DetailPane(link, onClose = {}) }
+            }
+        }
+        onNodeWithTag("detail-stacked").assertExists()
+    }
+
+    @Test
     fun `a wide detail pane keeps the table layout`() = runComposeUiTest {
         val link = (ready(SAMPLE).result as UiState.Ready).value.links.first()
         setContent {

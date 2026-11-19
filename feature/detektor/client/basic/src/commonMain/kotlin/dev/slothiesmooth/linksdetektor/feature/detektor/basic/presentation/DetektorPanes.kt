@@ -89,7 +89,9 @@ internal fun InputPane(
 }
 
 private const val UNTIDY_MESSAGE = "This link could not be tidied."
-private const val STACK_ABOVE_LABEL_SHARE = 0.25f
+
+/** The narrowest value column (Original or Tidied) the table may give a URL before each row stacks instead. */
+private val MinTableValueWidth = 136.dp
 
 private fun optionLabel(option: LinksDetektorOptions): String = when (option) {
     LinksDetektorOptions.Default -> "Default"
@@ -208,8 +210,10 @@ internal fun DetailPane(link: DetectedLink, onClose: (() -> Unit)?, modifier: Mo
     LdPanel(modifier.testTag("detektor-detail")) {
         Column(verticalArrangement = Arrangement.spacedBy(dimens.space3)) {
             BoxWithConstraints(Modifier.fillMaxWidth()) {
-                // When the labels take too much of the row for two readable value columns, each row stacks instead.
-                if (labelWidth > maxWidth * STACK_ABOVE_LABEL_SHARE) {
+                // The table has a label column and two value columns with two gaps between them. When a value column would
+                // be narrower than MinTableValueWidth (URLs wrap into many lines), each row stacks instead.
+                val valueWidth = (maxWidth - labelWidth - dimens.space3 * 2) / 2
+                if (valueWidth < MinTableValueWidth) {
                     StackedDetail(rows, tidyable = link.normalized != null, Modifier.testTag("detail-stacked"))
                 } else {
                     TableDetail(rows, tidyable = link.normalized != null, labelWidth)

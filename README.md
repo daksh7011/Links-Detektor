@@ -2,10 +2,13 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.slothiesmooth/links-detektor.svg)](https://search.maven.org/search?q=g:com.slothiesmooth%20AND%20a:links-detektor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-blue.svg)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.4.20-blue.svg)](https://kotlinlang.org)
 
 🚀 **A robust library for detecting and extracting URLs from text content.** Links Detektor provides a powerful URL detection engine that can identify various URL formats within
 arbitrary text.
+
+**Platforms:** JVM 17+, Android 23+, iOS, macOS, JS, WasmJS, Linux and Windows (mingw). One Kotlin Multiplatform
+library, one behaviour everywhere.
 
 ## ✨ Features
 
@@ -25,7 +28,22 @@ arbitrary text.
 > 💡 **Tip:** You can always check for the latest version on [Maven Central](https://central.sonatype.com/artifact/com.slothiesmooth/links-detektor)
 
 <details open>
-<summary><b>📋 Gradle (Kotlin DSL)</b></summary>
+<summary><b>📋 Kotlin Multiplatform</b></summary>
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.slothiesmooth:links-detektor:<latest_version>")
+        }
+    }
+}
+```
+
+</details>
+
+<details>
+<summary><b>📋 Gradle (Kotlin DSL, JVM or Android only)</b></summary>
 
 ```kotlin
 dependencies {
@@ -53,10 +71,13 @@ dependencies {
 
 <dependency>
     <groupId>com.slothiesmooth</groupId>
-    <artifactId>links-detektor</artifactId>
+    <artifactId>links-detektor-jvm</artifactId>
     <version>latest_version</version>
 </dependency>
 ```
+
+Maven does not read Gradle module metadata, so it cannot pick the JVM variant of the multiplatform root artifact;
+depend on the `-jvm` artifact directly.
 
 </details>
 
@@ -75,7 +96,7 @@ val text = "Check out these websites: https://www.example.com and http://github.
 // Create a LinksDetektor instance with HTML options
 val detector = LinksDetektor(text, LinksDetektorOptions.HTML)
 
-// Detect URLs in the text
+// Detect URLs in the text: an ImmutableList<Url>
 val urls = detector.detect()
 
 // Print the detected URLs
@@ -85,6 +106,20 @@ urls.forEach { url ->
     println("  Host: ${url.host}")
     println("  Path: ${url.path}")
 }
+
+// Highlight each match: `range` is its position in the original text
+urls.forEach { url -> println(text.substring(url.range)) }
+```
+
+Several options can be combined by passing a set (`kotlinx.collections.immutable.persistentSetOf`):
+
+```kotlin
+import kotlinx.collections.immutable.persistentSetOf
+
+val detector = LinksDetektor(
+    text,
+    persistentSetOf(LinksDetektorOptions.QUOTE_MATCH, LinksDetektorOptions.BRACKET_MATCH)
+)
 ```
 
 > 💡 **Tip:** Use various `LinksDetektorOptions` to cater the detection to your needs.
@@ -102,10 +137,14 @@ try {
     println("Path: ${url.path}")
     println("Query: ${url.query}")
     println("Fragment: ${url.fragment}")
-} catch (e: MalformedURLException) {
+} catch (e: MalformedUrlException) {
     println("Invalid URL: ${e.message}")
 }
 ```
+
+> `MalformedUrlException` is `java.net.MalformedURLException` on JVM and Android, and a library class everywhere else.
+
+> `Url.create` expects a bare URL. Text glued before the scheme (as in `seehttp://example.com`) is not stripped; use `LinksDetektor` to find URLs inside running text.
 
 </details>
 
@@ -118,32 +157,60 @@ val normalizedUrl = url.normalize()
 
 println("Original: $url")
 println("Normalized: $normalizedUrl")
-// Output: Normalized: http://example.com/a/c
+// Output: Normalized: HTTP://example.com/a/c
 ```
 
-> 🧹 **Normalization** cleans up URLs by converting to lowercase, resolving path segments, and standardizing IP addresses.
+> 🧹 **Normalization** cleans up URLs by lowercasing the host, resolving path segments, and standardizing IP addresses. The scheme is kept as written (`HTTP` stays `HTTP`).
 </details>
 
 <details>
 <summary><b>🔍 Extracting All Links from Text</b></summary>
 
 ```kotlin
-fun String.extractLinks(): List<String> {
+fun String.extractLinks(): ImmutableList<String> {
     return LinksDetektorOptions.entries.asSequence()
+        // Single-level domains would turn plain words such as "formats:" into hosts.
+        .filter { it != LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN }
         .flatMap { option ->
             LinksDetektor(this, option).detect().asSequence().mapNotNull { it.host }
         }
         .distinct()
-        .toList()
+        .toImmutableList()
 }
 
 val text = "Check multiple formats: https://example.com, <a href='https://github.com'>GitHub</a>, {\"url\": \"https://kotlin.org\"}"
 val links = text.extractLinks()
 println("Found domains: $links")
+// Found domains: [example.com, github.com, kotlin.org]
 ```
 
-> 💪 **Power tip:** This extension function tries all detection options to find as many URLs as possible!
+> 💪 **Power tip:** This extension function tries every detection option (except single-level domains) to find as many URLs as possible!
 </details>
+
+## 🔀 Migrating from 2.x
+
+- `detect()` now returns `ImmutableList<Url>` (from `kotlinx-collections-immutable`) instead of `List<Url>`. It is still
+  a `List`, so reading code keeps working; the library exposes `kotlinx-collections-immutable` as an `api` dependency.
+- `HostNormalizer` is now internal. Use `Url.normalize()` and `NormalizedUrl`.
+- `commons-math3` is no longer on the classpath. If you relied on it transitively, declare it yourself.
+- Maven users must depend on `links-detektor-jvm` (see Installation). Gradle resolves the right variant on its own.
+- Host lowercasing is locale independent (a Turkish default locale no longer turns `I` into a dotless `i`).
+- The backtrack guard throws `IllegalStateException` instead of a platform-specific error.
+- Internationalized hosts are converted by one implementation on every platform, with bundled Unicode 15.0 tables;
+  `java.net.IDN` is no longer used. Hosts it accepted convert the same way.
+- That implementation does not run the Nameprep prohibited-character, bidi and unassigned checks. Hosts that 2.x
+  rejected on the JVM (`NormalizedUrl.host` was `null`), such as emoji domains, are now encoded (`xn--e28h.com`).
+- A port above 65535 now means no port: `Url.port` is `-1` and `fullUrl` omits it.
+- A scheme written as `http%3a//` is now parsed.
+- Text before a `#`, `?`, `/` or `\` that precedes an `@` is never userinfo. With `ALLOW_SINGLE_LEVEL_DOMAIN`,
+  `http://evil#@good.com` has host `evil`; otherwise at most a bare `good.com` is found, never with `evil` as userinfo.
+- Punctuation glued before a scheme (`(http://a.com)`, `'http://a.com'`, `x,http://a.com`) is no longer part of the URL: it
+  starts at the scheme and keeps it. Single-word hosts such as `(http://localhost)` no longer get a host like `(http:/`.
+- With `Default`, a bracket or quote written right before a host no longer hides it: `(a.com)` and `'a.com'` now give the host
+  `a.com` (the leading wrapper is cut off), and a host never contains `<>"'()[]{}`, `:` or `/` (bracketed IPv6 excepted).
+- Normalized hosts keep delimiter characters percent-encoded instead of decoding them.
+- `LinksDetektor` is stateful and not thread-safe; `detect()` is idempotent. `Url.rawHost`/`rawPath` are no longer
+  `protected`.
 
 ## ⚙️ Configuration Options
 
@@ -212,7 +279,7 @@ The library provides the following main classes:
 1. 🔄 Clone the repository
 2. 🧰 Open the project in your IDE (IntelliJ IDEA recommended)
 3. 🏗️ Build the project with Gradle: `./gradlew build`
-4. 🧪 Run tests: `./gradlew test`
+4. 🧪 Run checks and tests: `./gradlew detektCheck :links-detektor:allTests`
 
 </details>
 
@@ -224,7 +291,7 @@ The library provides the following main classes:
 The project uses [detekt](https://github.com/detekt/detekt) for static code analysis. Make sure your code passes the detekt checks before submitting a pull request:
 
 ```bash
-./gradlew detekt
+./gradlew detektCheck
 ```
 
 > ⚠️ **Important:** Pull requests that don't pass detekt checks will not be accepted.
@@ -245,8 +312,8 @@ The project uses [detekt](https://github.com/detekt/detekt) for static code anal
 | ⬜      | 🛠️ **Extensions**   | Add extensions to make the library usage easy |
 | ⬜      | 🔢 **Magic Numbers** | Enable magic number rule in detekt            |
 | ⬜      | 🧩 **Complexity**    | Enable complexity rule in detekt              |
-| ⬜      | 📱 **Multiplatform** | Make library KMP (Kotlin Multiplatform) ready |
-| ⬜      | 📚 **Documentation** | Make project dokka2 ready                     |
+| ✅      | 📱 **Multiplatform** | Make library KMP (Kotlin Multiplatform) ready |
+| ✅      | 📚 **Documentation** | Make project dokka2 ready                     |
 | ⬜      | 🧪 **Testing**       | Write more tests for utils and other methods  |
 | ✅      | 🧪 **Core Tests**    | Added tests for utils and main detektor class |
 

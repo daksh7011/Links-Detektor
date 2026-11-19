@@ -1,0 +1,27 @@
+# Reusable Apple build + verify chain. Called by ci / develop / master. Not triggered on its own.
+name: Build & Verify (Apple)
+
+on:
+  workflow_call:
+
+jobs:
+  apple:
+    name: Apple tests and cross-compiled targets
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+      # The ABI check runs here too: the Apple klib dumps can only be produced on a Mac. `assemble` also
+      # cross-compiles linuxArm64 and mingwX64.
+      - name: Apple tests, ABI check and assemble
+        run: ./gradlew :links-detektor:iosSimulatorArm64Test :links-detektor:macosArm64Test :links-detektor:checkKotlinAbi :links-detektor:assemble --continue

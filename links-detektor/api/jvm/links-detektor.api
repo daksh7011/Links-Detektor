@@ -1,0 +1,53 @@
+public final class com/slothiesmooth/linksdetektor/LinksDetektor {
+	public fun <init> (Ljava/lang/String;Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;)V
+	public fun <init> (Ljava/lang/String;Lkotlinx/collections/immutable/ImmutableSet;)V
+	public final fun detect ()Lkotlinx/collections/immutable/ImmutableList;
+	public final fun getBacktracked ()I
+}
+
+public final class com/slothiesmooth/linksdetektor/LinksDetektorOptions : java/lang/Enum {
+	public static final field ALLOW_SINGLE_LEVEL_DOMAIN Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static final field BRACKET_MATCH Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static final field Default Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static final field HTML Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static final field JAVASCRIPT Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static final field JSON Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static final field QUOTE_MATCH Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static final field SINGLE_QUOTE_MATCH Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static final field XML Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()I
+	public final fun hasFlag (Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;)Z
+	public static fun valueOf (Ljava/lang/String;)Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+	public static fun values ()[Lcom/slothiesmooth/linksdetektor/LinksDetektorOptions;
+}
+
+public final class com/slothiesmooth/linksdetektor/NormalizedUrl : com/slothiesmooth/linksdetektor/Url {
+	public fun getHost ()Ljava/lang/String;
+	public fun getHostBytes ()[B
+	public fun getPath ()Ljava/lang/String;
+}
+
+public class com/slothiesmooth/linksdetektor/Url {
+	public static final field Companion Lcom/slothiesmooth/linksdetektor/Url$Companion;
+	public final fun getFragment ()Ljava/lang/String;
+	public final fun getFullUrl ()Ljava/lang/String;
+	public final fun getFullUrlWithoutFragment ()Ljava/lang/String;
+	public fun getHost ()Ljava/lang/String;
+	public fun getHostBytes ()[B
+	public final fun getOriginalUrl ()Ljava/lang/String;
+	public final fun getPassword ()Ljava/lang/String;
+	public fun getPath ()Ljava/lang/String;
+	public final fun getPort ()I
+	public final fun getQuery ()Ljava/lang/String;
+	public final fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getScheme ()Ljava/lang/String;
+	public final fun getUsername ()Ljava/lang/String;
+	public final fun normalize ()Lcom/slothiesmooth/linksdetektor/NormalizedUrl;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/slothiesmooth/linksdetektor/Url$Companion {
+	public final fun create (Ljava/lang/String;)Lcom/slothiesmooth/linksdetektor/Url;
+}
+

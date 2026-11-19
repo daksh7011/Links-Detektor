@@ -1,0 +1,87 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, js, linuxArm64, linuxX64, macosArm64, mingwX64, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.slothiesmooth:links-detektor>
+final enum class com.slothiesmooth.linksdetektor/LinksDetektorOptions : kotlin/Enum<com.slothiesmooth.linksdetektor/LinksDetektorOptions> { // com.slothiesmooth.linksdetektor/LinksDetektorOptions|null[0]
+    enum entry ALLOW_SINGLE_LEVEL_DOMAIN // com.slothiesmooth.linksdetektor/LinksDetektorOptions.ALLOW_SINGLE_LEVEL_DOMAIN|null[0]
+    enum entry BRACKET_MATCH // com.slothiesmooth.linksdetektor/LinksDetektorOptions.BRACKET_MATCH|null[0]
+    enum entry Default // com.slothiesmooth.linksdetektor/LinksDetektorOptions.Default|null[0]
+    enum entry HTML // com.slothiesmooth.linksdetektor/LinksDetektorOptions.HTML|null[0]
+    enum entry JAVASCRIPT // com.slothiesmooth.linksdetektor/LinksDetektorOptions.JAVASCRIPT|null[0]
+    enum entry JSON // com.slothiesmooth.linksdetektor/LinksDetektorOptions.JSON|null[0]
+    enum entry QUOTE_MATCH // com.slothiesmooth.linksdetektor/LinksDetektorOptions.QUOTE_MATCH|null[0]
+    enum entry SINGLE_QUOTE_MATCH // com.slothiesmooth.linksdetektor/LinksDetektorOptions.SINGLE_QUOTE_MATCH|null[0]
+    enum entry XML // com.slothiesmooth.linksdetektor/LinksDetektorOptions.XML|null[0]
+
+    final val entries // com.slothiesmooth.linksdetektor/LinksDetektorOptions.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.slothiesmooth.linksdetektor/LinksDetektorOptions> // com.slothiesmooth.linksdetektor/LinksDetektorOptions.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // com.slothiesmooth.linksdetektor/LinksDetektorOptions.value|{}value[0]
+        final fun <get-value>(): kotlin/Int // com.slothiesmooth.linksdetektor/LinksDetektorOptions.value.<get-value>|<get-value>(){}[0]
+
+    final fun hasFlag(com.slothiesmooth.linksdetektor/LinksDetektorOptions): kotlin/Boolean // com.slothiesmooth.linksdetektor/LinksDetektorOptions.hasFlag|hasFlag(com.slothiesmooth.linksdetektor.LinksDetektorOptions){}[0]
+    final fun valueOf(kotlin/String): com.slothiesmooth.linksdetektor/LinksDetektorOptions // com.slothiesmooth.linksdetektor/LinksDetektorOptions.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.slothiesmooth.linksdetektor/LinksDetektorOptions> // com.slothiesmooth.linksdetektor/LinksDetektorOptions.values|values#static(){}[0]
+}
+
+final class com.slothiesmooth.linksdetektor/LinksDetektor { // com.slothiesmooth.linksdetektor/LinksDetektor|null[0]
+    constructor <init>(kotlin/String, com.slothiesmooth.linksdetektor/LinksDetektorOptions) // com.slothiesmooth.linksdetektor/LinksDetektor.<init>|<init>(kotlin.String;com.slothiesmooth.linksdetektor.LinksDetektorOptions){}[0]
+    constructor <init>(kotlin/String, kotlinx.collections.immutable/ImmutableSet<com.slothiesmooth.linksdetektor/LinksDetektorOptions>) // com.slothiesmooth.linksdetektor/LinksDetektor.<init>|<init>(kotlin.String;kotlinx.collections.immutable.ImmutableSet<com.slothiesmooth.linksdetektor.LinksDetektorOptions>){}[0]
+
+    final val backtracked // com.slothiesmooth.linksdetektor/LinksDetektor.backtracked|{}backtracked[0]
+        final fun <get-backtracked>(): kotlin/Int // com.slothiesmooth.linksdetektor/LinksDetektor.backtracked.<get-backtracked>|<get-backtracked>(){}[0]
+
+    final fun detect(): kotlinx.collections.immutable/ImmutableList<com.slothiesmooth.linksdetektor/Url> // com.slothiesmooth.linksdetektor/LinksDetektor.detect|detect(){}[0]
+}
+
+final class com.slothiesmooth.linksdetektor/NormalizedUrl : com.slothiesmooth.linksdetektor/Url { // com.slothiesmooth.linksdetektor/NormalizedUrl|null[0]
+    final val host // com.slothiesmooth.linksdetektor/NormalizedUrl.host|{}host[0]
+        final fun <get-host>(): kotlin/String? // com.slothiesmooth.linksdetektor/NormalizedUrl.host.<get-host>|<get-host>(){}[0]
+    final val hostBytes // com.slothiesmooth.linksdetektor/NormalizedUrl.hostBytes|{}hostBytes[0]
+        final fun <get-hostBytes>(): kotlin/ByteArray? // com.slothiesmooth.linksdetektor/NormalizedUrl.hostBytes.<get-hostBytes>|<get-hostBytes>(){}[0]
+    final val path // com.slothiesmooth.linksdetektor/NormalizedUrl.path|{}path[0]
+        final fun <get-path>(): kotlin/String? // com.slothiesmooth.linksdetektor/NormalizedUrl.path.<get-path>|<get-path>(){}[0]
+}
+
+open class com.slothiesmooth.linksdetektor/MalformedUrlException : kotlin/Exception { // com.slothiesmooth.linksdetektor/MalformedUrlException|null[0]
+    constructor <init>(kotlin/String) // com.slothiesmooth.linksdetektor/MalformedUrlException.<init>|<init>(kotlin.String){}[0]
+}
+
+open class com.slothiesmooth.linksdetektor/Url { // com.slothiesmooth.linksdetektor/Url|null[0]
+    final val fragment // com.slothiesmooth.linksdetektor/Url.fragment|{}fragment[0]
+        final fun <get-fragment>(): kotlin/String // com.slothiesmooth.linksdetektor/Url.fragment.<get-fragment>|<get-fragment>(){}[0]
+    final val fullUrl // com.slothiesmooth.linksdetektor/Url.fullUrl|{}fullUrl[0]
+        final fun <get-fullUrl>(): kotlin/String // com.slothiesmooth.linksdetektor/Url.fullUrl.<get-fullUrl>|<get-fullUrl>(){}[0]
+    final val fullUrlWithoutFragment // com.slothiesmooth.linksdetektor/Url.fullUrlWithoutFragment|{}fullUrlWithoutFragment[0]
+        final fun <get-fullUrlWithoutFragment>(): kotlin/String // com.slothiesmooth.linksdetektor/Url.fullUrlWithoutFragment.<get-fullUrlWithoutFragment>|<get-fullUrlWithoutFragment>(){}[0]
+    final val originalUrl // com.slothiesmooth.linksdetektor/Url.originalUrl|{}originalUrl[0]
+        final fun <get-originalUrl>(): kotlin/String? // com.slothiesmooth.linksdetektor/Url.originalUrl.<get-originalUrl>|<get-originalUrl>(){}[0]
+    final val password // com.slothiesmooth.linksdetektor/Url.password|{}password[0]
+        final fun <get-password>(): kotlin/String // com.slothiesmooth.linksdetektor/Url.password.<get-password>|<get-password>(){}[0]
+    final val port // com.slothiesmooth.linksdetektor/Url.port|{}port[0]
+        final fun <get-port>(): kotlin/Int // com.slothiesmooth.linksdetektor/Url.port.<get-port>|<get-port>(){}[0]
+    final val query // com.slothiesmooth.linksdetektor/Url.query|{}query[0]
+        final fun <get-query>(): kotlin/String // com.slothiesmooth.linksdetektor/Url.query.<get-query>|<get-query>(){}[0]
+    final val range // com.slothiesmooth.linksdetektor/Url.range|{}range[0]
+        final fun <get-range>(): kotlin.ranges/IntRange // com.slothiesmooth.linksdetektor/Url.range.<get-range>|<get-range>(){}[0]
+    final val scheme // com.slothiesmooth.linksdetektor/Url.scheme|{}scheme[0]
+        final fun <get-scheme>(): kotlin/String // com.slothiesmooth.linksdetektor/Url.scheme.<get-scheme>|<get-scheme>(){}[0]
+    final val username // com.slothiesmooth.linksdetektor/Url.username|{}username[0]
+        final fun <get-username>(): kotlin/String // com.slothiesmooth.linksdetektor/Url.username.<get-username>|<get-username>(){}[0]
+    open val host // com.slothiesmooth.linksdetektor/Url.host|{}host[0]
+        open fun <get-host>(): kotlin/String? // com.slothiesmooth.linksdetektor/Url.host.<get-host>|<get-host>(){}[0]
+    open val hostBytes // com.slothiesmooth.linksdetektor/Url.hostBytes|{}hostBytes[0]
+        open fun <get-hostBytes>(): kotlin/ByteArray? // com.slothiesmooth.linksdetektor/Url.hostBytes.<get-hostBytes>|<get-hostBytes>(){}[0]
+    open val path // com.slothiesmooth.linksdetektor/Url.path|{}path[0]
+        open fun <get-path>(): kotlin/String? // com.slothiesmooth.linksdetektor/Url.path.<get-path>|<get-path>(){}[0]
+
+    final fun normalize(): com.slothiesmooth.linksdetektor/NormalizedUrl // com.slothiesmooth.linksdetektor/Url.normalize|normalize(){}[0]
+    open fun toString(): kotlin/String // com.slothiesmooth.linksdetektor/Url.toString|toString(){}[0]
+
+    final object Companion { // com.slothiesmooth.linksdetektor/Url.Companion|null[0]
+        final fun create(kotlin/String): com.slothiesmooth.linksdetektor/Url // com.slothiesmooth.linksdetektor/Url.Companion.create|create(kotlin.String){}[0]
+    }
+}

@@ -1,0 +1,27 @@
+# Reusable Linux build + verify chain. Called by ci / develop / master. Not triggered on its own.
+name: Build & Verify (Linux)
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: Detekt and tests (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      # Kotlin version bump invalidates it.
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+      # `check` runs the jvm, android host, js/wasm node and linuxX64 tests plus checkKotlinAbi.
+      - name: Detekt, tests and ABI check
+        run: ./gradlew detektCheck :links-detektor:check --continue

@@ -204,6 +204,8 @@ println("Found domains: $links")
 - A scheme written as `http%3a//` is now parsed.
 - Text before a `#`, `?`, `/` or `\` that precedes an `@` is never userinfo. With `ALLOW_SINGLE_LEVEL_DOMAIN`,
   `http://evil#@good.com` has host `evil`; otherwise at most a bare `good.com` is found, never with `evil` as userinfo.
+- Punctuation glued before a scheme (`(http://a.com)`, `'http://a.com'`, `x,http://a.com`) is no longer part of the URL: it
+  starts at the scheme and keeps it. Single-word hosts such as `(http://localhost)` no longer get a host like `(http:/`.
 - Normalized hosts keep delimiter characters percent-encoded instead of decoding them.
 - `LinksDetektor` is stateful and not thread-safe; `detect()` is idempotent. `Url.rawHost`/`rawPath` are no longer
   `protected`.
